@@ -139,8 +139,22 @@ document.getElementById('heroCar').innerHTML=car();
 
 var h=new Date().getHours(),greet=h<12?'Good morning, Edwin!':h<18?'Good afternoon, Edwin!':'Good evening, Edwin!';
 document.getElementById('hello').textContent=greet;
+/* Uses the sound setting and voice chosen in the Number Garage's Parents screen */
+function settings(){try{var o=JSON.parse(localStorage.getItem('nanoNumbers.v1')||'null');return (o&&o.settings)||{};}catch(e){return {};}}
+function vscore(v){var n=(v.name||'').toLowerCase(),sc=0;
+  if(/natural|neural|online/.test(n))sc+=60;if(/premium|enhanced|siri/.test(n))sc+=50;if(/google/.test(n))sc+=35;
+  if(/(samantha|ava|allison|susan|zoe|nicky|aria|jenny|libby|sonia)/.test(n))sc+=15;if(v.localService===false)sc+=5;
+  if(/compact|espeak|eloquence|fred|albert|bad news|bells|boing|bubbles|cellos|whisper|zarvox|trinoids|jester|organ|superstar|wobble|grandma|grandpa|rocko|shelley|flo|eddy|reed|sandy|junior|ralph|kathy|bahh/.test(n))sc-=80;
+  return sc;}
+function bestVoice(want){var vs=[];try{vs=speechSynthesis.getVoices()||[];}catch(e){}
+  vs=vs.filter(function(v){return v.lang&&v.lang.toLowerCase().indexOf('en')===0;});
+  if(want){var f=vs.find(function(v){return v.name===want;});if(f)return f;}
+  vs.sort(function(a,b){return vscore(b)-vscore(a);});return vs[0]||null;}
+try{if(window.speechSynthesis)speechSynthesis.getVoices();}catch(e){}
 document.getElementById('speak').onclick=function(){
-  try{if(!window.speechSynthesis)return;speechSynthesis.cancel();var u=new SpeechSynthesisUtterance(greet+' Where shall Nano drive today?');u.lang='en-US';u.rate=0.85;speechSynthesis.speak(u);}catch(e){}
+  var st=settings();if(st.mute||st.voice===false)return;
+  try{if(!window.speechSynthesis)return;speechSynthesis.cancel();var u=new SpeechSynthesisUtterance(greet+' Where shall Nano drive today?');u.lang='en-US';u.rate=0.9;u.pitch=1.05;
+    var v=bestVoice(st.enVoice);if(v){u.voice=v;u.lang=v.lang;}speechSynthesis.speak(u);}catch(e){}
 };
 })();
 </script>
