@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#2A2E35">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>Belize Symbols Flight</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Andika:wght@400;700&family=Baloo+2:wght@600;800&display=swap">
+<style>
+/* Layout: one-screen picture game. Sky flight strip on top (helicopter flies to the flag), one question card, big picture tiles. */
+:root{
+  --bg:#E8F1EC; --card:#FFFFFF; --ink:#1E2A30; --muted:#56666D;
+  --sky:#4FA3D1; --path:#FFFFFF; --heli:#E8862A;
+  --tile:#FFFBF0; --tile-edge:#D3C9B0;
+  --go:#25915A; --go-soft:#DDF3E6; --oops:#C8463F; --focus:#1F6FD6;
+  --flag-blue:#1D3F94; --flag-red:#CE1126;
+  --display:"Baloo 2", "Trebuchet MS", system-ui, sans-serif;
+  --body:"Andika", "Verdana", system-ui, sans-serif;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#122019; --card:#1B2B24; --ink:#EEF3F0; --muted:#A8B8B0;
+    --sky:#2C6F93; --tile:#F2ECDD; --tile-edge:#7E7563;
+    --go:#4CC283; --go-soft:#1E3A2C; --oops:#F07A72; --focus:#7FB2FF;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#122019; --card:#1B2B24; --ink:#EEF3F0; --muted:#A8B8B0;
+  --sky:#2C6F93; --tile:#F2ECDD; --tile-edge:#7E7563;
+  --go:#4CC283; --go-soft:#1E3A2C; --oops:#F07A72; --focus:#7FB2FF;
+  color-scheme:dark;
+}
+html,body{height:100%}
+[hidden]{display:none!important}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:16px;line-height:1.45}
+button{font:inherit;color:inherit;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent}
+button:focus-visible{outline:3px solid var(--focus);outline-offset:3px}
+.wrap{max-width:860px;margin:0 auto;padding-block:16px 32px;
+  padding-left:max(16px, env(safe-area-inset-left, 0px));
+  padding-right:max(16px, env(safe-area-inset-right, 0px));
+  display:flex;flex-direction:column;gap:16px}
+h1,h2{font-family:var(--display);line-height:1.1;text-wrap:balance;margin:0}
+
+/* flight strip */
+.road{display:flex;align-items:center;gap:10px}
+.lane{position:relative;flex:1;min-width:0;height:58px;background:var(--sky);border-radius:14px;overflow:hidden}
+.lane::before{content:"";position:absolute;left:14px;right:60px;top:50%;height:3px;margin-top:-1px;
+  background:repeating-linear-gradient(90deg,var(--path) 0 6px,transparent 6px 14px);opacity:.75}
+.stops{position:absolute;left:30px;right:76px;top:50%;display:flex;justify-content:space-between;transform:translateY(-50%)}
+.stops i{width:10px;height:10px;border-radius:50%;background:rgba(255,255,255,.35)}
+.stops i.done{background:#FFE46B}
+.heli{position:absolute;top:3px;width:58px;height:52px;left:4px;transition:left .8s cubic-bezier(.3,1.3,.5,1)}
+.heli svg{animation:hover 1.6s ease-in-out infinite}
+@keyframes hover{50%{transform:translateY(-3px)}}
+.finish{position:absolute;right:6px;top:4px;width:50px;height:50px}
+.count{font-family:var(--display);font-weight:800;font-size:1.1rem;min-width:3.6em;text-align:right;font-variant-numeric:tabular-nums;color:var(--muted)}
+
+/* cards */
+.card{background:var(--card);border-radius:22px;padding:20px;display:flex;flex-direction:column;gap:16px;box-shadow:0 2px 0 rgba(0,0,0,.06)}
+.prompt{display:flex;gap:14px;align-items:flex-start}
+.speak{flex:none;width:64px;height:64px;border-radius:50%;border:0;background:var(--heli);color:#fff;display:grid;place-items:center;box-shadow:0 4px 0 #A9571A}
+.speak:active{transform:translateY(3px);box-shadow:0 1px 0 #A9571A}
+.speak svg{width:32px;height:32px}
+.qtext{font-size:clamp(1.25rem,3.6vw,1.65rem);font-weight:700;min-width:0}
+.tools{display:flex;flex-wrap:wrap;gap:10px}
+.chip{border:2px solid var(--tile-edge);background:transparent;border-radius:999px;padding:6px 14px;font-size:.95rem;font-weight:700;color:var(--muted)}
+.show{align-self:center;width:min(300px,100%);background:var(--tile);border:3px solid var(--tile-edge);border-radius:18px;padding:8px}
+.show svg{display:block;width:100%;height:auto}
+
+.opts{display:grid;grid-template-columns:repeat(var(--cols,3),minmax(0,1fr));gap:14px}
+.opts.two{max-width:440px;align-self:center;width:100%}
+.tile{position:relative;background:var(--tile);border:3px solid var(--tile-edge);border-radius:20px;padding:10px 8px 8px;
+  display:flex;flex-direction:column;align-items:center;gap:4px;min-width:0;color:#1E2A30;transition:transform .15s,opacity .2s}
+@media (hover:hover){.tile:hover{transform:translateY(-3px)}}
+.tile svg{width:100%;max-width:150px;aspect-ratio:1;height:auto;display:block}
+.tile span{font-family:var(--display);font-weight:600;font-size:clamp(.95rem,2.8vw,1.2rem);text-align:center;line-height:1.15}
+.tile.speaking{border-color:#F4C430;box-shadow:0 0 0 4px rgba(244,196,48,.5)}
+.tile.right{border-color:var(--go);box-shadow:0 0 0 5px var(--go-soft)}
+.tile.right::after{content:"";position:absolute;top:-12px;right:-10px;width:40px;height:40px;border-radius:50%;
+  background:var(--go) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M5 12.5l4.5 4.5L19 7.5' fill='none' stroke='white' stroke-width='3.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center/70% no-repeat}
+.tile.wrong{opacity:.35;animation:shake .4s}
+.tile:disabled{cursor:default;transform:none}
+@keyframes shake{20%{transform:translateX(-8px)}40%{transform:translateX(8px)}60%{transform:translateX(-5px)}80%{transform:translateX(5px)}}
+
+.feedback{min-height:1.6em;font-size:1.15rem;font-weight:700;text-align:center}
+.feedback.good{color:var(--go)}
+.feedback.try{color:var(--oops)}
+.go{align-self:center;border:0;border-radius:16px;background:var(--go);color:#fff;font-family:var(--display);font-weight:800;font-size:1.35rem;padding:10px 30px;box-shadow:0 4px 0 rgba(0,0,0,.25)}
+.go:active{transform:translateY(3px);box-shadow:0 1px 0 rgba(0,0,0,.25)}
+.note{font-size:.9rem;color:var(--muted)}
+
+.hero{display:flex;flex-direction:column;align-items:center;text-align:center;gap:14px}
+.hero h1{font-size:clamp(2rem,7vw,3rem);font-weight:800}
+.hero .scene{width:min(340px,100%)}
+.hero .scene svg{width:100%;height:auto;display:block}
+.parent{max-width:60ch;color:var(--muted)}
+.parent b{color:var(--ink)}
+.symbols{display:flex;flex-wrap:wrap;justify-content:center;gap:8px;width:100%;max-width:600px}
+.symbols div{background:var(--tile);border:3px solid var(--tile-edge);border-radius:16px;padding:6px;color:#1E2A30;font-family:var(--display);font-weight:600;font-size:.95rem;min-width:0;box-sizing:border-box;flex:0 1 calc(20% - 8px)}
+.symbols svg{width:100%;height:auto;display:block}
+.recap{display:flex;gap:12px;align-items:center}
+.stars{font-family:var(--display);font-size:1.5rem;font-weight:800}
+.results{list-style:none;margin:0;padding:0;display:flex;flex-wrap:wrap;gap:8px;justify-content:center}
+.results li{border-radius:999px;padding:4px 12px;font-size:.9rem;font-weight:700;background:var(--go-soft);color:var(--ink)}
+.results li.again{background:transparent;border:2px solid var(--oops)}
+
+@media (max-width:480px){
+  .wrap{gap:12px;padding-block:10px 24px}
+  .card{padding:14px 12px;gap:12px;border-radius:18px}
+  .prompt{gap:10px}
+  .speak{width:52px;height:52px}
+  .speak svg{width:26px;height:26px}
+  .qtext{font-size:1.2rem;line-height:1.3}
+  .show{width:min(230px,100%);padding:6px}
+  .opts{gap:8px}
+  .tile{padding:6px 4px;border-radius:16px}
+  .tile.right::after{width:32px;height:32px;top:-10px;right:-8px}
+  .lane{height:48px}
+  .heli,.finish{width:46px;height:42px}
+  .stops{left:22px;right:60px}
+  .stops i{width:6px;height:6px}
+  .lane::before{right:50px}
+  .count{font-size:1rem;min-width:3.2em}
+  .feedback{font-size:1.05rem}
+  .go{font-size:1.25rem;padding:10px 26px;width:100%;max-width:320px}
+  .hero h1{font-size:2.1rem}
+  .parent{font-size:.95rem}
+  .symbols div{font-size:.8rem;padding:4px;flex-basis:calc(33.3% - 8px)}
+}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+
+.home{flex:0 0 auto;width:48px;height:48px;border-radius:14px;background:#2A2E35;color:#fff;display:grid;place-items:center}
+.home svg{width:26px;height:26px}
+.home:focus-visible{outline:3px solid #1F6FD6;outline-offset:3px}
+body{margin:0}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="road" aria-label="Progress">
+    <a class="home" href="../" aria-label="Back to the road"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 11.5 12 4l9 7.5" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/><path d="M6 10v9h4.5v-5h3v5H18v-9" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linejoin="round"/></svg></a>
+    <div class="lane">
+      <div class="stops" id="stops"></div>
+      <div class="heli" id="heli"></div>
+      <div class="finish" id="finish"></div>
+    </div>
+    <div class="count" id="count">0 / 17</div>
+  </div>
+
+  <section class="card hero" id="start">
+    <h1>Fly Over Belize!</h1>
+    <div class="scene" id="startScene"></div>
+    <p class="parent"><b>For Mom or Dad:</b> Each question is read aloud, then each picture is named. Your child taps a picture. Tap the orange speaker to hear it again, or <b>Español</b> to hear it in Spanish. Every right answer flies the helicopter closer to the flag of Belize. The questions come in a new order each time.</p>
+    <button class="go" id="startBtn">Start the flight</button>
+    <p class="note" id="noVoice" hidden>This device cannot read aloud. Please read each question to your child.</p>
+  </section>
+
+  <section class="card" id="quiz" hidden>
+    <div class="prompt">
+      <button class="speak" id="hear" aria-label="Hear the question again"></button>
+      <div class="qtext" id="qtext"></div>
+    </div>
+    <div class="tools"><button class="chip" id="hearEs">Español</button></div>
+    <div class="show" id="show" hidden></div>
+    <div class="opts" id="opts"></div>
+    <div class="feedback" id="feedback" aria-live="polite"></div>
+    <button class="go" id="next" hidden>Fly on!</button>
+    <p class="note" id="esNote" hidden>No Spanish voice on this device. Say the question in Spanish yourself.</p>
+  </section>
+
+  <section class="card hero" id="end" hidden>
+    <h2 style="font-size:clamp(1.8rem,6vw,2.6rem)">Happy Independence Day, Belize!</h2>
+    <div class="recap">
+      <button class="speak" id="hearRecap" aria-label="Hear our national symbols"></button>
+      <p class="parent" style="margin:0;text-align:left"><b>Our national symbols</b></p>
+    </div>
+    <div class="symbols" id="symbols"></div>
+    <div class="stars" id="stars"></div>
+    <div>
+      <p class="parent" style="margin:0 0 8px"><b>Parent check:</b> green = right on the first try, red outline = practise again.</p>
+      <ul class="results" id="results"></ul>
+    </div>
+    <button class="go" id="again">Fly again</button>
+  </section>
+</div>
+
+<script>
+(function(){
+const K='#2b1a10';
+const S='stroke="'+K+'" stroke-width="3" stroke-linejoin="round"';
+const S2='stroke="'+K+'" stroke-width="2" stroke-linejoin="round"';
+
+function coat(){ // simplified Belize coat of arms, drawn in a 100x100 box
+  let leaves='';
+  for(let i=0;i<34;i++){ const a=i/34*Math.PI*2, lx=50+Math.cos(a)*44, ly=50+Math.sin(a)*44;
+    leaves+='<ellipse cx="'+lx.toFixed(1)+'" cy="'+ly.toFixed(1)+'" rx="4" ry="2.1" fill="#2E7D32" transform="rotate('+(a*180/Math.PI+90).toFixed(0)+' '+lx.toFixed(1)+' '+ly.toFixed(1)+')"/>'; }
+  return '<circle cx="50" cy="50" r="49" fill="#fff"/>'+leaves+
+  // mahogany tree behind the shield
+  '<rect x="48" y="14" width="4" height="24" fill="#6B3E1F"/>'+
+  '<path d="M50 5 Q62 5 64 12 Q71 16 65 23 Q58 27 50 24 Q42 27 35 23 Q29 16 36 12 Q38 5 50 5Z" fill="#2E7D32" stroke="#1B4D1F" stroke-width="1"/>'+
+  // shield: white / gold top, blue bottom with ship
+  '<path d="M36 34 H64 V55 Q64 67 50 73 Q36 67 36 55 Z" fill="#fff"/>'+
+  '<rect x="50" y="34" width="14" height="14" fill="#F2C230"/>'+
+  '<path d="M36 48 H64 V55 Q64 67 50 73 Q36 67 36 55 Z" fill="#3A7BD5"/>'+
+  '<path d="M39 46 L47 36 M39 36 L47 46" stroke="#7A4A2A" stroke-width="1.8" stroke-linecap="round"/>'+
+  '<path d="M53 46 L61 36" stroke="#666" stroke-width="1.8" stroke-linecap="round"/><path d="M53 36 L61 46" stroke="#7A4A2A" stroke-width="1.8" stroke-linecap="round"/>'+
+  '<path d="M50 50 V61" stroke="#3B2A1A" stroke-width=".8"/><path d="M49 51 L43 60 H49Z M51 51 L57 60 H51Z" fill="#fff"/><path d="M41 61 H59 L56 65 H44Z" fill="#7A4A2A"/>'+
+  '<path d="M40 67 Q45 65 50 67 T60 67" fill="none" stroke="#fff" stroke-width=".9"/>'+
+  '<path d="M36 34 H64 V55 Q64 67 50 73 Q36 67 36 55 Z M36 48 H64 M50 34 V48" fill="none" stroke="#222" stroke-width="1.2"/>'+
+  // grass base
+  '<path d="M13 73 Q50 69 87 73 L86 77 H14Z" fill="#5B8E3A"/>'+
+  // left woodcutter with axe over the shoulder
+  '<path d="M27 42 L35 18" stroke="#7A4A2A" stroke-width="1.8" stroke-linecap="round"/><path d="M33 16 L39 18 L36 23Z" fill="#8A8F94" stroke="#222" stroke-width=".5"/>'+
+  '<circle cx="24" cy="35" r="4.2" fill="#C68B59"/><path d="M19.9 34 Q20.4 30.3 24 30.5 Q27.6 30.3 28.1 34 Q24 32.2 19.9 34Z" fill="#3B2A1A"/>'+
+  '<path d="M19.5 40 H28.5 L29 56 H19Z" fill="#C68B59"/><path d="M28 43 L33 33" stroke="#C68B59" stroke-width="3" stroke-linecap="round"/><path d="M20 43 L17 54" stroke="#C68B59" stroke-width="3" stroke-linecap="round"/>'+
+  '<path d="M19 55 H29 L30 72 H25.5 L24 61 L22.5 72 H18Z" fill="#fff" stroke="#888" stroke-width=".6"/>'+
+  // right woodcutter with paddle
+  '<path d="M74 72 L68 24" stroke="#7A4A2A" stroke-width="1.8" stroke-linecap="round"/><ellipse cx="67.5" cy="20" rx="2.6" ry="6" fill="#B07A45" stroke="#222" stroke-width=".5"/>'+
+  '<circle cx="76" cy="35" r="4.2" fill="#6B4226"/><path d="M71.9 34 Q72.4 30.3 76 30.5 Q79.6 30.3 80.1 34 Q76 32.2 71.9 34Z" fill="#1E140C"/>'+
+  '<path d="M71.5 40 H80.5 L81 56 H71Z" fill="#6B4226"/><path d="M72 43 L69 50" stroke="#6B4226" stroke-width="3" stroke-linecap="round"/><path d="M80 43 L83 54" stroke="#6B4226" stroke-width="3" stroke-linecap="round"/>'+
+  '<path d="M71 55 H81 L82 72 H77.5 L76 61 L74.5 72 H70Z" fill="#fff" stroke="#888" stroke-width=".6"/>'+
+  // motto scroll
+  '<path d="M22 78 H78 L76 87 H24Z" fill="#F4ECD6" stroke="#222" stroke-width=".6"/>'+
+  '<text x="50" y="84.6" font-size="4.7" text-anchor="middle" font-family="Georgia, serif" font-weight="700" fill="#222">SUB UMBRA FLOREO</text>';
+}
+const COAT=coat();
+function flagArt(x,y,w,h){
+  const s=h/60, cx=x+w/2, cy=y+h/2, r=23*s;
+  return '<rect x="'+x+'" y="'+y+'" width="'+w+'" height="'+h+'" fill="#1D3F94"/>'+
+    '<rect x="'+x+'" y="'+y+'" width="'+w+'" height="'+(6*s)+'" fill="#CE1126"/>'+
+    '<rect x="'+x+'" y="'+(y+h-6*s)+'" width="'+w+'" height="'+(6*s)+'" fill="#CE1126"/>'+
+    '<g transform="translate('+(cx-r).toFixed(2)+' '+(cy-r).toFixed(2)+') scale('+(2*r/100).toFixed(4)+')">'+COAT+'</g>'+
+    '<rect x="'+x+'" y="'+y+'" width="'+w+'" height="'+h+'" fill="none" '+S+'/>';
+}
+function numeral(n){ return '<text x="50" y="75" text-anchor="middle" font-family="Baloo 2, Trebuchet MS, Arial, sans-serif" font-weight="800" font-size="76" fill="#1E2A30">'+n+'</text>'; }
+function swatch(c){ return '<path d="M24 30 Q30 12 52 16 Q78 14 82 36 Q90 56 76 74 Q60 90 38 82 Q14 76 14 54 Q14 40 24 30Z" fill="'+c+'" '+S+'/>'; }
+
+const ICONS={
+  cake:'<ellipse cx="50" cy="86" rx="42" ry="7" fill="#9CC9E8" '+S+'/><rect x="16" y="54" width="68" height="30" rx="6" fill="#B58BD6" '+S+'/><rect x="26" y="36" width="48" height="20" rx="5" fill="#CDAEE6" '+S+'/><path d="M16 64 Q24 70 32 64 T48 64 T64 64 T84 64" fill="none" stroke="#fff" stroke-width="3"/>'+
+    '<rect x="33" y="20" width="6" height="16" fill="#fff" '+S2+'/><rect x="47" y="18" width="6" height="18" fill="#fff" '+S2+'/><rect x="61" y="20" width="6" height="16" fill="#fff" '+S2+'/>'+
+    '<path d="M36 9 Q41 15 36 19 Q31 15 36 9Z" fill="#F28A1E"/><path d="M50 7 Q55 13 50 17 Q45 13 50 7Z" fill="#F28A1E"/><path d="M64 9 Q69 15 64 19 Q59 15 64 9Z" fill="#F28A1E"/>',
+  flagBZ:flagArt(5,20,90,60),
+  flagG:'<rect x="5" y="20" width="90" height="60" fill="#2E9E5B" '+S+'/><path d="M50 34 L54.5 46 L67 46 L57 53.5 L61 66 L50 58.5 L39 66 L43 53.5 L33 46 L45.5 46Z" fill="#F4C430"/>',
+  flagO:'<rect x="5" y="20" width="90" height="60" fill="#F2A23A" '+S+'/><rect x="5" y="40" width="90" height="20" fill="#7B3FA0"/><rect x="5" y="20" width="90" height="60" fill="none" '+S+'/>',
+  blue:swatch('#1D3F94'), green:swatch('#2E9E5B'), yellow:swatch('#F4C430'),
+  n1:numeral(1), n2:numeral(2), n3:numeral(3), n4:numeral(4), n5:numeral(5),
+  circle:'<circle cx="50" cy="50" r="34" fill="#fff" stroke="'+K+'" stroke-width="4"/>',
+  square:'<rect x="17" y="17" width="66" height="66" fill="#fff" stroke="'+K+'" stroke-width="4"/>',
+  triangle:'<path d="M50 14 L88 82 L12 82Z" fill="#fff" stroke="'+K+'" stroke-width="4" stroke-linejoin="round"/>',
+  flagUp:'<path d="M24 92 H48" stroke="#6B5A44" stroke-width="5" stroke-linecap="round"/><rect x="33" y="8" width="5" height="84" fill="#9AA3AB" '+S2+'/>'+flagArt(38,10,52,34),
+  flagDown:'<path d="M4 86 Q50 78 96 86 L96 96 L4 96Z" fill="#9B7A52"/><g transform="rotate(8 50 70)">'+flagArt(16,56,58,30)+'</g><rect x="6" y="66" width="70" height="4" fill="#9AA3AB" transform="rotate(-12 40 68)"/>',
+  tapir:'<path d="M30 40 Q50 26 76 32 Q92 38 90 56 Q88 66 78 66 L36 66 Q26 64 26 54 Z" fill="#6E6A5C" '+S+'/><path d="M32 40 Q20 38 12 48 Q8 52 5 58 Q10 61 16 59 Q24 58 32 56 Z" fill="#6E6A5C" '+S+'/><ellipse cx="30" cy="36" rx="4" ry="6" fill="#6E6A5C" '+S2+'/><circle cx="22" cy="46" r="2.2" fill="'+K+'"/><rect x="34" y="62" width="8" height="18" rx="2" fill="#5E5A4E" '+S2+'/><rect x="46" y="62" width="8" height="16" rx="2" fill="#5E5A4E" '+S2+'/><rect x="70" y="62" width="8" height="18" rx="2" fill="#5E5A4E" '+S2+'/><rect x="80" y="60" width="8" height="18" rx="2" fill="#5E5A4E" '+S2+'/><path d="M90 46 L95 50" stroke="'+K+'" stroke-width="3" stroke-linecap="round"/><path d="M8 86 H94" stroke="#5B8E3A" stroke-width="5" stroke-linecap="round"/>',
+  toucan:'<rect x="40" y="80" width="56" height="7" rx="3" fill="#8B5A2B" '+S2+'/><path d="M52 28 Q72 24 78 46 Q82 70 70 82 L60 84 Q52 68 50 50 Z" fill="#1A1A1A" '+S+'/><path d="M50 32 Q42 42 46 58 Q52 66 60 62 Q56 46 60 34 Z" fill="#FFD21F" '+S2+'/><path d="M50 32 Q26 26 6 42 Q8 50 18 50 Q34 46 50 46 Z" fill="#7BC043" '+S+'/><path d="M30 30 Q26 38 30 47" fill="none" stroke="#F28A1E" stroke-width="5"/><path d="M6 42 Q8 50 18 50 L20 44 Z" fill="#CE1126"/><path d="M40 46 Q28 48 18 50" fill="none" stroke="#3AA0E8" stroke-width="3"/><circle cx="55" cy="37" r="4.5" fill="#7BC6F0" stroke="'+K+'" stroke-width="1.5"/><circle cx="55" cy="37" r="1.8" fill="'+K+'"/><path d="M60 84 L58 90 M66 84 L66 90" stroke="#3A6FD0" stroke-width="3"/>',
+  fish:'<path d="M14 50 Q36 22 64 40 L86 26 L82 50 L86 74 L64 60 Q36 78 14 50Z" fill="#F28A1E" '+S+'/><circle cx="28" cy="46" r="3" fill="'+K+'"/><path d="M44 40 Q50 50 44 60" fill="none" stroke="'+K+'" stroke-width="2"/>',
+  leaves:'<path d="M50 90 Q48 60 52 30" fill="none" stroke="#3C7A2E" stroke-width="4"/><path d="M50 56 Q22 54 16 30 Q42 28 50 56Z" fill="#4CAF50" '+S+'/><path d="M52 46 Q80 46 86 20 Q58 18 52 46Z" fill="#5CBF4F" '+S+'/><path d="M51 72 Q74 76 82 56 Q60 50 51 72Z" fill="#3E9E44" '+S+'/><path d="M52 32 Q46 14 56 6 Q64 20 52 32Z" fill="#6CC85A" '+S2+'/>',
+  river:'<rect x="6" y="20" width="88" height="16" rx="8" fill="#5B8E3A"/><rect x="6" y="36" width="88" height="46" fill="#3AA0E8" '+S+'/><path d="M12 50 Q22 44 32 50 T52 50 T72 50 T92 50" fill="none" stroke="#fff" stroke-width="4" stroke-linecap="round"/><path d="M12 66 Q22 60 32 66 T52 66 T72 66 T92 66" fill="none" stroke="#BFE6F5" stroke-width="4" stroke-linecap="round"/><rect x="6" y="82" width="88" height="8" rx="4" fill="#5B8E3A"/>',
+  house:'<path d="M10 46 L50 16 L90 46Z" fill="#B23A2E" '+S+'/><rect x="20" y="46" width="60" height="30" fill="#E8C48A" '+S+'/><rect x="44" y="56" width="14" height="20" fill="#7A4A2A"/><rect x="24" y="54" width="12" height="10" fill="#BFE6F5" stroke="'+K+'" stroke-width="2"/><path d="M24 76 V92 M42 76 V92 M58 76 V92 M76 76 V92" stroke="'+K+'" stroke-width="4"/>',
+  car:'<path d="M8 64 Q9 49 24 46 L37 33 Q41 29 49 29 L64 29 Q71 29 75 35 L83 46 Q93 49 93 60 L93 66 L8 66 Z" fill="#E23B2E" '+S+'/><path d="M41 35 L50 35 L50 46 L31 46 Z" fill="#BFE6F5"/><path d="M55 35 L64 35 L73 46 L55 46 Z" fill="#BFE6F5"/><circle cx="27" cy="68" r="11" fill="#222"/><circle cx="27" cy="68" r="4.5" fill="#ccc"/><circle cx="74" cy="68" r="11" fill="#222"/><circle cx="74" cy="68" r="4.5" fill="#ccc"/>',
+  dove:'<path d="M14 60 Q36 42 60 47 Q70 36 82 39 Q78 44 77 51 Q72 69 48 71 Q30 72 14 60Z" fill="#fff" '+S+'/><path d="M42 52 Q46 20 76 14 Q68 36 60 50Z" fill="#fff" '+S+'/><circle cx="76" cy="43" r="2.6" fill="'+K+'"/><path d="M82 40 L92 43 L83 46Z" fill="#F28A1E" stroke="'+K+'" stroke-width="1.5"/>',
+  mango:'<path d="M28 60 Q20 30 50 25 Q81 23 79 54 Q75 83 48 81 Q33 79 28 60Z" fill="#F5A623" '+S+'/><path d="M54 32 Q73 33 72 53" fill="none" stroke="#E8562A" stroke-width="9" opacity=".45" stroke-linecap="round"/><path d="M50 25 Q58 9 74 12 Q66 26 50 25Z" fill="#3C9A3C" stroke="'+K+'" stroke-width="2.5"/>',
+  mahogany:'<rect x="45" y="40" width="10" height="52" fill="#7A4A2A" '+S2+'/><path d="M50 56 L38 44 M50 50 L62 40" stroke="#7A4A2A" stroke-width="4" stroke-linecap="round"/><path d="M50 4 Q74 6 76 24 Q86 30 80 42 Q76 50 64 48 Q56 54 44 50 Q30 52 22 42 Q14 30 26 22 Q28 6 50 4Z" fill="#2F7D32" '+S+'/><path d="M30 94 H70" stroke="#5B8E3A" stroke-width="5" stroke-linecap="round"/>',
+  orchid:'<path d="M10 98 Q22 72 48 47" fill="none" stroke="#5B8E3A" stroke-width="4"/><path d="M16 94 Q2 72 14 52 Q28 70 16 94Z" fill="#4CAF50" '+S2+'/><path d="M48 46 Q30 52 20 76" fill="none" stroke="#2b1a10" stroke-width="8" stroke-linecap="round"/><path d="M49 47 Q38 64 34 88" fill="none" stroke="#2b1a10" stroke-width="8" stroke-linecap="round"/><path d="M50 47 Q52 70 52 92" fill="none" stroke="#2b1a10" stroke-width="8" stroke-linecap="round"/><path d="M51 47 Q64 64 68 86" fill="none" stroke="#2b1a10" stroke-width="8" stroke-linecap="round"/><path d="M52 46 Q72 52 80 72" fill="none" stroke="#2b1a10" stroke-width="8" stroke-linecap="round"/><path d="M48 46 Q30 52 20 76" fill="none" stroke="#D6E38F" stroke-width="4.5" stroke-linecap="round"/><path d="M49 47 Q38 64 34 88" fill="none" stroke="#D6E38F" stroke-width="4.5" stroke-linecap="round"/><path d="M50 47 Q52 70 52 92" fill="none" stroke="#D6E38F" stroke-width="4.5" stroke-linecap="round"/><path d="M51 47 Q64 64 68 86" fill="none" stroke="#D6E38F" stroke-width="4.5" stroke-linecap="round"/><path d="M52 46 Q72 52 80 72" fill="none" stroke="#D6E38F" stroke-width="4.5" stroke-linecap="round"/><path d="M30 30 Q32 12 50 12 Q68 12 70 30 Q66 46 50 48 Q34 46 30 30Z" fill="#3B1F4A" '+S+'/><path d="M40 20 Q42 34 46 44 M50 16 V44 M60 20 Q58 34 54 44" stroke="#8A6AA6" stroke-width="2" fill="none"/><circle cx="50" cy="40" r="4" fill="#F4E9A0" stroke="#2b1a10" stroke-width="1.5"/>',
+  bush:'<path d="M18 86 Q12 70 26 66 Q28 54 42 58 Q50 48 62 58 Q76 54 78 68 Q90 72 82 86Z" fill="#4CAF50" '+S+'/><path d="M10 88 H90" stroke="#5B8E3A" stroke-width="5" stroke-linecap="round"/>',
+  flower:'<path d="M50 88 V54" stroke="#3C7A2E" stroke-width="4"/><path d="M50 74 Q38 66 34 74 Q42 80 50 74Z" fill="#4CAF50"/><circle cx="50" cy="42" r="7" fill="#F4C430" '+S2+'/><g fill="#F07AA8" '+S2+'><circle cx="50" cy="30" r="7"/><circle cx="62" cy="42" r="7"/><circle cx="50" cy="54" r="7"/><circle cx="38" cy="42" r="7"/></g><circle cx="50" cy="42" r="6" fill="#F4C430" '+S2+'/><path d="M14 90 H86" stroke="#5B8E3A" stroke-width="5" stroke-linecap="round"/>',
+  heli:'<path d="M10 16 H84" stroke="'+K+'" stroke-width="4" stroke-linecap="round"/><rect x="45" y="16" width="5" height="10" fill="'+K+'"/><path d="M58 46 L92 40 L92 48 L60 56Z" fill="#E8862A" '+S2+'/><circle cx="92" cy="40" r="7" fill="none" stroke="'+K+'" stroke-width="2.5"/><ellipse cx="44" cy="46" rx="28" ry="20" fill="#E8862A" '+S+'/><path d="M20 44 Q22 30 40 28 L40 46 Z" fill="#BFE6F5" '+S2+'/><path d="M26 74 H70 M34 66 L32 74 M58 66 L60 74" stroke="'+K+'" stroke-width="3.5" stroke-linecap="round"/>',
+  flagPole:'<path d="M14 94 H40" stroke="#6B5A44" stroke-width="5" stroke-linecap="round"/><rect x="24" y="6" width="5" height="88" fill="#D9DEE2" '+S2+'/>'+flagArt(29,8,62,40)
+};
+function svg(name){ return '<svg viewBox="0 0 100 100" aria-hidden="true">'+ICONS[name]+'</svg>'; }
+function many(name,n){ // n copies in one wide picture
+  const w=Math.min(100, 300/n), step=300/n; let g='';
+  for(let i=0;i<n;i++){ g+='<g transform="translate('+(i*step+(step-w)/2)+' '+((100-w)/2)+') scale('+(w/100)+')">'+ICONS[name]+'</g>'; }
+  return '<svg viewBox="0 0 300 100" aria-hidden="true">'+g+'</svg>';
+}
+const SPK='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9h4l5-4v14l-5-4H4z" fill="currentColor"/><path d="M16 8.5a5 5 0 0 1 0 7M18.5 6a8.5 8.5 0 0 1 0 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>';
+
+// [shown label, spoken English, spoken Spanish]
+const LBL={
+  cake:['cake','the birthday cake','el pastel'], tapir:['tapir','the tapir','el danto'], mahogany:['tall tree','the tall tree','el árbol alto'],
+  flagBZ:['blue flag','the blue flag','la bandera azul'], flagG:['green flag','the green flag','la bandera verde'], flagO:['orange flag','the orange flag','la bandera anaranjada'],
+  blue:['blue','blue','azul'], green:['green','green','verde'], yellow:['yellow','yellow','amarillo'],
+  n1:['1','one','uno'], n2:['2','two','dos'], n3:['3','three','tres'], n4:['4','four','cuatro'], n5:['5','five','cinco'],
+  circle:['circle','the circle','el círculo'], square:['square','the square','el cuadrado'], triangle:['triangle','the triangle','el triángulo'],
+  flagUp:['up high','the flag up high','la bandera arriba'], flagDown:['on the ground','the flag on the ground','la bandera en el suelo'],
+  toucan:['toucan','the toucan','el tucán'], fish:['fish','the fish','el pescado'], leaves:['leaves','the leaves','las hojas'],
+  river:['water','the water','el agua'], house:['house','the house','la casa'], car:['car','the car','el carro'],
+  dove:['dove','the dove','la paloma'], mango:['mango','the mango','el mango'], bush:['bush','the bush','el arbusto'], flower:['pink flower','the pink flower','la flor rosada'], orchid:['black orchid','the black orchid','la orquídea negra']
+};
+
+const FIRST={key:'Independence', text:"September 21 is Belize's birthday. We call it Independence Day! Tap the birthday cake.", es:"El 21 de septiembre es el cumpleaños de Belice. ¡Es el Día de la Independencia! Toca el pastel.", answer:'cake', opts:['cake','tapir','mahogany'], ok:"Happy birthday, Belize! Belize became independent on September 21, 1981."};
+const REST=[
+  {key:'Flag', text:"Which one is the flag of Belize?", es:"¿Cuál es la bandera de Belice?", answer:'flagBZ', opts:['flagBZ','flagG','flagO'], ok:"This is our flag. It shows we are one country, together."},
+  {key:'Blue', text:"Our flag is mostly blue. Tap blue.", es:"Nuestra bandera es casi toda azul. Toca el azul.", answer:'blue', opts:['blue','green','yellow'], ok:"Blue! Our flag is red, blue and white."},
+  {key:'Red stripes', show:'flagBZ', text:"Count the red stripes on our flag. Tap the number.", es:"Cuenta las rayas rojas de nuestra bandera. Toca el número.", answer:'n2', opts:['n1','n2','n3'], ok:"One, two. Two red stripes: one at the top and one at the bottom."},
+  {key:'Circle', text:"In the middle of our flag is a white circle. Tap the circle.", es:"En el centro de nuestra bandera hay un círculo blanco. Toca el círculo.", answer:'circle', opts:['circle','square','triangle'], ok:"A white circle, in the center of our flag."},
+  {key:'Flag up high', text:"Our flag must never touch the ground. Tap the flag that is up high.", es:"Nuestra bandera nunca debe tocar el suelo. Toca la bandera que está arriba.", answer:'flagUp', opts:['flagUp','flagDown'], ok:"Yes! We keep our flag up high. It never touches the ground."},
+  {key:'Tapir', text:"Our national animal is the tapir. People call it the mountain cow. Tap the tapir.", es:"Nuestro animal nacional es el danto. Toca el danto.", answer:'tapir', opts:['tapir','toucan','fish'], ok:"The tapir is the biggest wild animal in Central America."},
+  {key:'Tapir food', text:"The tapir eats plants. Tap the leaves.", es:"El danto come plantas. Toca las hojas.", answer:'leaves', opts:['leaves','fish','cake'], ok:"The tapir eats leaves and plants. It does not eat meat."},
+  {key:'Tapir swims', text:"The tapir is a strong swimmer. It likes water and mud. Tap the water.", es:"El danto nada muy bien. Le gusta el agua y el lodo. Toca el agua.", answer:'river', opts:['river','house','car'], ok:"Splash! The tapir loves the water."},
+  {key:'Toucan', text:"Our national bird is the keel-billed toucan. Tap the toucan.", es:"Nuestra ave nacional es el tucán. Toca el tucán.", answer:'toucan', opts:['toucan','dove','tapir'], ok:"The toucan has a big, colourful bill."},
+  {key:'Toucan food', text:"Toucans like to eat fruit. Tap the fruit.", es:"A los tucanes les gusta comer fruta. Toca la fruta.", answer:'mango', opts:['mango','fish','house'], ok:"Yum! Toucans love fruit."},
+  {key:'Mahogany', text:"Our national tree is the mahogany. It grows very tall. Tap the tall tree.", es:"Nuestro árbol nacional es la caoba. Crece muy alto. Toca el árbol alto.", answer:'mahogany', opts:['mahogany','bush','flower'], ok:"The mahogany is one of the biggest trees in the Belize forest."},
+  {key:'Count toucans', show:{many:'toucan',n:4}, text:"Count the toucans. Tap the number.", es:"Cuenta los tucanes. Toca el número.", answer:'n4', opts:['n3','n4','n5'], ok:"One, two, three, four. Four toucans!"},
+  {key:'Count candles', show:'cake', text:"Count the candles on Belize's birthday cake. Tap the number.", es:"Cuenta las velas del pastel de Belice. Toca el número.", answer:'n3', opts:['n2','n3','n4'], ok:"One, two, three. Three candles!"},
+  {key:'Black orchid', text:"Our national flower is the black orchid. Tap the black orchid.", es:"Nuestra flor nacional es la orquídea negra. Toca la orquídea negra.", answer:'orchid', opts:['orchid','flower','leaves'], ok:"The black orchid is our national flower. It blooms almost all year round."},
+  {key:'Orchid grows on trees', text:"The black orchid grows on trees. Tap the tree.", es:"La orquídea negra crece en los árboles. Toca el árbol.", answer:'mahogany', opts:['mahogany','river','car'], ok:"Yes! The black orchid grows on trees, in damp, wet places."},
+  {key:'Count orchids', show:{many:'orchid',n:5}, text:"Count the black orchid flowers. Tap the number.", es:"Cuenta las flores de orquídea negra. Toca el número.", answer:'n5', opts:['n3','n4','n5'], ok:"One, two, three, four, five. Five black orchids!"},
+];
+const N=1+REST.length;
+const PRAISE=["Yes! Great job!","That's right!","Super! Fly on!","You got it!","Well done!"];
+
+const $=id=>document.getElementById(id);
+const synthOK='speechSynthesis' in window && typeof SpeechSynthesisUtterance!=='undefined';
+let voices=[];
+function loadVoices(){ try{ voices=speechSynthesis.getVoices()||[]; }catch(e){ voices=[]; } }
+if(synthOK){ loadVoices(); try{ speechSynthesis.onvoiceschanged=loadVoices; }catch(e){} }
+function pickVoice(lang){
+  const pre=lang==='es'?'es':'en';
+  const pool=voices.filter(v=>(v.lang||'').toLowerCase().startsWith(pre));
+  if(!pool.length) return null;
+  /* Use the voice chosen in the Number Garage's Parents screen, if any */
+  let want=''; try{ const o=JSON.parse(localStorage.getItem('nanoNumbers.v1')||'null'); want=(o&&o.settings&&o.settings[pre==='es'?'esVoice':'enVoice'])||''; }catch(e){}
+  if(want){ const f=pool.find(v=>v.name===want); if(f) return f; }
+  const sc=v=>{ const n=(v.name||'').toLowerCase(), l=(v.lang||'').toLowerCase().replace('_','-'); let s=0;
+    if(/natural|neural|online/.test(n))s+=60; if(/premium|enhanced|siri/.test(n))s+=50; if(/google/.test(n))s+=35; if(v.localService===false)s+=5;
+    if(/compact|espeak|eloquence|fred|albert|bad news|bells|boing|bubbles|cellos|whisper|zarvox|trinoids|jester|organ|superstar|wobble|grandma|grandpa|rocko|shelley|flo|eddy|reed|sandy|junior|ralph|kathy|bahh/.test(n))s-=80;
+    if(pre==='es' ? /^es-(mx|us|419)/.test(l) : /^en-us/.test(l)) s+=10; return s; };
+  return pool.slice().sort((a,b)=>sc(b)-sc(a))[0];
+}
+function hasSpanish(){ loadVoices(); return voices.length===0 ? true : !!pickVoice('es'); }
+// Spoken-only respellings so the phone voice uses the local pronunciation (screen text is unchanged)
+function sayFix(t){ return t.replace(/\btapirs?\b/gi, m=>/s$/i.test(m)?'tah-peers':'tah-peer'); }
+function clearSpeaking(){ document.querySelectorAll('.tile.speaking').forEach(t=>t.classList.remove('speaking')); }
+let speakTimer=null;
+function speakSeq(items,lang){
+  if(!synthOK) return;
+  try{ speechSynthesis.cancel(); }catch(e){}
+  clearSpeaking(); clearTimeout(speakTimer);
+  speakTimer=setTimeout(()=>{
+    const v=pickVoice(lang);
+    items.forEach((it,i)=>{
+      const u=new SpeechSynthesisUtterance(lang==='es' ? it.text : sayFix(it.text));
+      if(v) u.voice=v;
+      u.lang=v?v.lang:(lang==='es'?'es-MX':'en-US');
+      u.rate=0.85; u.pitch=1.05;
+      u.onstart=()=>{ clearSpeaking(); if(it.el) it.el.classList.add('speaking'); };
+      if(i===items.length-1) u.onend=clearSpeaking;
+      speechSynthesis.speak(u);
+    });
+  },80);
+}
+function stopSpeech(){ if(synthOK){ try{ speechSynthesis.cancel(); }catch(e){} } clearTimeout(speakTimer); clearSpeaking(); }
+
+// flight strip
+const stops=$('stops');
+for(let i=0;i<N;i++) stops.appendChild(document.createElement('i'));
+$('heli').innerHTML=svg('heli');
+$('finish').innerHTML=svg('flagPole');
+function setRoad(done){
+  [...stops.children].forEach((d,i)=>d.classList.toggle('done',i<done));
+  $('heli').style.left='calc(4px + (100% - '+(window.innerWidth<=480?96:120)+'px) * '+(done/N)+')';
+  $('count').textContent=done+' / '+N;
+}
+$('hear').innerHTML=SPK; $('hearRecap').innerHTML=SPK;
+
+function scene(withHeliX){
+  return '<svg viewBox="0 0 240 110" aria-hidden="true"><rect x="0" y="0" width="240" height="110" rx="14" fill="#BFE3F2"/>'+
+    '<path d="M0 84 Q40 70 80 82 T160 80 T240 78 V110 H0Z" fill="#5B8E3A"/>'+
+    '<g transform="translate(6 46) scale(.45)">'+ICONS.mahogany+'</g><g transform="translate(40 52) scale(.38)">'+ICONS.mahogany+'</g>'+
+    '<g transform="translate(70 66) scale(.4)">'+ICONS.tapir+'</g>'+
+    '<g transform="translate(176 26) scale(.6)">'+ICONS.flagPole+'</g>'+
+    '<g transform="translate('+withHeliX+' 6) scale(.55)">'+ICONS.heli+'</g>'+
+    '<g transform="translate(118 50) scale(.32)">'+ICONS.toucan+'</g></svg>';
+}
+$('startScene').innerHTML=scene(60);
+$('symbols').innerHTML=[['flagBZ','flag'],['tapir','tapir'],['toucan','toucan'],['mahogany','mahogany'],['orchid','black orchid']]
+  .map(s=>'<div>'+svg(s[0])+s[1]+'</div>').join('');
+
+if(!synthOK) $('noVoice').hidden=false;
+
+let QS=[], idx=0, tries=[], locked=false;
+function shuffle(a){ a=a.slice(); for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } return a; }
+
+function readQuestion(lang){
+  const q=QS[idx];
+  const items=[{text: lang==='es'?q.es:q.text}];
+  [...$('opts').children].forEach(t=>{ if(!t.classList.contains('wrong')) items.push({text:LBL[t.dataset.k][lang==='es'?2:1], el:t}); });
+  speakSeq(items,lang);
+}
+
+function showQuestion(){
+  const q=QS[idx]; locked=false;
+  $('qtext').textContent=q.text;
+  $('feedback').textContent=''; $('feedback').className='feedback';
+  $('next').hidden=true; $('esNote').hidden=true;
+  const sh=$('show');
+  if(q.show){ sh.hidden=false; sh.innerHTML = typeof q.show==='string' ? svg(q.show) : many(q.show.many,q.show.n); }
+  else { sh.hidden=true; sh.innerHTML=''; }
+  const box=$('opts'); box.innerHTML='';
+  box.style.setProperty('--cols',q.opts.length);
+  box.classList.toggle('two',q.opts.length===2);
+  shuffle(q.opts).forEach(k=>{
+    const b=document.createElement('button');
+    b.className='tile'; b.dataset.k=k; b.id='opt-'+k;
+    b.setAttribute('aria-label',LBL[k][0]);
+    b.innerHTML=svg(k)+(k.charAt(0)==='n'&&k.length===2?'':'<span>'+LBL[k][0]+'</span>');
+    b.addEventListener('click',()=>choose(b));
+    box.appendChild(b);
+  });
+  readQuestion('en');
+}
+
+function choose(b){
+  if(locked||b.classList.contains('wrong')) return;
+  const q=QS[idx];
+  tries[idx]=(tries[idx]||0)+1;
+  if(b.dataset.k===q.answer){
+    locked=true;
+    b.classList.add('right');
+    [...$('opts').children].forEach(t=>t.disabled=true);
+    const p=PRAISE[Math.floor(Math.random()*PRAISE.length)];
+    $('feedback').textContent=p+' '+q.ok; $('feedback').className='feedback good';
+    setRoad(idx+1);
+    $('next').hidden=false;
+    $('next').textContent= idx===N-1 ? 'Land at the flag!' : 'Fly on!';
+    speakSeq([{text:p},{text:q.ok}],'en');
+  } else {
+    b.classList.add('wrong'); b.disabled=true;
+    $('feedback').textContent='Not that one. Try again!'; $('feedback').className='feedback try';
+    const items=[{text:'Not that one. Try again!'},{text:q.text}];
+    [...$('opts').children].filter(t=>!t.classList.contains('wrong')).forEach(t=>items.push({text:LBL[t.dataset.k][1],el:t}));
+    speakSeq(items,'en');
+  }
+}
+
+const RECAP="Our national symbols are the flag of Belize, the tapir, the keel-billed toucan, the mahogany tree, and the black orchid.";
+function showEnd(){
+  $('quiz').hidden=true; $('end').hidden=false;
+  const first=tries.filter(t=>t===1).length;
+  $('stars').textContent=first+' of '+N+' right on the first try';
+  $('results').innerHTML=QS.map((q,i)=>'<li class="'+(tries[i]===1?'':'again')+'">'+q.key+'</li>').join('');
+  speakSeq([{text:"Hooray! We landed at the flag of Belize! Happy Independence Day!"},{text:RECAP}],'en');
+}
+
+function begin(){
+  QS=[FIRST].concat(shuffle(REST));
+  idx=0; tries=[]; setRoad(0);
+  $('start').hidden=true; $('end').hidden=true; $('quiz').hidden=false;
+  showQuestion();
+}
+$('startBtn').addEventListener('click',begin);
+$('again').addEventListener('click',begin);
+$('hear').addEventListener('click',()=>readQuestion('en'));
+$('hearEs').addEventListener('click',()=>{ if(!synthOK||!hasSpanish()){ $('esNote').hidden=false; return; } readQuestion('es'); });
+$('next').addEventListener('click',()=>{ stopSpeech(); if(idx<N-1){ idx++; showQuestion(); } else showEnd(); });
+$('hearRecap').addEventListener('click',()=>speakSeq([{text:RECAP}],'en'));
+document.addEventListener('visibilitychange',()=>{ if(document.hidden) stopSpeech(); });
+setRoad(0);
+})();
+</script>
+</body>
+</html>

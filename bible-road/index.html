@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#2A2E35">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>Nano's Bible Road</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Andika:wght@400;700&family=Baloo+2:wght@600;800&display=swap">
+<style>
+/* Layout: one-screen picture game. Road progress strip on top, one question card, three big picture tiles. */
+:root{
+  --sky:#E6F1F3; --card:#FFFFFF; --ink:#1E2A30; --muted:#56666D;
+  --road:#3A3F44; --lane:#F4C430; --nano:#E23B2E;
+  --tile:#FFFBF0; --tile-edge:#D8CDB4;
+  --go:#25915A; --go-soft:#DDF3E6; --oops:#C8463F;
+  --focus:#1F6FD6;
+  --display:"Baloo 2", "Trebuchet MS", system-ui, sans-serif;
+  --body:"Andika", "Verdana", system-ui, sans-serif;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --sky:#13202A; --card:#1C2A35; --ink:#EEF3F5; --muted:#A9B7BD;
+    --road:#2A2F33; --tile:#F2ECDD; --tile-edge:#7E7563;
+    --go:#4CC283; --go-soft:#1E3A2C; --oops:#F07A72; --focus:#7FB2FF;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --sky:#13202A; --card:#1C2A35; --ink:#EEF3F5; --muted:#A9B7BD;
+  --road:#2A2F33; --tile:#F2ECDD; --tile-edge:#7E7563;
+  --go:#4CC283; --go-soft:#1E3A2C; --oops:#F07A72; --focus:#7FB2FF;
+  color-scheme:dark;
+}
+html,body{height:100%}
+[hidden]{display:none!important}
+button{touch-action:manipulation;-webkit-tap-highlight-color:transparent}
+body{background:var(--sky);color:var(--ink);font-family:var(--body);font-size:16px;line-height:1.45}
+.wrap{max-width:860px;margin:0 auto;padding-block:16px 32px;
+  padding-left:max(16px, env(safe-area-inset-left, 0px));
+  padding-right:max(16px, env(safe-area-inset-right, 0px));
+  display:flex;flex-direction:column;gap:16px}
+h1,h2{font-family:var(--display);line-height:1.1;text-wrap:balance;margin:0}
+button{font:inherit;color:inherit;cursor:pointer}
+button:focus-visible{outline:3px solid var(--focus);outline-offset:3px}
+
+/* progress road */
+.road{display:flex;align-items:center;gap:10px}
+.lane{position:relative;flex:1;min-width:0;height:58px;background:var(--road);border-radius:14px;overflow:hidden}
+.lane::before{content:"";position:absolute;left:14px;right:60px;top:50%;height:4px;margin-top:-2px;
+  background:repeating-linear-gradient(90deg,var(--lane) 0 16px,transparent 16px 28px)}
+.stops{position:absolute;left:30px;right:76px;top:50%;display:flex;justify-content:space-between;transform:translateY(-50%)}
+.stops i{width:10px;height:10px;border-radius:50%;background:#6B7178;border:2px solid var(--road)}
+.stops i.done{background:var(--lane)}
+.nano{position:absolute;top:4px;width:56px;height:50px;left:6px;transition:left .7s cubic-bezier(.3,1.4,.5,1)}
+.finish{position:absolute;right:6px;top:4px;width:50px;height:50px}
+.count{font-family:var(--display);font-weight:800;font-size:1.1rem;min-width:3.6em;text-align:right;font-variant-numeric:tabular-nums;color:var(--muted)}
+
+/* cards */
+.card{background:var(--card);border-radius:22px;padding:20px;display:flex;flex-direction:column;gap:16px;box-shadow:0 2px 0 rgba(0,0,0,.06)}
+.prompt{display:flex;gap:14px;align-items:flex-start}
+.speak{flex:none;width:64px;height:64px;border-radius:50%;border:0;background:var(--nano);color:#fff;display:grid;place-items:center;box-shadow:0 4px 0 #9E2219}
+.speak:active{transform:translateY(3px);box-shadow:0 1px 0 #9E2219}
+.speak svg{width:32px;height:32px}
+.qtext{font-size:clamp(1.25rem,3.6vw,1.65rem);font-weight:700;min-width:0}
+.tools{display:flex;flex-wrap:wrap;gap:10px}
+.chip{border:2px solid var(--tile-edge);background:transparent;border-radius:999px;padding:6px 14px;font-size:.95rem;font-weight:700;color:var(--muted)}
+.chip:hover{color:var(--ink)}
+
+.opts{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+.tile{position:relative;background:var(--tile);border:3px solid var(--tile-edge);border-radius:20px;padding:10px 8px 8px;
+  display:flex;flex-direction:column;align-items:center;gap:4px;min-width:0;color:#1E2A30;transition:transform .15s,opacity .2s}
+@media (hover:hover){.tile:hover{transform:translateY(-3px)}}
+.tile svg{width:100%;max-width:150px;aspect-ratio:1;height:auto;display:block}
+.tile span{font-family:var(--display);font-weight:600;font-size:clamp(.95rem,2.8vw,1.2rem)}
+.tile.speaking{border-color:var(--lane);box-shadow:0 0 0 4px rgba(244,196,48,.45)}
+.tile.right{border-color:var(--go);box-shadow:0 0 0 5px var(--go-soft)}
+.tile.right::after{content:"";position:absolute;top:-12px;right:-10px;width:40px;height:40px;border-radius:50%;
+  background:var(--go) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M5 12.5l4.5 4.5L19 7.5' fill='none' stroke='white' stroke-width='3.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center/70% no-repeat}
+.tile.wrong{opacity:.35;animation:shake .4s}
+.tile:disabled{cursor:default}
+.tile:disabled{transform:none}
+@keyframes shake{20%{transform:translateX(-8px)}40%{transform:translateX(8px)}60%{transform:translateX(-5px)}80%{transform:translateX(5px)}}
+
+.feedback{min-height:1.6em;font-size:1.15rem;font-weight:700;text-align:center}
+.feedback.good{color:var(--go)}
+.feedback.try{color:var(--oops)}
+.go{align-self:center;border:0;border-radius:16px;background:var(--go);color:#fff;font-family:var(--display);font-weight:800;font-size:1.35rem;padding:10px 30px;box-shadow:0 4px 0 rgba(0,0,0,.25)}
+.go:active{transform:translateY(3px);box-shadow:0 1px 0 rgba(0,0,0,.25)}
+.note{font-size:.9rem;color:var(--muted)}
+
+/* start + end */
+.hero{display:flex;flex-direction:column;align-items:center;text-align:center;gap:14px}
+.hero h1{font-size:clamp(2rem,7vw,3rem);font-weight:800}
+.hero .scene{width:min(320px,100%);height:auto}
+.parent{max-width:60ch;color:var(--muted)}
+.parent b{color:var(--ink)}
+.verse{background:var(--tile);color:#1E2A30;border:3px dashed var(--lane);border-radius:18px;padding:14px 16px;display:flex;gap:12px;align-items:center;text-align:left;max-width:560px}
+.verse p{margin:0;font-size:1.15rem;font-weight:700;min-width:0}
+.verse small{display:block;font-weight:400;font-size:.85rem;color:#56666D}
+.stars{font-family:var(--display);font-size:1.6rem;font-weight:800}
+.results{list-style:none;margin:0;padding:0;display:flex;flex-wrap:wrap;gap:8px;justify-content:center}
+.results li{border-radius:999px;padding:4px 12px;font-size:.9rem;font-weight:700;background:var(--go-soft);color:var(--ink)}
+.results li.again{background:transparent;border:2px solid var(--oops)}
+
+@media (max-width:480px){
+  .wrap{gap:12px;padding-block:10px 24px}
+  .card{padding:14px 12px;gap:12px;border-radius:18px}
+  .prompt{gap:10px}
+  .speak{width:52px;height:52px}
+  .speak svg{width:26px;height:26px}
+  .qtext{font-size:1.2rem;line-height:1.3}
+  .opts{gap:8px}
+  .tile{padding:6px 4px 6px;border-width:3px;border-radius:16px}
+  .tile.right::after{width:32px;height:32px;top:-10px;right:-8px}
+  .lane{height:48px}
+  .nano,.finish{width:44px;height:40px}
+  .stops{left:22px;right:60px}
+  .stops i{width:6px;height:6px;border-width:1px}
+  .lane::before{right:50px}
+  .count{font-size:1rem;min-width:3.2em}
+  .feedback{font-size:1.05rem}
+  .go{font-size:1.25rem;padding:10px 26px;width:100%;max-width:320px}
+  .hero h1{font-size:2.1rem}
+  .parent{font-size:.95rem}
+  .verse p{font-size:1.05rem}
+}
+@media (prefers-reduced-motion:reduce){
+  *{animation:none!important;transition:none!important}
+}
+
+.home{flex:0 0 auto;width:48px;height:48px;border-radius:14px;background:#2A2E35;color:#fff;display:grid;place-items:center}
+.home svg{width:26px;height:26px}
+.home:focus-visible{outline:3px solid #1F6FD6;outline-offset:3px}
+body{margin:0}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="road" aria-label="Progress">
+    <a class="home" href="../" aria-label="Back to the road"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 11.5 12 4l9 7.5" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/><path d="M6 10v9h4.5v-5h3v5H18v-9" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linejoin="round"/></svg></a>
+    <div class="lane">
+      <div class="stops" id="stops"></div>
+      <div class="nano" id="nano"></div>
+      <div class="finish" id="finish"></div>
+    </div>
+    <div class="count" id="count">0 / 13</div>
+  </div>
+
+  <section class="card hero" id="start">
+    <h1>Nano's Bible Road</h1>
+    <div class="scene" id="startScene"></div>
+    <p class="parent"><b>For Mom or Dad:</b> Each question is read aloud, then each picture is named. Your child taps a picture. Tap the red speaker to hear the question again, or <b>Español</b> to hear it in Spanish. Every right answer drives Nano one stop closer to church.</p>
+    <button class="go" id="startBtn">Start the drive</button>
+    <p class="note" id="noVoice" hidden>This device cannot read aloud. Please read each question to your child.</p>
+  </section>
+
+  <section class="card" id="quiz" hidden>
+    <div class="prompt">
+      <button class="speak" id="hear" aria-label="Hear the question again"></button>
+      <div class="qtext" id="qtext"></div>
+    </div>
+    <div class="tools">
+      <button class="chip" id="hearEs">Español</button>
+    </div>
+    <div class="opts" id="opts"></div>
+    <div class="feedback" id="feedback" aria-live="polite"></div>
+    <button class="go" id="next" hidden>Drive on!</button>
+    <p class="note" id="esNote" hidden>No Spanish voice on this device. Say the question in Spanish yourself.</p>
+  </section>
+
+  <section class="card hero" id="end" hidden>
+    <h2 style="font-size:clamp(1.8rem,6vw,2.6rem)">Nano made it to church!</h2>
+    <div class="scene" id="endScene"></div>
+    <div class="stars" id="stars"></div>
+    <div class="verse">
+      <button class="speak" id="hearVerse" aria-label="Hear the memory verse"></button>
+      <p>Your word is a lamp to my feet and a light to my path.<small>Psalm 119:105 (NKJV)</small></p>
+    </div>
+    <div>
+      <p class="parent" style="margin:0 0 8px"><b>Parent check:</b> green = right on the first try, red outline = practise again.</p>
+      <ul class="results" id="results"></ul>
+    </div>
+    <button class="go" id="again">Drive again</button>
+  </section>
+</div>
+
+<script>
+(function(){
+const K = '#2b1a10';
+const S = 'stroke="'+K+'" stroke-width="3" stroke-linejoin="round"';
+function bookStack(n){
+  const cols=['#C0392B','#2E86C1','#27AE60'];
+  const w=20,g=6,total=n*w+(n-1)*g; let x=(100-total)/2, out='';
+  for(let i=0;i<n;i++){
+    out+='<rect x="'+x+'" y="18" width="'+w+'" height="66" rx="3" fill="'+cols[i]+'" '+S+'/>'+
+         '<rect x="'+(x+4)+'" y="28" width="'+(w-8)+'" height="5" fill="#F4C430"/>'+
+         '<rect x="'+(x+4)+'" y="68" width="'+(w-8)+'" height="5" fill="#F4C430"/>';
+    x+=w+g;
+  }
+  return out;
+}
+const ICONS = {
+  bible:'<rect x="22" y="12" width="56" height="76" rx="6" fill="#7A3B1E" '+S+'/><rect x="72" y="16" width="8" height="70" rx="2" fill="#F4ECD6" '+S+'/><rect x="45" y="26" width="10" height="44" fill="#F2C230"/><rect x="33" y="38" width="34" height="10" fill="#F2C230"/>',
+  car:'<path d="M8 64 Q9 49 24 46 L37 33 Q41 29 49 29 L64 29 Q71 29 75 35 L83 46 Q93 49 93 60 L93 66 L8 66 Z" fill="#E23B2E" '+S+'/><path d="M41 35 L50 35 L50 46 L31 46 Z" fill="#BFE6F5"/><path d="M55 35 L64 35 L73 46 L55 46 Z" fill="#BFE6F5"/><circle cx="27" cy="68" r="11" fill="#222"/><circle cx="27" cy="68" r="4.5" fill="#ccc"/><circle cx="74" cy="68" r="11" fill="#222"/><circle cx="74" cy="68" r="4.5" fill="#ccc"/><rect x="84" y="52" width="8" height="5" rx="2" fill="#FFE46B"/>',
+  ball:'<circle cx="50" cy="52" r="34" fill="#3AA0E8" '+S+'/><path d="M18 44 Q50 62 82 44" fill="none" stroke="#fff" stroke-width="7"/><path d="M22 66 Q50 80 78 66" fill="none" stroke="#F2C230" stroke-width="7"/><circle cx="50" cy="52" r="34" fill="none" '+S+'/>',
+  lamp:'<circle cx="50" cy="51" r="34" fill="#FFF0B3" opacity=".8"/><path d="M38 22 Q50 4 62 22" fill="none" stroke="'+K+'" stroke-width="4"/><rect x="33" y="21" width="34" height="11" rx="3" fill="#5A4632" '+S+'/><rect x="36" y="32" width="28" height="38" rx="7" fill="#FFE9A8" '+S+'/><path d="M50 39 Q59 52 50 63 Q41 52 50 39Z" fill="#F28A1E"/><rect x="29" y="70" width="42" height="13" rx="4" fill="#5A4632" '+S+'/>',
+  mango:'<path d="M28 60 Q20 30 50 25 Q81 23 79 54 Q75 83 48 81 Q33 79 28 60Z" fill="#F5A623" '+S+'/><path d="M54 32 Q73 33 72 53" fill="none" stroke="#E8562A" stroke-width="9" opacity=".45" stroke-linecap="round"/><path d="M50 25 Q58 9 74 12 Q66 26 50 25Z" fill="#3C9A3C" stroke="'+K+'" stroke-width="2.5"/>',
+  feet:'<ellipse cx="34" cy="64" rx="11" ry="19" fill="#D9A066" '+S+'/><circle cx="25" cy="40" r="4" fill="#D9A066" stroke="'+K+'" stroke-width="2"/><circle cx="31" cy="37" r="3.5" fill="#D9A066" stroke="'+K+'" stroke-width="2"/><circle cx="37" cy="37" r="3.2" fill="#D9A066" stroke="'+K+'" stroke-width="2"/><circle cx="42" cy="39" r="3" fill="#D9A066" stroke="'+K+'" stroke-width="2"/><ellipse cx="66" cy="54" rx="11" ry="19" fill="#D9A066" '+S+'/><circle cx="75" cy="30" r="4" fill="#D9A066" stroke="'+K+'" stroke-width="2"/><circle cx="69" cy="27" r="3.5" fill="#D9A066" stroke="'+K+'" stroke-width="2"/><circle cx="63" cy="27" r="3.2" fill="#D9A066" stroke="'+K+'" stroke-width="2"/><circle cx="58" cy="29" r="3" fill="#D9A066" stroke="'+K+'" stroke-width="2"/>',
+  bulb:'<g stroke="#F2A900" stroke-width="5" stroke-linecap="round"><path d="M50 4 V12"/><path d="M18 18 L24 24"/><path d="M82 18 L76 24"/><path d="M8 44 H16"/><path d="M84 44 H92"/></g><circle cx="50" cy="44" r="24" fill="#FFE46B" '+S+'/><path d="M44 54 Q50 40 56 54" fill="none" stroke="#C98A00" stroke-width="3"/><rect x="39" y="65" width="22" height="16" rx="3" fill="#9AA3AB" '+S+'/><path d="M44 88 H56" stroke="'+K+'" stroke-width="5" stroke-linecap="round"/>',
+  earth:'<circle cx="50" cy="50" r="37" fill="#3B8FD9" '+S+'/><path d="M26 32 Q38 22 48 30 Q52 42 40 46 Q34 56 26 50 Q18 42 26 32Z" fill="#4CAF50"/><path d="M58 50 Q70 44 78 54 Q76 70 64 76 Q54 72 56 62Z" fill="#4CAF50"/><path d="M54 18 Q64 16 70 24 Q62 28 54 24Z" fill="#4CAF50"/><circle cx="50" cy="50" r="37" fill="none" '+S+'/>',
+  tree:'<rect x="43" y="56" width="14" height="32" fill="#8B5A2B" '+S+'/><circle cx="50" cy="40" r="30" fill="#3C9A3C" '+S+'/><circle cx="38" cy="34" r="5" fill="#E23B2E"/><circle cx="60" cy="30" r="5" fill="#E23B2E"/><circle cx="56" cy="50" r="5" fill="#E23B2E"/><circle cx="36" cy="52" r="5" fill="#E23B2E"/><path d="M14 88 H86" stroke="#5B8E3A" stroke-width="5" stroke-linecap="round"/>',
+  ark:'<path d="M18 30 A32 32 0 0 1 82 30" fill="none" stroke="#E23B2E" stroke-width="5"/><path d="M24 30 A26 26 0 0 1 76 30" fill="none" stroke="#F2C230" stroke-width="5"/><path d="M30 30 A20 20 0 0 1 70 30" fill="none" stroke="#3AA0E8" stroke-width="5"/><rect x="34" y="40" width="32" height="18" fill="#C98E55" '+S+'/><path d="M30 40 L50 30 L70 40Z" fill="#8B5A2B" '+S+'/><path d="M10 58 H90 L80 76 H20 Z" fill="#8B5A2B" '+S+'/><path d="M6 84 Q16 78 26 84 T46 84 T66 84 T86 84 T96 84" fill="none" stroke="#2E86C1" stroke-width="5" stroke-linecap="round"/>',
+  stable:'<path d="M50 4 L53.5 13 L63 13 L55.5 18.5 L58.5 28 L50 22 L41.5 28 L44.5 18.5 L37 13 L46.5 13Z" fill="#F2C230" stroke="'+K+'" stroke-width="2"/><rect x="20" y="48" width="60" height="40" fill="#C98E55" '+S+'/><path d="M10 52 L50 30 L90 52" fill="none" stroke="#7A4A2A" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/><rect x="32" y="56" width="36" height="32" fill="#5A3A22"/><path d="M36 74 H64 L60 88 H40Z" fill="#B07A45" '+S+'/><path d="M36 74 Q42 66 50 72 Q58 66 64 74Z" fill="#F2C230"/><circle cx="50" cy="69" r="5" fill="#F3D2B0" stroke="'+K+'" stroke-width="2"/>',
+  river:'<rect x="6" y="20" width="88" height="16" rx="8" fill="#5B8E3A"/><rect x="6" y="36" width="88" height="46" fill="#3AA0E8" '+S+'/><path d="M12 50 Q22 44 32 50 T52 50 T72 50 T92 50" fill="none" stroke="#fff" stroke-width="4" stroke-linecap="round"/><path d="M12 66 Q22 60 32 66 T52 66 T72 66 T92 66" fill="none" stroke="#BFE6F5" stroke-width="4" stroke-linecap="round"/><rect x="6" y="82" width="88" height="8" rx="4" fill="#5B8E3A"/>',
+  cross:'<rect x="42" y="8" width="16" height="84" rx="2" fill="#9B5E2E" '+S+'/><rect x="20" y="28" width="60" height="16" rx="2" fill="#9B5E2E" '+S+'/><path d="M30 92 H70" stroke="'+K+'" stroke-width="4" stroke-linecap="round"/>',
+  crown:'<path d="M14 72 L18 30 L36 50 L50 20 L64 50 L82 30 L86 72 Z" fill="#F2C230" '+S+'/><rect x="14" y="72" width="72" height="12" rx="3" fill="#E0A800" '+S+'/><circle cx="50" cy="56" r="6" fill="#E23B2E"/><circle cx="30" cy="62" r="4.5" fill="#2E86C1"/><circle cx="70" cy="62" r="4.5" fill="#27AE60"/><circle cx="50" cy="18" r="4" fill="#fff" stroke="'+K+'" stroke-width="2"/>',
+  dove:'<path d="M14 60 Q36 42 60 47 Q70 36 82 39 Q78 44 77 51 Q72 69 48 71 Q30 72 14 60Z" fill="#fff" '+S+'/><path d="M42 52 Q46 20 76 14 Q68 36 60 50Z" fill="#fff" '+S+'/><path d="M14 60 L6 54 L8 66 Z" fill="#fff" '+S+'/><circle cx="76" cy="43" r="2.6" fill="'+K+'"/><path d="M82 40 L92 43 L83 46Z" fill="#F28A1E" stroke="'+K+'" stroke-width="1.5"/><path d="M88 44 Q90 56 84 64" fill="none" stroke="#3C9A3C" stroke-width="3"/><ellipse cx="91" cy="52" rx="4" ry="2.4" fill="#3C9A3C"/><ellipse cx="85" cy="58" rx="4" ry="2.4" fill="#3C9A3C"/>',
+  house:'<path d="M10 46 L50 16 L90 46Z" fill="#B23A2E" '+S+'/><rect x="20" y="46" width="60" height="30" fill="#E8C48A" '+S+'/><path d="M30 46 V76 M40 46 V76 M60 46 V76 M70 46 V76" stroke="#C49A5E" stroke-width="2"/><rect x="44" y="56" width="14" height="20" fill="#7A4A2A"/><rect x="24" y="54" width="12" height="10" fill="#BFE6F5" stroke="'+K+'" stroke-width="2"/><path d="M24 76 V92 M42 76 V92 M58 76 V92 M76 76 V92" stroke="'+K+'" stroke-width="4"/>',
+  books1:bookStack(1), books2:bookStack(2), books3:bookStack(3),
+  church:'<path d="M50 4 V22 M43 12 H57" stroke="'+K+'" stroke-width="4" stroke-linecap="round"/><path d="M18 50 L50 22 L82 50Z" fill="#C0392B" '+S+'/><rect x="24" y="48" width="52" height="42" fill="#FFF6E5" '+S+'/><path d="M43 90 V70 Q50 61 57 70 V90Z" fill="#7A4A2A" stroke="'+K+'" stroke-width="2"/><circle cx="50" cy="40" r="5" fill="#F2C230" stroke="'+K+'" stroke-width="2"/>'
+};
+function svg(name, extra){return '<svg viewBox="0 0 100 100" aria-hidden="true"'+(extra||'')+'>'+ICONS[name]+'</svg>';}
+const SPK='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9h4l5-4v14l-5-4H4z" fill="currentColor"/><path d="M16 8.5a5 5 0 0 1 0 7M18.5 6a8.5 8.5 0 0 1 0 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>';
+
+const LBL = {
+  bible:['Bible','the Bible','la Biblia'], car:['toy car','the toy car','el carrito'], ball:['ball','the ball','la pelota'],
+  lamp:['lamp','the lamp','la lámpara'], mango:['mango','the mango','el mango'], feet:['feet','the feet','los pies'],
+  tree:['tree','the tree','el árbol'], bulb:['light','the light','la luz'], house:['house','the house','la casa'],
+  ark:['ark','the ark','el arca'], books1:['one','one','uno'], books2:['two','two','dos'], books3:['three','three','tres'],
+  earth:['world','the world','el mundo'], cross:['cross','the cross','la cruz'], crown:['crown','the crown','la corona'],
+  dove:['dove','the dove','la paloma'], stable:['stable','the stable','el establo'], river:['river','the river','el río']
+};
+
+const QS = [
+  {text:"Which one is the Bible, God's special book? Tap the Bible.", es:"¿Cuál es la Biblia, el libro especial de Dios? Toca la Biblia.", answer:'bible', opts:['bible','car','ball'], ok:"The Bible is a special book. It is the Word of God."},
+  {text:"God's Word is like a lamp. Tap the lamp.", es:"La Palabra de Dios es como una lámpara. Toca la lámpara.", answer:'lamp', opts:['lamp','mango','ball'], ok:"God's Word is a lamp. It helps us see the way."},
+  {text:"The lamp shines on our feet. Tap the feet.", es:"La lámpara alumbra nuestros pies. Toca los pies.", answer:'feet', opts:['feet','tree','car'], ok:"Your word is a lamp to my feet."},
+  {text:"God's Word is a light for my path. Tap the light.", es:"La Palabra de Dios es una luz para mi camino. Toca la luz.", answer:'bulb', opts:['bulb','house','ark'], ok:"God's Word is a light to my path."},
+  {text:"The Bible has two parts: the Old Testament and the New Testament. Tap two.", es:"La Biblia tiene dos partes: el Antiguo Testamento y el Nuevo Testamento. Toca el dos.", answer:'books2', opts:['books1','books2','books3'], ok:"Two parts! The Old Testament and the New Testament."},
+  {text:"In the Old Testament, God made the world. Tap the world.", es:"En el Antiguo Testamento, Dios hizo el mundo. Toca el mundo.", answer:'earth', opts:['earth','car','cross'], ok:"God made the world. That story is in the Old Testament."},
+  {text:"Adam and Eve lived in a garden with a big tree. Tap the tree.", es:"Adán y Eva vivían en un jardín con un árbol grande. Toca el árbol.", answer:'tree', opts:['tree','ark','house'], ok:"Adam and Eve lived in God's garden."},
+  {text:"Noah built a big boat called an ark. Tap the ark.", es:"Noé construyó un barco grande llamado arca. Toca el arca.", answer:'ark', opts:['ark','house','car'], ok:"Noah and the Ark is in the Old Testament."},
+  {text:"In the New Testament, baby Jesus was born. Tap the stable.", es:"En el Nuevo Testamento, nació el niño Jesús. Toca el establo.", answer:'stable', opts:['stable','ark','earth'], ok:"Baby Jesus was born. That story is in the New Testament."},
+  {text:"Jesus was baptized in the river. Tap the river.", es:"Jesús fue bautizado en el río. Toca el río.", answer:'river', opts:['river','lamp','crown'], ok:"Jesus was baptized in the water."},
+  {text:"Jesus died on the cross for our sins. Tap the cross.", es:"Jesús murió en la cruz por nuestros pecados. Toca la cruz.", answer:'cross', opts:['cross','crown','dove'], ok:"Jesus came to save us. He is God the Son."},
+  {text:"The crown shows God the Father. He made the world. Tap the crown.", es:"La corona representa a Dios el Padre. Él hizo el mundo. Toca la corona.", answer:'crown', opts:['crown','cross','dove'], ok:"The crown shows God the Father."},
+  {text:"The dove shows God the Holy Spirit. He helps us be kind and loving. Tap the dove.", es:"La paloma representa a Dios el Espíritu Santo. Él nos ayuda a ser amables. Toca la paloma.", answer:'dove', opts:['dove','crown','cross'], ok:"The dove shows God the Holy Spirit. One God: the Father, the Son, and the Holy Spirit."}
+];
+const PRAISE=["Yes! Great job!","That's right!","Super! Nano drives on!","You got it!","Well done!"];
+const N=QS.length;
+
+const $=id=>document.getElementById(id);
+const synthOK = 'speechSynthesis' in window && typeof SpeechSynthesisUtterance!=='undefined';
+let voices=[];
+function loadVoices(){ try{ voices=speechSynthesis.getVoices()||[]; }catch(e){ voices=[]; } }
+if(synthOK){ loadVoices(); try{ speechSynthesis.onvoiceschanged=loadVoices; }catch(e){} }
+function pickVoice(lang){
+  const pre=lang==='es'?'es':'en';
+  const pool=voices.filter(v=>(v.lang||'').toLowerCase().startsWith(pre));
+  if(!pool.length) return null;
+  /* Use the voice chosen in the Number Garage's Parents screen, if any */
+  let want=''; try{ const o=JSON.parse(localStorage.getItem('nanoNumbers.v1')||'null'); want=(o&&o.settings&&o.settings[pre==='es'?'esVoice':'enVoice'])||''; }catch(e){}
+  if(want){ const f=pool.find(v=>v.name===want); if(f) return f; }
+  const sc=v=>{ const n=(v.name||'').toLowerCase(), l=(v.lang||'').toLowerCase().replace('_','-'); let s=0;
+    if(/natural|neural|online/.test(n))s+=60; if(/premium|enhanced|siri/.test(n))s+=50; if(/google/.test(n))s+=35; if(v.localService===false)s+=5;
+    if(/compact|espeak|eloquence|fred|albert|bad news|bells|boing|bubbles|cellos|whisper|zarvox|trinoids|jester|organ|superstar|wobble|grandma|grandpa|rocko|shelley|flo|eddy|reed|sandy|junior|ralph|kathy|bahh/.test(n))s-=80;
+    if(pre==='es' ? /^es-(mx|us|419)/.test(l) : /^en-us/.test(l)) s+=10; return s; };
+  return pool.slice().sort((a,b)=>sc(b)-sc(a))[0];
+}
+function hasSpanish(){ loadVoices(); return voices.length===0 ? true : !!pickVoice('es'); }
+function clearSpeaking(){ document.querySelectorAll('.tile.speaking').forEach(t=>t.classList.remove('speaking')); }
+let speakTimer=null;
+function speakSeq(items, lang){
+  if(!synthOK) return;
+  try{ speechSynthesis.cancel(); }catch(e){}
+  clearSpeaking();
+  clearTimeout(speakTimer);
+  speakTimer=setTimeout(()=>{
+    const v=pickVoice(lang);
+    items.forEach((it,i)=>{
+      const u=new SpeechSynthesisUtterance(it.text);
+      if(v) u.voice=v;
+      u.lang = v ? v.lang : (lang==='es'?'es-MX':'en-US');
+      u.rate = 0.85; u.pitch = 1.05;
+      u.onstart=()=>{ clearSpeaking(); if(it.el) it.el.classList.add('speaking'); };
+      if(i===items.length-1) u.onend=clearSpeaking;
+      speechSynthesis.speak(u);
+    });
+  },80);
+}
+function stopSpeech(){ if(synthOK){ try{ speechSynthesis.cancel(); }catch(e){} } clearTimeout(speakTimer); clearSpeaking(); }
+
+// road
+const stops=$('stops');
+for(let i=0;i<N;i++){ const d=document.createElement('i'); stops.appendChild(d); }
+$('nano').innerHTML=svg('car');
+$('finish').innerHTML=svg('church');
+function setRoad(done){
+  [...stops.children].forEach((d,i)=>d.classList.toggle('done',i<done));
+  $('nano').style.left = 'calc(4px + (100% - '+(window.innerWidth<=480?96:120)+'px) * '+(done/N)+')';
+  $('count').textContent = done+' / '+N;
+}
+
+$('hear').innerHTML=SPK; $('hearVerse').innerHTML=SPK;
+$('startScene').innerHTML='<svg viewBox="0 0 220 100" aria-hidden="true" style="width:100%;height:auto"><rect x="0" y="62" width="220" height="30" rx="8" fill="#3A3F44"/><path d="M10 77 H210" stroke="#F4C430" stroke-width="3" stroke-dasharray="14 10"/><g transform="translate(10 18) scale(.62)">'+ICONS.car+'</g><g transform="translate(150 6) scale(.6)">'+ICONS.church+'</g><g transform="translate(92 8) scale(.42)">'+ICONS.bible+'</g></svg>';
+$('endScene').innerHTML='<svg viewBox="0 0 220 100" aria-hidden="true" style="width:100%;height:auto"><rect x="0" y="62" width="220" height="30" rx="8" fill="#3A3F44"/><path d="M10 77 H210" stroke="#F4C430" stroke-width="3" stroke-dasharray="14 10"/><g transform="translate(70 18) scale(.62)">'+ICONS.car+'</g><g transform="translate(140 6) scale(.6)">'+ICONS.church+'</g><g transform="translate(14 6) scale(.4)">'+ICONS.dove+'</g></svg>';
+
+if(!synthOK) $('noVoice').hidden=false;
+
+let order=[], idx=0, tries=[], locked=false;
+function shuffle(a){ a=a.slice(); for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } return a; }
+
+function readQuestion(lang){
+  const q=QS[idx];
+  const tiles=[...$('opts').children];
+  const items=[{text: lang==='es'? q.es : q.text}];
+  tiles.forEach(t=>{ if(!t.classList.contains('wrong')) items.push({text: LBL[t.dataset.k][lang==='es'?2:1], el:t}); });
+  speakSeq(items, lang);
+}
+
+function showQuestion(){
+  const q=QS[idx]; locked=false;
+  $('qtext').textContent=q.text;
+  $('feedback').textContent=''; $('feedback').className='feedback';
+  $('next').hidden=true; $('esNote').hidden=true;
+  const box=$('opts'); box.innerHTML='';
+  shuffle(q.opts).forEach(k=>{
+    const b=document.createElement('button');
+    b.className='tile'; b.dataset.k=k; b.id='opt-'+k;
+    b.setAttribute('aria-label',LBL[k][0]);
+    b.innerHTML=svg(k)+'<span>'+LBL[k][0]+'</span>';
+    b.addEventListener('click',()=>choose(b));
+    box.appendChild(b);
+  });
+  readQuestion('en');
+}
+
+function choose(b){
+  if(locked || b.classList.contains('wrong')) return;
+  const q=QS[idx];
+  tries[idx]=(tries[idx]||0)+1;
+  if(b.dataset.k===q.answer){
+    locked=true;
+    b.classList.add('right');
+    [...$('opts').children].forEach(t=>t.disabled=true);
+    const p=PRAISE[Math.floor(Math.random()*PRAISE.length)];
+    $('feedback').textContent=p+' '+q.ok; $('feedback').className='feedback good';
+    setRoad(idx+1);
+    $('next').hidden=false;
+    $('next').textContent = idx===N-1 ? 'Finish the drive!' : 'Drive on!';
+    speakSeq([{text:p},{text:q.ok}],'en');
+  } else {
+    b.classList.add('wrong'); b.disabled=true;
+    $('feedback').textContent='Not that one. Try again!'; $('feedback').className='feedback try';
+    const left=[...$('opts').children].filter(t=>!t.classList.contains('wrong'));
+    const items=[{text:'Not that one. Try again!'},{text:q.text}];
+    left.forEach(t=>items.push({text:LBL[t.dataset.k][1], el:t}));
+    speakSeq(items,'en');
+  }
+}
+
+function showEnd(){
+  $('quiz').hidden=true; $('end').hidden=false;
+  const first=tries.filter(t=>t===1).length;
+  $('stars').textContent = first+' of '+N+' right on the first try';
+  $('results').innerHTML = QS.map((q,i)=>'<li class="'+(tries[i]===1?'':'again')+'">'+LBL[q.answer][0]+'</li>').join('');
+  speakSeq([{text:"Hooray! Nano made it to church!"},{text:"Let's say our verse. Your word is a lamp to my feet, and a light to my path. Psalm 119, verse 105."}],'en');
+}
+
+function begin(){
+  idx=0; tries=[]; setRoad(0);
+  $('start').hidden=true; $('end').hidden=true; $('quiz').hidden=false;
+  showQuestion();
+}
+
+$('startBtn').addEventListener('click',begin);
+$('again').addEventListener('click',begin);
+$('hear').addEventListener('click',()=>readQuestion('en'));
+$('hearEs').addEventListener('click',()=>{
+  if(!synthOK || !hasSpanish()){ $('esNote').hidden=false; return; }
+  readQuestion('es');
+});
+$('next').addEventListener('click',()=>{
+  stopSpeech();
+  if(idx<N-1){ idx++; showQuestion(); } else { showEnd(); }
+});
+$('hearVerse').addEventListener('click',()=>speakSeq([{text:"Your word is a lamp to my feet, and a light to my path. Psalm 119, verse 105."}],'en'));
+document.addEventListener('visibilitychange',()=>{ if(document.hidden) stopSpeech(); });
+setRoad(0);
+})();
+</script>
+</body>
+</html>

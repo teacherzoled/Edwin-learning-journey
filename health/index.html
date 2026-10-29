@@ -1,0 +1,545 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#2A2E35">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>Ambulance Health Run</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Andika:wght@400;700&family=Baloo+2:wght@600;800&display=swap">
+<style>
+/* Layout: one-screen picture game. Road strip on top (ambulance drives to the clinic), one question card, picture tiles. Four question types share the card. */
+:root{
+  --bg:#EAF2F7; --card:#FFFFFF; --ink:#1E2A30; --muted:#56666D;
+  --road:#3A3F44; --lane:#F4C430; --siren:#D7263D;
+  --tile:#FFFBF0; --tile-edge:#D3C9B0;
+  --go:#25915A; --go-soft:#DDF3E6; --oops:#C8463F; --focus:#1F6FD6;
+  --display:"Baloo 2", "Trebuchet MS", system-ui, sans-serif;
+  --body:"Andika", "Verdana", system-ui, sans-serif;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#121C22; --card:#1B2830; --ink:#EEF3F5; --muted:#A9B7BD;
+    --road:#2A2F33; --tile:#F2ECDD; --tile-edge:#7E7563;
+    --go:#4CC283; --go-soft:#1E3A2C; --oops:#F07A72; --focus:#7FB2FF;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#121C22; --card:#1B2830; --ink:#EEF3F5; --muted:#A9B7BD;
+  --road:#2A2F33; --tile:#F2ECDD; --tile-edge:#7E7563;
+  --go:#4CC283; --go-soft:#1E3A2C; --oops:#F07A72; --focus:#7FB2FF;
+  color-scheme:dark;
+}
+html,body{height:100%}
+[hidden]{display:none!important}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:16px;line-height:1.45}
+button{font:inherit;color:inherit;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent}
+button:focus-visible{outline:3px solid var(--focus);outline-offset:3px}
+.wrap{max-width:860px;margin:0 auto;padding-block:16px 32px;
+  padding-left:max(16px, env(safe-area-inset-left, 0px));
+  padding-right:max(16px, env(safe-area-inset-right, 0px));
+  display:flex;flex-direction:column;gap:16px}
+h1,h2{font-family:var(--display);line-height:1.1;text-wrap:balance;margin:0}
+
+/* road strip */
+.road{display:flex;align-items:center;gap:10px}
+.lane{position:relative;flex:1;min-width:0;height:58px;background:var(--road);border-radius:14px;overflow:hidden}
+.lane::before{content:"";position:absolute;left:14px;right:60px;top:50%;height:4px;margin-top:-2px;
+  background:repeating-linear-gradient(90deg,var(--lane) 0 16px,transparent 16px 28px)}
+.stops{position:absolute;left:30px;right:76px;top:50%;display:flex;justify-content:space-between;transform:translateY(-50%)}
+.stops i{width:10px;height:10px;border-radius:50%;background:#6B7178;border:2px solid var(--road)}
+.stops i.done{background:var(--lane)}
+.amb{position:absolute;top:4px;width:58px;height:50px;left:4px;transition:left .7s cubic-bezier(.3,1.4,.5,1)}
+.amb.flash .light{animation:flash .25s steps(1) 6}
+@keyframes flash{50%{fill:#3A7BD5}}
+.finish{position:absolute;right:6px;top:4px;width:50px;height:50px}
+.count{font-family:var(--display);font-weight:800;font-size:1.1rem;min-width:3.6em;text-align:right;font-variant-numeric:tabular-nums;color:var(--muted)}
+
+/* cards */
+.card{background:var(--card);border-radius:22px;padding:20px;display:flex;flex-direction:column;gap:16px;box-shadow:0 2px 0 rgba(0,0,0,.06)}
+.section{font-family:var(--display);font-weight:800;font-size:.9rem;letter-spacing:.06em;text-transform:uppercase;color:var(--siren)}
+.prompt{display:flex;gap:14px;align-items:flex-start}
+.speak{flex:none;width:64px;height:64px;border-radius:50%;border:0;background:var(--siren);color:#fff;display:grid;place-items:center;box-shadow:0 4px 0 #8E1626}
+.speak:active{transform:translateY(3px);box-shadow:0 1px 0 #8E1626}
+.speak svg{width:32px;height:32px}
+.qtext{font-size:clamp(1.25rem,3.6vw,1.65rem);font-weight:700;min-width:0}
+.tools{display:flex;flex-wrap:wrap;gap:10px}
+.chip{border:2px solid var(--tile-edge);background:transparent;border-radius:999px;padding:6px 14px;font-size:.95rem;font-weight:700;color:var(--muted)}
+.show{align-self:center;width:min(300px,100%);background:var(--tile);border:3px solid var(--tile-edge);border-radius:18px;padding:8px}
+.show.wide{width:min(420px,100%)}
+.show svg{display:block;width:100%;height:auto}
+.findbar{display:flex;gap:6px;justify-content:center}
+.findbar i{width:16px;height:16px;border-radius:50%;border:3px solid var(--tile-edge)}
+.findbar i.got{background:var(--go);border-color:var(--go)}
+
+.opts{display:grid;grid-template-columns:repeat(var(--cols,3),minmax(0,1fr));gap:14px}
+.opts.narrow{max-width:440px;align-self:center;width:100%}
+.opts.yn{max-width:320px}
+.opts.yn .tile svg{max-width:92px}
+.tile{position:relative;background:var(--tile);border:3px solid var(--tile-edge);border-radius:20px;padding:10px 8px 8px;
+  display:flex;flex-direction:column;align-items:center;gap:4px;min-width:0;color:#1E2A30;transition:transform .15s,opacity .2s}
+@media (hover:hover){.tile:hover{transform:translateY(-3px)}}
+.tile svg{width:100%;max-width:150px;aspect-ratio:1;height:auto;display:block}
+.tile span{font-family:var(--display);font-weight:600;font-size:clamp(.95rem,2.8vw,1.2rem);text-align:center;line-height:1.15}
+.tile.speaking{border-color:#F4C430;box-shadow:0 0 0 4px rgba(244,196,48,.5)}
+.tile.right{border-color:var(--go);box-shadow:0 0 0 5px var(--go-soft)}
+.tile.right::after{content:"";position:absolute;top:-12px;right:-10px;width:40px;height:40px;border-radius:50%;
+  background:var(--go) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M5 12.5l4.5 4.5L19 7.5' fill='none' stroke='white' stroke-width='3.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center/70% no-repeat}
+.tile.wrong{opacity:.35;animation:shake .4s}
+.tile:disabled{cursor:default;transform:none}
+@keyframes shake{20%{transform:translateX(-8px)}40%{transform:translateX(8px)}60%{transform:translateX(-5px)}80%{transform:translateX(5px)}}
+
+.feedback{min-height:1.6em;font-size:1.15rem;font-weight:700;text-align:center}
+.feedback.good{color:var(--go)}
+.feedback.try{color:var(--oops)}
+.feedback.more{color:var(--muted)}
+.go{align-self:center;border:0;border-radius:16px;background:var(--go);color:#fff;font-family:var(--display);font-weight:800;font-size:1.35rem;padding:10px 30px;box-shadow:0 4px 0 rgba(0,0,0,.25)}
+.go:active{transform:translateY(3px);box-shadow:0 1px 0 rgba(0,0,0,.25)}
+.note{font-size:.9rem;color:var(--muted)}
+
+.hero{display:flex;flex-direction:column;align-items:center;text-align:center;gap:14px}
+.hero h1{font-size:clamp(2rem,7vw,3rem);font-weight:800}
+.hero .scene{width:min(340px,100%)}
+.hero .scene svg{width:100%;height:auto;display:block}
+.parent{max-width:60ch;color:var(--muted)}
+.parent b{color:var(--ink)}
+.safety{max-width:60ch;border:2px dashed var(--siren);border-radius:14px;padding:8px 12px;font-size:.95rem}
+.recap{display:flex;gap:12px;align-items:center}
+.facts{display:flex;flex-wrap:wrap;justify-content:center;gap:8px;width:100%;max-width:600px}
+.facts div{box-sizing:border-box;flex:0 1 calc(20% - 8px);background:var(--tile);border:3px solid var(--tile-edge);border-radius:16px;padding:6px;color:#1E2A30;font-family:var(--display);font-weight:600;font-size:.9rem;line-height:1.1;min-width:0}
+.facts svg{width:100%;height:auto;display:block}
+.stars{font-family:var(--display);font-size:1.5rem;font-weight:800}
+.results{list-style:none;margin:0;padding:0;display:flex;flex-wrap:wrap;gap:8px;justify-content:center}
+.results li{border-radius:999px;padding:4px 12px;font-size:.9rem;font-weight:700;background:var(--go-soft);color:var(--ink)}
+.results li.again{background:transparent;border:2px solid var(--oops)}
+
+@media (max-width:480px){
+  .wrap{gap:12px;padding-block:10px 24px}
+  .card{padding:14px 12px;gap:10px;border-radius:18px}
+  .prompt{gap:10px}
+  .speak{width:52px;height:52px}
+  .speak svg{width:26px;height:26px}
+  .qtext{font-size:1.2rem;line-height:1.3}
+  .show{width:min(180px,100%);padding:6px}
+  .show.wide{width:100%}
+  .opts{gap:8px}
+  .tile{padding:6px 4px;border-radius:16px}
+  .tile.right::after{width:32px;height:32px;top:-10px;right:-8px}
+  .lane{height:48px}
+  .amb,.finish{width:46px;height:42px}
+  .stops{left:22px;right:60px}
+  .stops i{width:6px;height:6px;border-width:1px}
+  .lane::before{right:50px}
+  .count{font-size:1rem;min-width:3.2em}
+  .feedback{font-size:1.05rem}
+  .go{font-size:1.25rem;padding:10px 26px;width:100%;max-width:320px}
+  .hero h1{font-size:2.1rem}
+  .parent{font-size:.95rem}
+  .facts div{font-size:.78rem;padding:4px;flex-basis:calc(33.3% - 8px)}
+}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+
+.home{flex:0 0 auto;width:48px;height:48px;border-radius:14px;background:#2A2E35;color:#fff;display:grid;place-items:center}
+.home svg{width:26px;height:26px}
+.home:focus-visible{outline:3px solid #1F6FD6;outline-offset:3px}
+body{margin:0}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="road" aria-label="Progress">
+    <a class="home" href="../" aria-label="Back to the road"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 11.5 12 4l9 7.5" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/><path d="M6 10v9h4.5v-5h3v5H18v-9" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linejoin="round"/></svg></a>
+    <div class="lane">
+      <div class="stops" id="stops"></div>
+      <div class="amb" id="amb"></div>
+      <div class="finish" id="finish"></div>
+    </div>
+    <div class="count" id="count">0 / 17</div>
+  </div>
+
+  <section class="card hero" id="start">
+    <h1>Ambulance Health Run!</h1>
+    <div class="scene" id="startScene"></div>
+    <p class="parent"><b>For Mom or Dad:</b> Each question is read aloud, then each picture is named. Some questions ask him to tap one picture, some to <b>find all</b> the right pictures, some are <b>yes or no</b>, and some are counting. Tap the red speaker to hear it again, or <b>Español</b> for Spanish. Every right answer drives the ambulance closer to the clinic.</p>
+    <p class="safety"><b>Safety:</b> the notes teach that river water is made safe with a drop of bleach (Clorox). The quiz says only grown-ups use bleach. Please say that too.</p>
+    <button class="go" id="startBtn">Start the ambulance</button>
+    <p class="note" id="noVoice" hidden>This device cannot read aloud. Please read each question to your child.</p>
+  </section>
+
+  <section class="card" id="quiz" hidden>
+    <div class="section" id="section"></div>
+    <div class="prompt">
+      <button class="speak" id="hear" aria-label="Hear the question again"></button>
+      <div class="qtext" id="qtext"></div>
+    </div>
+    <div class="tools">
+      <button class="chip" id="hearEs">Español</button>
+      <button class="chip" id="sirenBtn" aria-pressed="true">Siren: on</button>
+    </div>
+    <div class="show" id="show" hidden></div>
+    <div class="findbar" id="findbar" hidden></div>
+    <div class="opts" id="opts"></div>
+    <div class="feedback" id="feedback" aria-live="polite"></div>
+    <button class="go" id="next" hidden>Drive on!</button>
+    <p class="note" id="esNote" hidden>No Spanish voice on this device. Say the question in Spanish yourself.</p>
+  </section>
+
+  <section class="card hero" id="end" hidden>
+    <h2 style="font-size:clamp(1.8rem,6vw,2.6rem)">The ambulance made it to the clinic!</h2>
+    <div class="recap">
+      <button class="speak" id="hearRecap" aria-label="Hear what we learned"></button>
+      <p class="parent" style="margin:0;text-align:left"><b>Five safe drinking waters</b></p>
+    </div>
+    <div class="facts" id="facts"></div>
+    <p class="parent" style="margin:0"><b>Germs</b> are too small to see, they are everywhere, and they can make us sick.</p>
+    <div class="stars" id="stars"></div>
+    <div>
+      <p class="parent" style="margin:0 0 8px"><b>Parent check:</b> green = right on the first try, red outline = practise again.</p>
+      <ul class="results" id="results"></ul>
+    </div>
+    <button class="go" id="again">Drive again</button>
+  </section>
+</div>
+
+<script>
+(function(){
+const K='#2b1a10';
+const S='stroke="'+K+'" stroke-width="3" stroke-linejoin="round"';
+const S2='stroke="'+K+'" stroke-width="2" stroke-linejoin="round"';
+
+// ---------- drawings (all original, 100x100) ----------
+function germ(x,y,r,c){ // small round germ with eyes, for sprinkling on things
+  return '<g><circle cx="'+x+'" cy="'+y+'" r="'+r+'" fill="'+c+'" stroke="'+K+'" stroke-width="1.5"/>'+
+    '<circle cx="'+(x-r*.35)+'" cy="'+(y-r*.2)+'" r="'+(r*.28)+'" fill="#fff"/><circle cx="'+(x+r*.35)+'" cy="'+(y-r*.2)+'" r="'+(r*.28)+'" fill="#fff"/>'+
+    '<circle cx="'+(x-r*.35)+'" cy="'+(y-r*.2)+'" r="'+(r*.13)+'" fill="'+K+'"/><circle cx="'+(x+r*.35)+'" cy="'+(y-r*.2)+'" r="'+(r*.13)+'" fill="'+K+'"/>'+
+    '<path d="M'+(x-r*.4)+' '+(y+r*.35)+' Q'+x+' '+(y+r*.6)+' '+(x+r*.4)+' '+(y+r*.35)+'" fill="none" stroke="'+K+'" stroke-width="1.2"/></g>';
+}
+function glass(water,extra){
+  return '<path d="M31 40 H69 L66 88 H34 Z" fill="'+water+'"/>'+(extra||'')+
+    '<path d="M28 18 H72 L66 88 H34 Z" fill="none" '+S+'/><path d="M36 26 L39 80" stroke="#fff" stroke-width="3" opacity=".7"/>';
+}
+function kid(mood){ // standing child, mood: happy | strong
+  let s='<path d="M36 56 Q36 48 50 48 Q64 48 64 56 L66 82 H34 Z" fill="#3A7BD5" '+S+'/>'+
+    '<rect x="38" y="80" width="9" height="14" rx="3" fill="#2E4057" '+S2+'/><rect x="53" y="80" width="9" height="14" rx="3" fill="#2E4057" '+S2+'/>'+
+    '<circle cx="50" cy="30" r="16" fill="#C68B59" '+S+'/><path d="M34 27 Q36 12 50 13 Q64 12 66 27 Q58 20 50 21 Q42 20 34 27Z" fill="#2B1A10"/>'+
+    '<circle cx="44" cy="30" r="2" fill="'+K+'"/><circle cx="56" cy="30" r="2" fill="'+K+'"/><path d="M43 36 Q50 43 57 36" fill="none" stroke="'+K+'" stroke-width="2.2" stroke-linecap="round"/>';
+  if(mood==='strong'){
+    s+='<path d="M64 56 Q76 58 76 46 Q76 40 70 40" fill="none" stroke="#C68B59" stroke-width="7" stroke-linecap="round"/><circle cx="70" cy="44" r="5" fill="#C68B59" stroke="'+K+'" stroke-width="1.5"/>'+
+       '<path d="M36 56 Q26 64 22 74" fill="none" stroke="#C68B59" stroke-width="7" stroke-linecap="round"/>'+
+       '<rect x="14" y="66" width="11" height="22" rx="4" fill="#BFE6F5" '+S2+'/><rect x="16" y="62" width="7" height="5" fill="#3A7BD5" stroke="'+K+'" stroke-width="1.5"/>';
+  } else {
+    s+='<path d="M36 56 Q26 64 26 76" fill="none" stroke="#C68B59" stroke-width="7" stroke-linecap="round"/><path d="M64 56 Q74 64 74 76" fill="none" stroke="#C68B59" stroke-width="7" stroke-linecap="round"/>';
+  }
+  return s;
+}
+function hand(n){
+  let s='<path d="M30 92 L30 56 Q30 48 36 48 L36 22 Q36 16 41 16 Q46 16 46 22 L46 44 L46 16 Q46 10 51 10 Q56 10 56 16 L56 44 L56 18 Q56 12 61 12 Q66 12 66 18 L66 46 L66 28 Q66 22 71 22 Q76 22 76 28 L76 66 Q76 92 54 92 Z" fill="#E0A97A" '+S+'/>'+
+    '<path d="M30 60 Q20 50 14 54 Q10 58 18 66 L30 80" fill="#E0A97A" '+S+'/>';
+  const spots=[[52,64],[40,74],[64,74],[46,56],[62,58]];
+  for(let i=0;i<n;i++) s+=germ(spots[i][0],spots[i][1],6,i%2?'#9B5DE5':'#6CC04A');
+  return s;
+}
+const ICONS={
+  dog:'<path d="M30 92 Q26 60 44 54 L62 54 Q76 58 76 92Z" fill="#B07A45" '+S+'/><path d="M76 82 Q90 76 88 64" fill="none" stroke="#B07A45" stroke-width="6" stroke-linecap="round"/>'+
+      '<circle cx="50" cy="38" r="20" fill="#C48B55" '+S+'/><path d="M32 26 Q22 30 24 50 Q32 46 36 34Z" fill="#7A4A2A" '+S2+'/><path d="M68 26 Q78 30 76 50 Q68 46 64 34Z" fill="#7A4A2A" '+S2+'/>'+
+      '<circle cx="43" cy="36" r="2.6" fill="'+K+'"/><circle cx="57" cy="36" r="2.6" fill="'+K+'"/><ellipse cx="50" cy="45" rx="5" ry="3.5" fill="'+K+'"/><path d="M50 49 Q50 55 55 55" fill="none" stroke="'+K+'" stroke-width="2"/><path d="M47 54 Q50 62 54 55" fill="#E86A7A"/>',
+  rock:'<path d="M12 84 Q14 56 34 50 Q46 34 64 42 Q86 46 88 70 Q90 84 80 86 H18 Q12 86 12 84Z" fill="#9AA3AB" '+S+'/><path d="M34 62 Q42 58 48 64 M60 56 Q68 54 72 60" fill="none" stroke="#6E767E" stroke-width="2.5"/>',
+  car:'<path d="M8 64 Q9 49 24 46 L37 33 Q41 29 49 29 L64 29 Q71 29 75 35 L83 46 Q93 49 93 60 L93 66 L8 66 Z" fill="#E23B2E" '+S+'/><path d="M41 35 L50 35 L50 46 L31 46 Z" fill="#BFE6F5"/><path d="M55 35 L64 35 L73 46 L55 46 Z" fill="#BFE6F5"/><circle cx="27" cy="68" r="11" fill="#222"/><circle cx="27" cy="68" r="4.5" fill="#ccc"/><circle cx="74" cy="68" r="11" fill="#222"/><circle cx="74" cy="68" r="4.5" fill="#ccc"/>',
+  flower:'<path d="M50 88 V54" stroke="#3C7A2E" stroke-width="4"/><path d="M50 74 Q38 66 34 74 Q42 80 50 74Z" fill="#4CAF50"/><g fill="#F07AA8" '+S2+'><circle cx="50" cy="30" r="7"/><circle cx="62" cy="42" r="7"/><circle cx="50" cy="54" r="7"/><circle cx="38" cy="42" r="7"/></g><circle cx="50" cy="42" r="6" fill="#F4C430" '+S2+'/><path d="M14 90 H86" stroke="#5B8E3A" stroke-width="5" stroke-linecap="round"/>',
+  mango:'<path d="M28 60 Q20 30 50 25 Q81 23 79 54 Q75 83 48 81 Q33 79 28 60Z" fill="#F5A623" '+S+'/><path d="M50 25 Q58 9 74 12 Q66 26 50 25Z" fill="#3C9A3C" stroke="'+K+'" stroke-width="2.5"/>',
+  clean:glass('#9ED8F5'),
+  muddy:glass('#8B6B3E','<circle cx="44" cy="60" r="3" fill="#5E4526"/><circle cx="56" cy="72" r="4" fill="#5E4526"/><circle cx="50" cy="50" r="2" fill="#5E4526"/><path d="M34 82 H66 L66 88 H34Z" fill="#5E4526"/>'),
+  germy:glass('#9ED8F5', germ(42,56,7,'#6CC04A')+germ(57,68,7,'#9B5DE5')+germ(48,79,6,'#F28A1E')),
+  smelly:glass('#A9B56A')+'<path d="M38 14 Q32 8 38 2 M50 14 Q44 8 50 2 M62 14 Q56 8 62 2" fill="none" stroke="#6A8F2A" stroke-width="3.5" stroke-linecap="round"/>',
+  bottle:'<rect x="42" y="6" width="16" height="9" rx="2" fill="#3A7BD5" '+S2+'/><path d="M43 15 H57 L60 26 Q68 30 68 40 V86 Q68 94 60 94 H40 Q32 94 32 86 V40 Q32 30 40 26 Z" fill="#CFEFFB" '+S+'/>'+
+    '<path d="M33 48 H67 V86 Q67 93 60 93 H40 Q33 93 33 86 Z" fill="#9ED8F5"/><path d="M32 52 H68 M32 66 H68" stroke="'+K+'" stroke-width="2"/><rect x="32" y="54" width="36" height="10" fill="#3A7BD5"/><path d="M38 34 V84" stroke="#fff" stroke-width="3" opacity=".8"/>',
+  gallon:'<rect x="41" y="4" width="18" height="8" rx="2" fill="#3A7BD5" '+S2+'/><path d="M44 12 H56 L58 20 Q82 22 82 38 V82 Q82 94 70 94 H30 Q18 94 18 82 V38 Q18 22 42 20 Z" fill="#BFE6F5" '+S+'/>'+
+    '<path d="M19 46 H81 V82 Q81 93 70 93 H30 Q19 93 19 82Z" fill="#8ECFF0"/><path d="M18 34 H82 M18 58 H82 M18 74 H82" stroke="#4A90C2" stroke-width="2.5"/>'+
+    '<circle cx="50" cy="66" r="10" fill="#fff" stroke="'+K+'" stroke-width="1.5"/><text x="50" y="72" text-anchor="middle" font-family="Baloo 2, Arial, sans-serif" font-weight="800" font-size="17" fill="#1E2A30">5</text>',
+  boiled:'<path d="M40 18 Q36 12 40 6 M50 18 Q46 12 50 6 M60 18 Q56 12 60 6" fill="none" stroke="#9AA3AB" stroke-width="3" stroke-linecap="round"/>'+
+    '<path d="M24 28 Q50 18 76 28" fill="#B9C0C6" '+S+'/><circle cx="50" cy="21" r="3.5" fill="#B9C0C6" '+S2+'/>'+
+    '<path d="M26 30 H74 L70 70 Q70 74 66 74 H34 Q30 74 30 70 Z" fill="#D3D8DC" '+S+'/><path d="M74 38 H92" stroke="'+K+'" stroke-width="5" stroke-linecap="round"/>'+
+    '<path d="M28 44 H72" stroke="#9ED8F5" stroke-width="4"/><path d="M28 84 H72" stroke="'+K+'" stroke-width="4" stroke-linecap="round"/>'+
+    '<path d="M34 82 Q36 74 40 80 Q43 72 47 80 Q50 72 53 80 Q57 72 60 80 Q64 74 66 82Z" fill="#F28A1E"/>',
+  filter:'<rect x="20" y="10" width="24" height="76" rx="6" fill="#E8EEF2" '+S+'/><rect x="24" y="22" width="16" height="40" rx="3" fill="#BFE6F5"/>'+
+    '<rect x="14" y="84" width="58" height="8" rx="3" fill="#9AA3AB" '+S2+'/><path d="M44 74 H58 V44 Q58 34 68 34 Q78 34 78 44 V50" fill="none" stroke="'+K+'" stroke-width="8" stroke-linecap="round"/>'+
+    '<path d="M44 74 H58 V44 Q58 34 68 34 Q78 34 78 44 V50" fill="none" stroke="#C9D1D6" stroke-width="4.5" stroke-linecap="round"/><path d="M78 58 Q74 64 78 68 Q82 64 78 58Z" fill="#3AA0E8"/>',
+  purified:'<path d="M58 8 H70 V14 Q80 16 80 26 V44 Q80 48 76 48 H52 Q48 48 48 44 V26 Q48 16 58 14Z" fill="#fff" '+S+'/><rect x="56" y="3" width="16" height="6" rx="2" fill="#3A7BD5" '+S2+'/>'+
+    '<path d="M48 30 H38 Q34 30 34 34 V40" fill="none" stroke="'+K+'" stroke-width="2.5"/><path d="M34 46 Q30 52 34 56 Q38 52 34 46Z" fill="#3AA0E8" stroke="'+K+'" stroke-width="1.2"/>'+
+    '<path d="M10 66 H90 Q86 92 50 92 Q14 92 10 66Z" fill="#fff" '+S+'/><path d="M14 68 H86 Q84 76 80 80 H20 Q16 76 14 68Z" fill="#9ED8F5"/><path d="M10 66 H90" stroke="'+K+'" stroke-width="3"/>',
+  puddle:'<path d="M8 78 Q10 62 30 62 Q40 54 58 58 Q80 56 90 70 Q94 84 74 86 H22 Q6 86 8 78Z" fill="#8B6B3E" '+S+'/><path d="M24 72 Q34 68 44 72 M56 66 Q66 64 74 70" fill="none" stroke="#5E4526" stroke-width="3"/>'+germ(36,78,5,'#6CC04A')+germ(66,76,5,'#9B5DE5'),
+  germ:'<path d="M50 12 L56 26 L70 18 L68 34 L84 34 L74 46 L88 56 L72 60 L78 76 L62 70 L58 86 L50 72 L42 86 L38 70 L22 76 L28 60 L12 56 L26 46 L16 34 L32 34 L30 18 L44 26Z" fill="#6CC04A" '+S+'/>'+
+    '<circle cx="42" cy="44" r="7" fill="#fff" '+S2+'/><circle cx="58" cy="44" r="7" fill="#fff" '+S2+'/><circle cx="43" cy="45" r="3" fill="'+K+'"/><circle cx="57" cy="45" r="3" fill="'+K+'"/>'+
+    '<path d="M38 58 L42 62 L46 58 L50 62 L54 58 L58 62 L62 58" fill="none" stroke="'+K+'" stroke-width="2.5" stroke-linejoin="round"/>',
+  germ2:'<path d="M50 20 Q64 18 70 28 Q82 30 80 44 Q88 54 80 64 Q82 78 68 80 Q60 90 50 84 Q40 90 32 80 Q18 78 20 64 Q12 54 20 44 Q18 30 30 28 Q36 18 50 20Z" fill="#9B5DE5" '+S+'/>'+
+    '<path d="M40 22 Q34 10 26 10 M60 22 Q66 10 74 10" fill="none" stroke="'+K+'" stroke-width="3" stroke-linecap="round"/><circle cx="26" cy="10" r="4" fill="#F4C430" '+S2+'/><circle cx="74" cy="10" r="4" fill="#F4C430" '+S2+'/>'+
+    '<circle cx="50" cy="44" r="9" fill="#fff" '+S2+'/><circle cx="51" cy="45" r="4" fill="'+K+'"/><path d="M38 62 Q50 74 62 62 Z" fill="'+K+'"/>',
+  eye:'<path d="M8 50 Q50 10 92 50 Q50 90 8 50Z" fill="#fff" '+S+'/><circle cx="50" cy="50" r="17" fill="#7A4A2A" '+S2+'/><circle cx="50" cy="50" r="8" fill="'+K+'"/><circle cx="55" cy="45" r="3.5" fill="#fff"/>',
+  sick:'<rect x="6" y="56" width="88" height="22" rx="4" fill="#E8C48A" '+S+'/><path d="M6 78 V92 M94 78 V92" stroke="'+K+'" stroke-width="4"/>'+
+    '<ellipse cx="26" cy="52" rx="18" ry="8" fill="#fff" '+S2+'/><circle cx="30" cy="40" r="14" fill="#C9B07A" '+S+'/>'+
+    '<path d="M22 36 L27 38 M38 36 L33 38" stroke="'+K+'" stroke-width="2" stroke-linecap="round"/><circle cx="25" cy="41" r="1.8" fill="'+K+'"/><circle cx="35" cy="41" r="1.8" fill="'+K+'"/><path d="M25 49 Q30 45 35 49" fill="none" stroke="'+K+'" stroke-width="2" stroke-linecap="round"/>'+
+    '<path d="M34 47 L52 40" stroke="#fff" stroke-width="4" stroke-linecap="round"/><path d="M34 47 L52 40" stroke="'+K+'" stroke-width="1"/><circle cx="51" cy="40.5" r="2.5" fill="#D7263D"/>'+
+    '<path d="M40 52 Q60 44 92 50 V62 H40Z" fill="#3A7BD5" '+S+'/>',
+  happy:kid('happy'), strong:kid('strong'),
+  yes:'<circle cx="50" cy="50" r="40" fill="#25915A" '+S+'/><path d="M30 52 L44 66 L72 36" fill="none" stroke="#fff" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>',
+  no:'<circle cx="50" cy="50" r="40" fill="#D7263D" '+S+'/><path d="M34 34 L66 66 M66 34 L34 66" stroke="#fff" stroke-width="10" stroke-linecap="round"/>',
+  hand:hand(2), hand3:hand(3),
+  door:'<rect x="24" y="8" width="52" height="86" rx="3" fill="#B07A45" '+S+'/><rect x="32" y="16" width="36" height="30" rx="2" fill="none" stroke="#7A4A2A" stroke-width="3"/><rect x="32" y="54" width="36" height="32" rx="2" fill="none" stroke="#7A4A2A" stroke-width="3"/>'+
+    '<circle cx="66" cy="52" r="5" fill="#F4C430" '+S2+'/>'+germ(62,40,6,'#6CC04A')+germ(70,62,6,'#9B5DE5'),
+  toy:'<circle cx="50" cy="54" r="34" fill="#3AA0E8" '+S+'/><path d="M18 46 Q50 64 82 46" fill="none" stroke="#fff" stroke-width="7"/><path d="M22 68 Q50 82 78 68" fill="none" stroke="#F2C230" stroke-width="7"/><circle cx="50" cy="54" r="34" fill="none" '+S+'/>'+germ(38,34,7,'#6CC04A')+germ(64,60,7,'#9B5DE5'),
+  air:'<circle cx="50" cy="50" r="44" fill="#DFF1FA"/><path d="M12 36 Q40 26 60 36 Q74 42 80 32 M14 58 Q44 48 66 58 Q80 64 88 54 M20 78 Q44 70 62 78" fill="none" stroke="#7FB2D6" stroke-width="4" stroke-linecap="round"/>'+
+    germ(34,24,6,'#6CC04A')+germ(70,46,6,'#9B5DE5')+germ(42,66,6,'#F28A1E')+germ(76,74,5,'#6CC04A'),
+  n2:'', n3:'', n4:'', n5:'',
+  ambulance:'<path d="M6 30 H58 V24 Q58 20 62 20 H64" fill="none"/><rect x="6" y="26" width="56" height="40" rx="4" fill="#fff" '+S+'/>'+
+    '<path d="M62 34 H78 Q84 34 88 42 L94 54 V66 H62Z" fill="#fff" '+S+'/><path d="M66 38 H77 Q80 38 82 42 L86 50 H66Z" fill="#BFE6F5" '+S2+'/>'+
+    '<rect x="6" y="52" width="88" height="6" fill="#D7263D"/><rect x="26" y="32" width="14" height="4" fill="#D7263D"/><rect x="31" y="27" width="4" height="14" fill="#D7263D"/>'+
+    '<rect x="26" y="32" width="14" height="4" fill="#D7263D"/><rect class="light" x="20" y="18" width="16" height="8" rx="3" fill="#D7263D" '+S2+'/>'+
+    '<circle cx="26" cy="68" r="10" fill="#222"/><circle cx="26" cy="68" r="4" fill="#ccc"/><circle cx="76" cy="68" r="10" fill="#222"/><circle cx="76" cy="68" r="4" fill="#ccc"/>',
+  clinic:'<rect x="14" y="30" width="72" height="62" fill="#F4F7F9" '+S+'/><path d="M10 32 H90" stroke="'+K+'" stroke-width="4" stroke-linecap="round"/>'+
+    '<rect x="36" y="6" width="28" height="24" rx="3" fill="#fff" '+S2+'/><rect x="45" y="10" width="10" height="16" fill="#D7263D"/><rect x="42" y="13" width="16" height="10" fill="#D7263D"/>'+
+    '<rect x="40" y="62" width="20" height="30" fill="#3A7BD5" '+S2+'/><rect x="20" y="42" width="14" height="12" fill="#BFE6F5" '+S2+'/><rect x="66" y="42" width="14" height="12" fill="#BFE6F5" '+S2+'/>'
+};
+['n2','n3','n4','n5'].forEach(k=>{ ICONS[k]='<text x="50" y="75" text-anchor="middle" font-family="Baloo 2, Trebuchet MS, Arial, sans-serif" font-weight="800" font-size="76" fill="#1E2A30">'+k.slice(1)+'</text>'; });
+function svg(name){ return '<svg viewBox="0 0 100 100" aria-hidden="true">'+ICONS[name]+'</svg>'; }
+function row(names){
+  const n=names.length, step=300/n, w=Math.min(100,step-4); let g='';
+  names.forEach((nm,i)=>{ g+='<g transform="translate('+(i*step+(step-w)/2)+' '+((100-w)/2)+') scale('+(w/100)+')">'+ICONS[nm]+'</g>'; });
+  return '<svg viewBox="0 0 300 100" aria-hidden="true">'+g+'</svg>';
+}
+const SPK='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9h4l5-4v14l-5-4H4z" fill="currentColor"/><path d="M16 8.5a5 5 0 0 1 0 7M18.5 6a8.5 8.5 0 0 1 0 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>';
+
+// [shown label, spoken English, spoken Spanish]
+const LBL={
+  dog:['dog','the dog','el perro'], rock:['rock','the rock','la piedra'], car:['toy car','the toy car','el carrito'],
+  flower:['flower','the flower','la flor'], mango:['mango','the mango','el mango'],
+  clean:['clean water','the clean water','el agua limpia'], muddy:['muddy water','the muddy water','el agua sucia'],
+  germy:['water with germs','the water with germs','el agua con microbios'], smelly:['smelly water','the smelly water','el agua que huele feo'],
+  bottle:['bottled water','the bottled water','el agua en botella'], gallon:['5 gallon','the five gallon water','el galón de agua'],
+  boiled:['boiled water','the boiled water','el agua hervida'], filter:['filtered tap water','the filtered tap water','el agua filtrada'],
+  purified:['purified river water','the purified river water','el agua de río purificada'], puddle:['puddle water','the puddle water','el agua del charco'],
+  germ:['germ','the germ','el microbio'], germ2:['germ','the germ','el microbio'],
+  sick:['sick child','the sick child','el niño enfermo'], happy:['healthy child','the healthy child','el niño sano'],
+  yes:['Yes','yes','sí'], no:['No','no','no'],
+  hand:['hands','our hands','las manos'], door:['door','the door','la puerta'], toy:['toy','the toy','el juguete'], air:['air','the air','el aire'],
+  n2:['2','two','dos'], n3:['3','three','tres'], n4:['4','four','cuatro'], n5:['5','five','cinco']
+};
+const SAFE5=['bottle','gallon','boiled','filter','purified'];
+
+// Question types: pick (tap one), find (tap all), yesno, count (pick a numeral after counting a picture)
+const WATER=[
+  {key:'Living things need water', text:"All living things need water to live. Tap the one that is living.", es:"Todos los seres vivos necesitan agua para vivir. Toca el que está vivo.", answer:'dog', opts:['dog','rock','car'], ok:"The dog is living. People, animals and plants all need water to live."},
+  {key:'Water keeps us healthy', type:'yesno', show:'strong', text:"Water keeps our bodies working well. Does water help us stay fit and healthy?", es:"El agua ayuda a nuestro cuerpo. ¿El agua nos ayuda a estar sanos y fuertes?", answer:'yes', ok:"Yes! Water helps us stay fit and healthy."},
+  {key:'Safe water is clean', text:"Safe drinking water is clean. Tap the clean water.", es:"El agua segura para tomar está limpia. Toca el agua limpia.", answer:'clean', opts:['clean','muddy'], ok:"Clean water is safe to drink."},
+  {key:'Safe water has no smell', type:'yesno', show:'smelly', text:"Safe drinking water has no smell. This water smells bad. Is it safe to drink?", es:"El agua segura no tiene olor. Esta agua huele feo. ¿Es segura para tomar?", answer:'no', ok:"No! Safe water has no smell."},
+  {key:'Safe water has no germs', text:"Safe drinking water has no germs. Tap the water with no germs.", es:"El agua segura no tiene microbios. Toca el agua sin microbios.", answer:'clean', opts:['clean','germy'], ok:"Yes! Safe water has no germs."},
+  {key:'Find all 5 safe waters', type:'find', text:"Find all the safe drinking water! Tap every one.", es:"¡Busca toda el agua segura para tomar! Tócalas todas.", answers:SAFE5, opts:SAFE5.concat(['puddle']), ok:"You found all five safe drinking waters!"},
+  {key:'Count safe waters', type:'count', show:{row:SAFE5}, text:"How many safe drinking waters did we learn? Count them. Tap the number.", es:"¿Cuántas aguas seguras aprendimos? Cuéntalas. Toca el número.", answer:'n5', opts:['n3','n4','n5'], ok:"One, two, three, four, five. Five safe drinking waters!"},
+  {key:'Bottled water', text:"Bottled water is safe to drink. Tap the bottled water.", es:"El agua en botella es segura. Toca el agua en botella.", answer:'bottle', opts:['bottle','puddle','muddy'], ok:"Bottled water is safe drinking water."},
+  {key:'Water in a 5 gallon', text:"Water in a 5 gallon is safe to drink. Tap the 5 gallon.", es:"El agua del galón es segura. Toca el galón.", answer:'gallon', opts:['gallon','smelly','puddle'], ok:"Water in a five gallon is safe drinking water."},
+  {key:'Boiled water', text:"A grown-up boils water on the stove to make it safe. Tap the boiled water.", es:"Un adulto hierve el agua en la estufa. Toca el agua hervida.", answer:'boiled', opts:['boiled','bottle','filter'], ok:"Boiled water is safe drinking water. The pot is hot, so only grown-ups boil water."},
+  {key:'Filtered tap water', text:"Tap water is safe when it goes through a filter. Tap the filtered tap water.", es:"El agua del tubo es segura cuando pasa por un filtro. Toca el agua filtrada.", answer:'filter', opts:['filter','gallon','boiled'], ok:"Filtered tap water is safe drinking water."},
+  {key:'Purified river water', text:"A grown-up can make river water safe with one drop of bleach. Children never touch bleach! Tap the purified river water.", es:"Un adulto puede limpiar el agua del río con una gota de cloro. ¡Los niños nunca tocan el cloro! Toca el agua de río purificada.", answer:'purified', opts:['purified','puddle','bottle'], ok:"Purified river water is safe. Only grown-ups use bleach."}
+];
+const GERMS=[
+  {key:'Germs are little creatures', text:"Germs are little creatures. Tap the germ.", es:"Los microbios son criaturas pequeñitas. Toca el microbio.", answer:'germ2', opts:['germ2','dog','flower'], ok:"That's a germ! Germs are little creatures."},
+  {key:'Too small to see', type:'yesno', show:'eye', text:"Germs are too small to be seen. Can we see germs with our eyes?", es:"Los microbios son demasiado pequeños. ¿Podemos ver los microbios con los ojos?", answer:'no', ok:"No! Germs are too small to be seen."},
+  {key:'Germs make you sick', text:"Germs can make you sick. Tap the child who is sick.", es:"Los microbios te pueden enfermar. Toca al niño enfermo.", answer:'sick', opts:['sick','happy'], ok:"Germs can make us sick."},
+  {key:'Germs are bad', type:'yesno', show:'germ', text:"Germs can make you sick. So, are germs bad?", es:"Los microbios te pueden enfermar. Entonces, ¿los microbios son malos?", answer:'yes', ok:"Yes! Germs can make you sick, so germs are bad."},
+  {key:'Germs are everywhere', type:'find', text:"Germs are everywhere! Tap every place where germs can be.", es:"¡Los microbios están en todas partes! Toca cada lugar donde hay microbios.", answers:['hand','door','toy','air'], opts:['hand','door','toy','air'], ok:"Germs are on the things we touch, and they can be in the air too!"},
+  {key:'Germs in the air', text:"Germs can be in the air too. Tap the air.", es:"Los microbios también pueden estar en el aire. Toca el aire.", answer:'air', opts:['air','mango','rock'], ok:"Yes! Germs can be in the air too."},
+  {key:'Count germs on the hand', type:'count', show:'hand3', text:"Germs are on things we touch. Count the germs on the hand. Tap the number.", es:"Los microbios están en lo que tocamos. Cuenta los microbios en la mano. Toca el número.", answer:'n3', opts:['n2','n3','n4'], ok:"One, two, three. Three germs on the hand!"}
+];
+const N=WATER.length+GERMS.length;
+const PRAISE=["Yes! Great job!","That's right!","Super! Drive on!","You got it!","Well done!"];
+
+const $=id=>document.getElementById(id);
+
+// ---------- voice ----------
+const synthOK='speechSynthesis' in window && typeof SpeechSynthesisUtterance!=='undefined';
+let voices=[];
+function loadVoices(){ try{ voices=speechSynthesis.getVoices()||[]; }catch(e){ voices=[]; } }
+if(synthOK){ loadVoices(); try{ speechSynthesis.onvoiceschanged=loadVoices; }catch(e){} }
+function pickVoice(lang){
+  const pre=lang==='es'?'es':'en';
+  const pool=voices.filter(v=>(v.lang||'').toLowerCase().startsWith(pre));
+  if(!pool.length) return null;
+  /* Use the voice chosen in the Number Garage's Parents screen, if any */
+  let want=''; try{ const o=JSON.parse(localStorage.getItem('nanoNumbers.v1')||'null'); want=(o&&o.settings&&o.settings[pre==='es'?'esVoice':'enVoice'])||''; }catch(e){}
+  if(want){ const f=pool.find(v=>v.name===want); if(f) return f; }
+  const sc=v=>{ const n=(v.name||'').toLowerCase(), l=(v.lang||'').toLowerCase().replace('_','-'); let s=0;
+    if(/natural|neural|online/.test(n))s+=60; if(/premium|enhanced|siri/.test(n))s+=50; if(/google/.test(n))s+=35; if(v.localService===false)s+=5;
+    if(/compact|espeak|eloquence|fred|albert|bad news|bells|boing|bubbles|cellos|whisper|zarvox|trinoids|jester|organ|superstar|wobble|grandma|grandpa|rocko|shelley|flo|eddy|reed|sandy|junior|ralph|kathy|bahh/.test(n))s-=80;
+    if(pre==='es' ? /^es-(mx|us|419)/.test(l) : /^en-us/.test(l)) s+=10; return s; };
+  return pool.slice().sort((a,b)=>sc(b)-sc(a))[0];
+}
+function hasSpanish(){ loadVoices(); return voices.length===0 ? true : !!pickVoice('es'); }
+// Spoken-only respellings (screen text unchanged)
+function sayFix(t){ return t.replace(/\b5 gallon\b/gi,'five gallon'); }
+function clearSpeaking(){ document.querySelectorAll('.tile.speaking').forEach(t=>t.classList.remove('speaking')); }
+let speakTimer=null;
+function speakSeq(items,lang,delay){
+  if(!synthOK) return;
+  try{ speechSynthesis.cancel(); }catch(e){}
+  clearSpeaking(); clearTimeout(speakTimer);
+  speakTimer=setTimeout(()=>{
+    const v=pickVoice(lang);
+    items.forEach((it,i)=>{
+      const u=new SpeechSynthesisUtterance(lang==='es'?it.text:sayFix(it.text));
+      if(v) u.voice=v;
+      u.lang=v?v.lang:(lang==='es'?'es-MX':'en-US');
+      u.rate=0.85; u.pitch=1.05;
+      u.onstart=()=>{ clearSpeaking(); if(it.el) it.el.classList.add('speaking'); };
+      if(i===items.length-1) u.onend=clearSpeaking;
+      speechSynthesis.speak(u);
+    });
+  },delay==null?80:delay);
+}
+function stopSpeech(){ if(synthOK){ try{ speechSynthesis.cancel(); }catch(e){} } clearTimeout(speakTimer); clearSpeaking(); }
+
+// ---------- siren (short, quiet, only after a tap) ----------
+let sirenOn=true, actx=null;
+function siren(){
+  if(!sirenOn) return false;
+  try{
+    actx = actx || new (window.AudioContext||window.webkitAudioContext)();
+    const o=actx.createOscillator(), g=actx.createGain(), t=actx.currentTime;
+    o.type='triangle';
+    for(let i=0;i<4;i++) o.frequency.setValueAtTime(i%2?660:880, t+i*0.17);
+    g.gain.setValueAtTime(0.0001,t); g.gain.exponentialRampToValueAtTime(0.07,t+0.03);
+    g.gain.setValueAtTime(0.07,t+0.62); g.gain.exponentialRampToValueAtTime(0.0001,t+0.7);
+    o.connect(g); g.connect(actx.destination); o.start(t); o.stop(t+0.72);
+    return true;
+  }catch(e){ return false; }
+}
+
+// ---------- road ----------
+const stops=$('stops');
+for(let i=0;i<N;i++) stops.appendChild(document.createElement('i'));
+$('amb').innerHTML=svg('ambulance');
+$('finish').innerHTML=svg('clinic');
+function setRoad(done){
+  [...stops.children].forEach((d,i)=>d.classList.toggle('done',i<done));
+  $('amb').style.left='calc(4px + (100% - '+(window.innerWidth<=480?96:120)+'px) * '+(done/N)+')';
+  $('count').textContent=done+' / '+N;
+}
+function flashAmb(){ const a=$('amb'); a.classList.remove('flash'); void a.offsetWidth; a.classList.add('flash'); }
+$('hear').innerHTML=SPK; $('hearRecap').innerHTML=SPK;
+$('startScene').innerHTML='<svg viewBox="0 0 240 110" aria-hidden="true"><rect x="0" y="0" width="240" height="110" rx="14" fill="#DDEFF8"/><rect x="0" y="74" width="240" height="26" fill="#3A3F44"/><path d="M8 87 H232" stroke="#F4C430" stroke-width="3" stroke-dasharray="14 10"/>'+
+  '<g transform="translate(14 20) scale(.62)">'+ICONS.ambulance+'</g><g transform="translate(160 6) scale(.7)">'+ICONS.clinic+'</g><g transform="translate(100 30) scale(.34)">'+ICONS.bottle+'</g><g transform="translate(126 40) scale(.28)">'+ICONS.germ+'</g></svg>';
+$('facts').innerHTML=SAFE5.map(k=>'<div>'+svg(k)+LBL[k][0]+'</div>').join('');
+if(!synthOK) $('noVoice').hidden=false;
+
+// ---------- game ----------
+let QS=[], idx=0, wrongs=[], locked=false, found=0;
+function shuffle(a){ a=a.slice(); for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } return a; }
+function optsOf(q){ return q.type==='yesno' ? ['yes','no'] : q.opts; }
+
+function readQuestion(lang){
+  const q=QS[idx];
+  const items=[{text: lang==='es'?q.es:q.text}];
+  [...$('opts').children].forEach(t=>{ if(!t.classList.contains('wrong') && !t.classList.contains('right')) items.push({text:LBL[t.dataset.k][lang==='es'?2:1], el:t}); });
+  speakSeq(items,lang);
+}
+
+function showQuestion(){
+  const q=QS[idx]; locked=false; found=0;
+  $('section').textContent = q.sec==='w' ? 'Safe drinking water' : 'Germs';
+  $('qtext').textContent=q.text;
+  $('feedback').textContent=''; $('feedback').className='feedback';
+  $('next').hidden=true; $('esNote').hidden=true;
+  const sh=$('show');
+  sh.classList.toggle('wide', !!(q.show && q.show.row));
+  if(q.show){ sh.hidden=false; sh.innerHTML = q.show.row ? row(q.show.row) : svg(q.show); } else { sh.hidden=true; sh.innerHTML=''; }
+  const fb=$('findbar');
+  if(q.type==='find'){ fb.hidden=false; fb.innerHTML=q.answers.map(()=>'<i></i>').join(''); } else { fb.hidden=true; fb.innerHTML=''; }
+  const opts=optsOf(q);
+  const box=$('opts'); box.innerHTML='';
+  const cols = opts.length===6 ? 3 : opts.length===4 ? 2 : opts.length;
+  box.style.setProperty('--cols',cols);
+  box.classList.toggle('narrow', opts.length<=2 || opts.length===4);
+  box.classList.toggle('yn', q.type==='yesno');
+  (q.type==='yesno' ? opts : shuffle(opts)).forEach(k=>{
+    const b=document.createElement('button');
+    b.className='tile'; b.dataset.k=k; b.id='opt-'+k;
+    b.setAttribute('aria-label',LBL[k][0]);
+    b.innerHTML=svg(k)+(/^n\d$/.test(k)?'':'<span>'+LBL[k][0]+'</span>');
+    b.addEventListener('click',()=>choose(b));
+    box.appendChild(b);
+  });
+  readQuestion('en');
+}
+
+function finishQuestion(q){
+  locked=true;
+  [...$('opts').children].forEach(t=>t.disabled=true);
+  const p=PRAISE[Math.floor(Math.random()*PRAISE.length)];
+  $('feedback').textContent=p+' '+q.ok; $('feedback').className='feedback good';
+  setRoad(idx+1); flashAmb();
+  $('next').hidden=false;
+  $('next').textContent= idx===N-1 ? 'Arrive at the clinic!' : 'Drive on!';
+  try{ $('next').scrollIntoView({block:'nearest',behavior:'smooth'}); }catch(e){}
+  const played=siren();
+  speakSeq([{text:p},{text:q.ok}],'en', played?760:80);
+}
+
+function choose(b){
+  if(locked||b.classList.contains('wrong')||b.classList.contains('right')) return;
+  const q=QS[idx], k=b.dataset.k;
+  if(q.type==='find'){
+    if(q.answers.includes(k)){
+      b.classList.add('right'); b.disabled=true; found++;
+      [...$('findbar').children].forEach((d,i)=>d.classList.toggle('got',i<found));
+      const left=q.answers.length-found;
+      if(left===0){ finishQuestion(q); return; }
+      $('feedback').textContent = left===1 ? 'Yes! 1 more to find.' : 'Yes! '+left+' more to find.';
+      $('feedback').className='feedback more';
+      speakSeq([{text:'Yes! '+LBL[k][1]+'.'},{text: left===1?'One more to find.':left+' more to find.'}],'en');
+    } else {
+      wrongs[idx]=true; b.classList.add('wrong'); b.disabled=true;
+      $('feedback').textContent='Not that one. Keep looking!'; $('feedback').className='feedback try';
+      speakSeq([{text:'Not that one. '+LBL[k][1]+' is not safe to drink. Keep looking!'}],'en');
+    }
+    return;
+  }
+  if(k===q.answer){ b.classList.add('right'); finishQuestion(q); }
+  else {
+    wrongs[idx]=true; b.classList.add('wrong'); b.disabled=true;
+    $('feedback').textContent='Not that one. Try again!'; $('feedback').className='feedback try';
+    const items=[{text:'Not that one. Try again!'},{text:q.text}];
+    [...$('opts').children].filter(t=>!t.classList.contains('wrong')).forEach(t=>items.push({text:LBL[t.dataset.k][1],el:t}));
+    speakSeq(items,'en');
+  }
+}
+
+const RECAP="Safe drinking water is clean, has no smell, and has no germs. Five safe drinking waters are bottled water, water in a five gallon, boiled water, filtered tap water, and purified river water. Germs are too small to be seen. Germs are everywhere, and germs can make us sick.";
+function showEnd(){
+  $('quiz').hidden=true; $('end').hidden=false;
+  const first=QS.filter((q,i)=>!wrongs[i]).length;
+  $('stars').textContent=first+' of '+N+' right on the first try';
+  $('results').innerHTML=QS.map((q,i)=>'<li class="'+(wrongs[i]?'again':'')+'">'+q.key+'</li>').join('');
+  const played=siren();
+  speakSeq([{text:"Hooray! The ambulance made it to the clinic!"},{text:RECAP}],'en',played?760:80);
+}
+
+function begin(){
+  QS = shuffle(WATER).map(q=>Object.assign({sec:'w'},q)).concat(shuffle(GERMS).map(q=>Object.assign({sec:'g'},q)));
+  idx=0; wrongs=[]; setRoad(0);
+  $('start').hidden=true; $('end').hidden=true; $('quiz').hidden=false;
+  showQuestion();
+}
+$('startBtn').addEventListener('click',begin);
+$('again').addEventListener('click',begin);
+$('hear').addEventListener('click',()=>readQuestion('en'));
+$('hearEs').addEventListener('click',()=>{ if(!synthOK||!hasSpanish()){ $('esNote').hidden=false; return; } readQuestion('es'); });
+$('sirenBtn').addEventListener('click',e=>{ sirenOn=!sirenOn; e.currentTarget.textContent='Siren: '+(sirenOn?'on':'off'); e.currentTarget.setAttribute('aria-pressed',sirenOn); });
+$('next').addEventListener('click',()=>{ stopSpeech(); if(idx<N-1){ idx++; showQuestion(); } else showEnd(); });
+$('hearRecap').addEventListener('click',()=>speakSeq([{text:RECAP}],'en'));
+document.addEventListener('visibilitychange',()=>{ if(document.hidden) stopSpeech(); });
+setRoad(0);
+})();
+</script>
+</body>
+</html>
