@@ -98,9 +98,9 @@ a.stop:hover{border-color:var(--asph)}
 /* ---- The stops. To add a new app: put it in its own folder and add one line here. ---- */
 var STOPS=[
   {name:"Nano's Number Garage",about:"Numbers 1 to 10",href:"numbers/",art:"numbers",open:true,progress:numbersProgress},
-  {name:"Nano's Bible Road",about:"My Bible notes",href:"bible-road/",art:"bible",open:true},
-  {name:"Fly Over Belize",about:"Our national symbols",href:"belize-symbols/",art:"belize",open:true},
-  {name:"Ambulance Health Run",about:"Safe water and germs",href:"health/",art:"health",open:true},
+  {name:"Nano's Bible Road",about:"My Bible notes",href:"bible-road/",art:"bible",open:true,progress:function(){return quizProgress("bible");}},
+  {name:"Fly Over Belize",about:"Our national symbols",href:"belize-symbols/",art:"belize",open:true,progress:function(){return quizProgress("belize");}},
+  {name:"Ambulance Health Run",about:"Safe water and germs",href:"health/",art:"health",open:true,progress:function(){return quizProgress("health");}},
   {name:"Letter Road",about:"Letter sounds",art:"letters",open:false},
   {name:"Word Parking",about:"Sight words",art:"words",open:false},
   {name:"Sentence Trip",about:"Read sentences around Belize",art:"trip",open:false},
@@ -128,6 +128,15 @@ function numbersProgress(){
     var strong=0;for(var n=1;n<=10;n++){var l=(o.stats[n]&&o.stats[n].last||[]).slice(-5);if(l.length>=5&&l.filter(Boolean).length>=4)strong++;}
     var d=new Date(),today=d.getFullYear()+'-'+(d.getMonth()+1)+'-'+d.getDate(),laps=(o.laps&&o.laps.date===today)?o.laps.count:0;
     return '★ '+strong+' of 10 numbers strong'+(laps?' · '+laps+' lap'+(laps>1?'s':'')+' today':'');
+  }catch(e){return '';}
+}
+
+/* Progress from the review quizzes: a question is strong when right on the first try in 4 of its last 5 drives */
+function quizProgress(id){
+  try{var o=JSON.parse(localStorage.getItem('nanoQuiz.'+id+'.v1')||'null');if(!o||!o.hist||!o.total)return '';
+    var strong=0;for(var k in o.hist){var h=o.hist[k]||[];if(h.length>=5&&h.filter(Boolean).length>=4)strong++;}
+    var d=new Date(),today=d.getFullYear()+'-'+(d.getMonth()+1)+'-'+d.getDate(),n=(o.drives&&o.drives.date===today)?o.drives.count:0;
+    return '\u2605 '+strong+' of '+o.total+' strong'+(n?' \u00b7 '+n+' drive'+(n>1?'s':'')+' today':'');
   }catch(e){return '';}
 }
 

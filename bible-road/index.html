@@ -104,6 +104,9 @@ button:focus-visible{outline:3px solid var(--focus);outline-offset:3px}
 .results{list-style:none;margin:0;padding:0;display:flex;flex-wrap:wrap;gap:8px;justify-content:center}
 .results li{border-radius:999px;padding:4px 12px;font-size:.9rem;font-weight:700;background:var(--go-soft);color:var(--ink)}
 .results li.again{background:transparent;border:2px solid var(--oops)}
+.results li.new{background:transparent;border:2px solid var(--tile-edge)}
+.results li small{font-weight:400;margin-left:6px;letter-spacing:1px;font-variant-numeric:tabular-nums}
+.strongline{font-family:var(--display);font-weight:800;font-size:1.15rem;color:var(--go)}
 
 @media (max-width:480px){
   .wrap{gap:12px;padding-block:10px 24px}
@@ -154,6 +157,7 @@ body{margin:0}
     <div class="scene" id="startScene"></div>
     <p class="parent"><b>For Mom or Dad:</b> Each question is read aloud, then each picture is named. Your child taps a picture. Tap the red speaker to hear the question again, or <b>Español</b> to hear it in Spanish. Every right answer drives Nano one stop closer to church.</p>
     <button class="go" id="startBtn">Start the drive</button>
+    <p class="strongline" id="startProg" hidden></p>
     <p class="note" id="noVoice" hidden>This device cannot read aloud. Please read each question to your child.</p>
   </section>
 
@@ -175,12 +179,13 @@ body{margin:0}
     <h2 style="font-size:clamp(1.8rem,6vw,2.6rem)">Nano made it to church!</h2>
     <div class="scene" id="endScene"></div>
     <div class="stars" id="stars"></div>
+    <div class="strongline" id="strongline"></div>
     <div class="verse">
       <button class="speak" id="hearVerse" aria-label="Hear the memory verse"></button>
       <p>Your word is a lamp to my feet and a light to my path.<small>Psalm 119:105 (NKJV)</small></p>
     </div>
     <div>
-      <p class="parent" style="margin:0 0 8px"><b>Parent check:</b> green = right on the first try, red outline = practise again.</p>
+      <p class="parent" style="margin:0 0 8px"><b>Parent check:</b> green = strong (right on the first try in 4 of his last 5 drives), red outline = still practising, plain = needs more drives. The marks show his last 5 tries, newest last.</p>
       <ul class="results" id="results"></ul>
     </div>
     <button class="go" id="again">Drive again</button>
@@ -234,7 +239,7 @@ const LBL = {
   dove:['dove','the dove','la paloma'], stable:['stable','the stable','el establo'], river:['river','the river','el río']
 };
 
-const QS = [
+const QS_ALL = [
   {text:"Which one is the Bible, God's special book? Tap the Bible.", es:"¿Cuál es la Biblia, el libro especial de Dios? Toca la Biblia.", answer:'bible', opts:['bible','car','ball'], ok:"The Bible is a special book. It is the Word of God."},
   {text:"God's Word is like a lamp. Tap the lamp.", es:"La Palabra de Dios es como una lámpara. Toca la lámpara.", answer:'lamp', opts:['lamp','mango','ball'], ok:"God's Word is a lamp. It helps us see the way."},
   {text:"The lamp shines on our feet. Tap the feet.", es:"La lámpara alumbra nuestros pies. Toca los pies.", answer:'feet', opts:['feet','tree','car'], ok:"Your word is a lamp to my feet."},
@@ -250,7 +255,8 @@ const QS = [
   {text:"The dove shows God the Holy Spirit. He helps us be kind and loving. Tap the dove.", es:"La paloma representa a Dios el Espíritu Santo. Él nos ayuda a ser amables. Toca la paloma.", answer:'dove', opts:['dove','crown','cross'], ok:"The dove shows God the Holy Spirit. One God: the Father, the Son, and the Holy Spirit."}
 ];
 const PRAISE=["Yes! Great job!","That's right!","Super! Nano drives on!","You got it!","Well done!"];
-const N=QS.length;
+const N=QS_ALL.length;
+let QS=QS_ALL;
 
 const $=id=>document.getElementById(id);
 const synthOK = 'speechSynthesis' in window && typeof SpeechSynthesisUtterance!=='undefined';
@@ -344,6 +350,7 @@ function choose(b){
   tries[idx]=(tries[idx]||0)+1;
   if(b.dataset.k===q.answer){
     locked=true;
+    recordQ(QID(q), tries[idx]===1);
     b.classList.add('right');
     [...$('opts').children].forEach(t=>t.disabled=true);
     const p=PRAISE[Math.floor(Math.random()*PRAISE.length)];
@@ -362,20 +369,43 @@ function choose(b){
   }
 }
 
+
+/* ---------- saved progress (this phone only) ---------- */
+const PKEY='nanoQuiz.bible.v1';
+function loadP(){ try{ const o=JSON.parse(localStorage.getItem(PKEY)||'null'); if(o&&o.hist) return o; }catch(e){} return {hist:{},drives:{date:'',count:0},total:0}; }
+function saveP(p){ try{ localStorage.setItem(PKEY,JSON.stringify(p)); }catch(e){} }
+function todayStr(){ const d=new Date(); return d.getFullYear()+'-'+(d.getMonth()+1)+'-'+d.getDate(); }
+function recordQ(id,first){ const p=loadP(); p.hist[id]=(p.hist[id]||[]).concat([first?1:0]).slice(-5); p.total=N; saveP(p); }
+function recordDrive(){ const p=loadP(), t=todayStr(); if(!p.drives||p.drives.date!==t) p.drives={date:t,count:0}; p.drives.count++; p.total=N; saveP(p); }
+function qState(h){ h=h||[]; if(h.length>=5&&h.filter(Boolean).length>=4) return 'strong'; return h.some(x=>!x)?'again':'new'; }
+function progLine(){ const p=loadP(), ids=CANON.map(q=>QID(q)); if(!ids.some(i=>p.hist[i])) return '';
+  const strong=ids.filter(i=>qState(p.hist[i])==='strong').length, d=(p.drives&&p.drives.date===todayStr())?p.drives.count:0;
+  return '\u2605 '+strong+' of '+N+' strong'+(d?' \u00b7 '+d+' drive'+(d>1?'s':'')+' today':''); }
+function progChips(){ const p=loadP();
+  return CANON.map(q=>{ const id=QID(q), h=p.hist[id]||[];
+    return '<li class="'+qState(h)+'">'+QLABEL(q)+(h.length?'<small>'+h.map(x=>x?'\u2713':'\u2717').join('')+'</small>':'')+'</li>'; }).join(''); }
+function showStartProg(){ const el=$('startProg'), t=progLine(); el.textContent=t; el.hidden=!t; }
+const BKEY={bible:'The Bible',lamp:'Lamp',feet:'Feet',bulb:'Light for my path',books2:'Two parts',earth:'God made the world',tree:'Adam and Eve',ark:"Noah's ark",stable:'Baby Jesus',river:'Jesus baptized',cross:'The cross',crown:'God the Father',dove:'Holy Spirit'};
+const CANON=QS_ALL, QID=q=>q.answer, QLABEL=q=>BKEY[q.answer]||LBL[q.answer][0];
+
 function showEnd(){
   $('quiz').hidden=true; $('end').hidden=false;
   const first=tries.filter(t=>t===1).length;
-  $('stars').textContent = first+' of '+N+' right on the first try';
-  $('results').innerHTML = QS.map((q,i)=>'<li class="'+(tries[i]===1?'':'again')+'">'+LBL[q.answer][0]+'</li>').join('');
+  recordDrive();
+  $('stars').textContent = 'This drive: '+first+' of '+N+' right on the first try';
+  $('strongline').textContent = progLine();
+  $('results').innerHTML = progChips();
   speakSeq([{text:"Hooray! Nano made it to church!"},{text:"Let's say our verse. Your word is a lamp to my feet, and a light to my path. Psalm 119, verse 105."}],'en');
 }
 
 function begin(){
+  QS=[QS_ALL[0]].concat(shuffle(QS_ALL.slice(1)));
   idx=0; tries=[]; setRoad(0);
   $('start').hidden=true; $('end').hidden=true; $('quiz').hidden=false;
   showQuestion();
 }
 
+showStartProg();
 $('startBtn').addEventListener('click',begin);
 $('again').addEventListener('click',begin);
 $('hear').addEventListener('click',()=>readQuestion('en'));

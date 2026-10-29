@@ -107,6 +107,9 @@ h1,h2{font-family:var(--display);line-height:1.1;text-wrap:balance;margin:0}
 .results{list-style:none;margin:0;padding:0;display:flex;flex-wrap:wrap;gap:8px;justify-content:center}
 .results li{border-radius:999px;padding:4px 12px;font-size:.9rem;font-weight:700;background:var(--go-soft);color:var(--ink)}
 .results li.again{background:transparent;border:2px solid var(--oops)}
+.results li.new{background:transparent;border:2px solid var(--tile-edge)}
+.results li small{font-weight:400;margin-left:6px;letter-spacing:1px;font-variant-numeric:tabular-nums}
+.strongline{font-family:var(--display);font-weight:800;font-size:1.15rem;color:var(--go)}
 
 @media (max-width:480px){
   .wrap{gap:12px;padding-block:10px 24px}
@@ -156,6 +159,7 @@ body{margin:0}
     <div class="scene" id="startScene"></div>
     <p class="parent"><b>For Mom or Dad:</b> Each question is read aloud, then each picture is named. Your child taps a picture. Tap the orange speaker to hear it again, or <b>Español</b> to hear it in Spanish. Every right answer flies the helicopter closer to the flag of Belize. The questions come in a new order each time.</p>
     <button class="go" id="startBtn">Start the flight</button>
+    <p class="strongline" id="startProg" hidden></p>
     <p class="note" id="noVoice" hidden>This device cannot read aloud. Please read each question to your child.</p>
   </section>
 
@@ -180,8 +184,9 @@ body{margin:0}
     </div>
     <div class="symbols" id="symbols"></div>
     <div class="stars" id="stars"></div>
+    <div class="strongline" id="strongline"></div>
     <div>
-      <p class="parent" style="margin:0 0 8px"><b>Parent check:</b> green = right on the first try, red outline = practise again.</p>
+      <p class="parent" style="margin:0 0 8px"><b>Parent check:</b> green = strong (right on the first try in 4 of his last 5 drives), red outline = still practising, plain = needs more drives. The marks show his last 5 tries, newest last.</p>
       <ul class="results" id="results"></ul>
     </div>
     <button class="go" id="again">Fly again</button>
@@ -419,6 +424,7 @@ function choose(b){
   tries[idx]=(tries[idx]||0)+1;
   if(b.dataset.k===q.answer){
     locked=true;
+    recordQ(QID(q), tries[idx]===1);
     b.classList.add('right');
     [...$('opts').children].forEach(t=>t.disabled=true);
     const p=PRAISE[Math.floor(Math.random()*PRAISE.length)];
@@ -437,11 +443,30 @@ function choose(b){
 }
 
 const RECAP="Our national symbols are the flag of Belize, the tapir, the keel-billed toucan, the mahogany tree, and the black orchid.";
+/* ---------- saved progress (this phone only) ---------- */
+const PKEY='nanoQuiz.belize.v1';
+function loadP(){ try{ const o=JSON.parse(localStorage.getItem(PKEY)||'null'); if(o&&o.hist) return o; }catch(e){} return {hist:{},drives:{date:'',count:0},total:0}; }
+function saveP(p){ try{ localStorage.setItem(PKEY,JSON.stringify(p)); }catch(e){} }
+function todayStr(){ const d=new Date(); return d.getFullYear()+'-'+(d.getMonth()+1)+'-'+d.getDate(); }
+function recordQ(id,first){ const p=loadP(); p.hist[id]=(p.hist[id]||[]).concat([first?1:0]).slice(-5); p.total=N; saveP(p); }
+function recordDrive(){ const p=loadP(), t=todayStr(); if(!p.drives||p.drives.date!==t) p.drives={date:t,count:0}; p.drives.count++; p.total=N; saveP(p); }
+function qState(h){ h=h||[]; if(h.length>=5&&h.filter(Boolean).length>=4) return 'strong'; return h.some(x=>!x)?'again':'new'; }
+function progLine(){ const p=loadP(), ids=CANON.map(q=>QID(q)); if(!ids.some(i=>p.hist[i])) return '';
+  const strong=ids.filter(i=>qState(p.hist[i])==='strong').length, d=(p.drives&&p.drives.date===todayStr())?p.drives.count:0;
+  return '\u2605 '+strong+' of '+N+' strong'+(d?' \u00b7 '+d+' drive'+(d>1?'s':'')+' today':''); }
+function progChips(){ const p=loadP();
+  return CANON.map(q=>{ const id=QID(q), h=p.hist[id]||[];
+    return '<li class="'+qState(h)+'">'+QLABEL(q)+(h.length?'<small>'+h.map(x=>x?'\u2713':'\u2717').join('')+'</small>':'')+'</li>'; }).join(''); }
+function showStartProg(){ const el=$('startProg'), t=progLine(); el.textContent=t; el.hidden=!t; }
+const CANON=[FIRST].concat(REST), QID=q=>q.key, QLABEL=q=>q.key;
+
 function showEnd(){
   $('quiz').hidden=true; $('end').hidden=false;
   const first=tries.filter(t=>t===1).length;
-  $('stars').textContent=first+' of '+N+' right on the first try';
-  $('results').innerHTML=QS.map((q,i)=>'<li class="'+(tries[i]===1?'':'again')+'">'+q.key+'</li>').join('');
+  recordDrive();
+  $('stars').textContent='This drive: '+first+' of '+N+' right on the first try';
+  $('strongline').textContent=progLine();
+  $('results').innerHTML=progChips();
   speakSeq([{text:"Hooray! We landed at the flag of Belize! Happy Independence Day!"},{text:RECAP}],'en');
 }
 
@@ -451,6 +476,7 @@ function begin(){
   $('start').hidden=true; $('end').hidden=true; $('quiz').hidden=false;
   showQuestion();
 }
+showStartProg();
 $('startBtn').addEventListener('click',begin);
 $('again').addEventListener('click',begin);
 $('hear').addEventListener('click',()=>readQuestion('en'));

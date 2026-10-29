@@ -24,6 +24,7 @@ Stops marked "Coming soon" on the homepage: Letter Road (letter sounds), Word Pa
 
 ## Notes
 
+- The review quizzes save each question's last 5 tries on the phone (`nanoQuiz.bible.v1`, `nanoQuiz.belize.v1`, `nanoQuiz.health.v1`). A question is strong when he gets it right on the first try in 4 of his last 5 drives, the same rule as the Number Garage. The hub shows strong questions and drives today; each quiz's end screen has a parent check with every question's recent tries.
 - The three review quizzes read every question and picture aloud, so he does not need to read. They use the English and Spanish voices chosen in the Number Garage's Parents screen when set.
 
 - Each app saves progress in the phone's browser storage. All apps share the website `teacherzoled.github.io`, so the hub can show progress from each app.
