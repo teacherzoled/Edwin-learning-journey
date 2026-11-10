@@ -47,3 +47,7 @@ Stops marked "Coming soon" on the homepage: Word Parking (sight words), Sentence
 3. In `blend/index.html`, add the new words to `WORDS`, for example `{w:'nap',pic:'nap',es:'siesta'}`, and draw any picture in that file's `PIC`. Words without `pic` still work in every game except Picture Stop.
 4. Commit and push. On the phone, switch the letter on in Letter Road · Parents and record its sound.
 
+
+## Built-in letter sounds
+
+`sounds/<letter>.mp3` holds one clip per letter (s, a, t, p, i so far), recorded by Dad. Both Letter Road and Blend Road load these when the phone has no recording of its own for that letter. To add a letter's sound: put `sounds/<letter>.mp3` in place and add the letter to the `BUNDLED` list in `letters/index.html` and `blend/index.html`.

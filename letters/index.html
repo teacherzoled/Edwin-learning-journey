@@ -298,6 +298,10 @@ function loadRecordings(){return idb().then(function(db){if(!db)return;return ne
 function setRec(l,blob,date){var old=REC[l];if(old&&old.url){try{URL.revokeObjectURL(old.url);}catch(e){}}
   var url='';try{url=URL.createObjectURL(blob);}catch(e){}
   REC[l]={blob:blob,date:date||'',url:url,buf:null,start:0,dur:0,tried:false};}
+var BUNDLED=['s','a','t','p','i'];   /* built-in clips in ../sounds/<letter>.mp3; a recording made on this phone replaces one */
+function loadBundled(){if(!window.fetch)return Promise.resolve();
+  return Promise.all(BUNDLED.map(function(l){if(REC[l])return null;
+    return fetch('../sounds/'+l+'.mp3').then(function(r){return r.ok?r.blob():null;}).then(function(b){if(b&&!REC[l]){setRec(l,b,'');REC[l].bundled=true;}}).catch(function(){});}));}
 function hasRec(l){return !!REC[l];}
 /* Decode once and trim the silence before and after the sound, so it plays the moment Nano reaches the tile */
 function decodeRec(r){if(r.tried)return Promise.resolve(r);r.tried=true;var a=ac();
@@ -634,7 +638,7 @@ function parents(){
   app.innerHTML='<div class="screen parents">'+
    '<div class="top"><button class="ib" id="homeBtn" aria-label="Back to games">'+ICON.home+'</button><h2 style="flex:1">Letter Road · Parents</h2></div>'+
    '<div class="psec"><h3>Letters switched on</h3><div class="chips" id="chips"></div><p class="note" style="margin-top:8px">Switch a letter on when school has taught it. At least 2 stay on. Blend Road only uses words whose letters are all on.</p></div>'+
-   '<div class="psec" id="recSec"><h3>Record the sounds</h3><p>Record each sound once, in your voice. Say the pure sound, short and clear: <b>"sss"</b> not "suh", <b>"t"</b> as a short puff not "tuh", short <b>"a"</b> as in apple, short <b>"i"</b> as in iguana. Each recording stops by itself after 2 seconds. Hold the phone about a hand away.</p>'+
+   '<div class="psec" id="recSec"><h3>Letter sounds</h3><p>s, a, t, p and i come <b>built in</b>, in Dad\'s voice. You only need to record here to replace one on this phone, or for a new letter.</p><p>Record each sound once, in your voice. Say the pure sound, short and clear: <b>"sss"</b> not "suh", <b>"t"</b> as a short puff not "tuh", short <b>"a"</b> as in apple, short <b>"i"</b> as in iguana. Each recording stops by itself after 2 seconds. Hold the phone about a hand away.</p>'+
      '<p class="note">Until a sound is recorded the games use the keyword instead ("Which letter starts sun?"). The phone voice cannot say letter sounds on their own.</p>'+
      (recMsg?'<p class="warn">'+recMsg+'</p>':'')+'<div id="recRows"></div><p class="warn" id="recErr" hidden></p></div>'+
    '<div class="psec" id="baseSec"><h3>Starting check</h3><p>About 3 minutes. For each letter that is on: <b>Say It</b> (you judge) and <b>Sound Horn</b> (his first tap counts). Run it now, then again in a few weeks to compare.</p><button class="solid-go" id="bgo">Start the check</button><div id="baseOut" style="margin-top:10px"></div></div>'+
@@ -685,13 +689,13 @@ function resetAsk(){$('#resetBox').innerHTML='<p style="font-weight:700;margin:0
 var recBusy=false;
 function renderRecRows(){var el=$('#recRows');if(!el)return;var can=!recSupport();
   el.innerHTML=onList().map(function(l){var r=REC[l];
-    return '<div class="rrow" data-l="'+l+'"><span class="pg-n">'+l+'</span><span class="rst">'+(r?'Recorded'+(r.date?' · '+niceDate(r.date):''):'Not recorded')+'</span>'+
-      '<button class="rbtn rec" data-a="rec"'+(can?'':' disabled')+'>'+(r?'Re-record':'Record')+'</button><button class="rbtn" data-a="play"'+(r?'':' disabled')+'>Play</button><button class="rbtn del" data-a="del"'+(r?'':' disabled')+'>Delete</button></div>';}).join('');
+    return '<div class="rrow" data-l="'+l+'"><span class="pg-n">'+l+'</span><span class="rst">'+(r?(r.bundled?'Built in':'Recorded'+(r.date?' · '+niceDate(r.date):'')):'Not recorded')+'</span>'+
+      '<button class="rbtn rec" data-a="rec"'+(can?'':' disabled')+'>'+(r?(r.bundled?'Record my own':'Re-record'):'Record')+'</button><button class="rbtn" data-a="play"'+(r?'':' disabled')+'>Play</button><button class="rbtn del" data-a="del"'+(r&&!r.bundled?'':' disabled')+'>Delete</button></div>';}).join('');
   $$('.rrow',el).forEach(function(row){var l=row.dataset.l;
     $$('.rbtn',row).forEach(function(b){b.onclick=function(){ac();var a=b.dataset.a;
       if(a==='play'){run([function(){return playSound(l,true);}]);}
       else if(a==='del'){if(!b.classList.contains('sure')){b.classList.add('sure');b.textContent='Sure?';setTimeout(function(){if(b.isConnected){b.classList.remove('sure');b.textContent='Delete';}},3000);return;}
-        dbDo('readwrite',function(st){return st.delete(l);}).then(function(){if(REC[l]&&REC[l].url){try{URL.revokeObjectURL(REC[l].url);}catch(e){}}delete REC[l];renderRecRows();});}
+        dbDo('readwrite',function(st){return st.delete(l);}).then(function(){if(REC[l]&&REC[l].url){try{URL.revokeObjectURL(REC[l].url);}catch(e){}}delete REC[l];loadBundled().then(renderRecRows);});}
       else recordLetter(l,row);};});});}
 function recErr(t){var e=$('#recErr');if(!e)return;e.hidden=!t;e.textContent=t||'';}
 function recordLetter(l,row){if(recBusy)return;var why=recSupport();if(why){recErr(why);return;}
@@ -725,7 +729,7 @@ if(state.laps.date!==today()){state.laps={date:today(),count:0};}
 save();
 try{if(synthOK)speechSynthesis.getVoices();}catch(e){}
 render();
-loadRecordings().then(function(){if(view==='parents')renderRecRows();});
+loadRecordings().then(loadBundled).then(function(){if(view==='parents')renderRecRows();});
 })();
 </script>
 </body>
