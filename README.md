@@ -50,4 +50,4 @@ Stops marked "Coming soon" on the homepage: Word Parking (sight words), Sentence
 
 ## Built-in letter sounds
 
-`sounds/<letter>.mp3` holds one clip per letter (s, a, t, p, i so far), recorded by Dad. Both Letter Road and Blend Road load these when the phone has no recording of its own for that letter. To add a letter's sound: put `sounds/<letter>.mp3` in place and add the letter to the `BUNDLED` list in `letters/index.html` and `blend/index.html`.
+`sounds/<letter>.mp3` holds one clip per letter (s, a, t, p, i in use; z stored for later). Letter sounds recorded by Kathryn J. Davis, used with permission. She gave written permission by email on 10 November 2026 for use in these activities on a public web page; they are from her Sound City Reading materials and are not to be sold. Both Letter Road and Blend Road load these when the phone has no recording of its own for that letter. To add a letter's sound: put `sounds/<letter>.mp3` in place and add the letter to the `BUNDLED` list in `letters/index.html` and `blend/index.html`.
