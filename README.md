@@ -13,8 +13,10 @@ Live site: https://teacherzoled.github.io/edwin-learning-journey/
 | `bible-road/` | Nano's Bible Road | Review of his Bible notes: God's Word (Psalm 119:105), the Old and New Testament, and the Trinity |
 | `belize-symbols/` | Fly Over Belize | Review of his notes on Independence Day and the national symbols: flag, tapir, toucan, mahogany, black orchid |
 | `health/` | Ambulance Health Run | Review of his Health Education notes: safe drinking water and germs |
+| `letters/` | Letter Road | Letter sounds in the school's order (s, a, t, p, i): Garage (learn), Sound Horn (hear the sound, tap the letter), First Sound Pickup (picture, tap its first letter), Twin Cars (capital to small letter), Say It (parent-scored), plus a starting check |
+| `blend/` | Blend Road | Blending: Drive the Road (learn), Which Road? (hear a word, tap it), Picture Stop (read a word, tap its picture), Read It To Me (parent-scored) |
 
-Stops marked "Coming soon" on the homepage: Letter Road (letter sounds), Word Parking (sight words), Sentence Trip (sentences around Belize) and Book Racetrack (first books).
+Stops marked "Coming soon" on the homepage: Word Parking (sight words), Sentence Trip (sentences around Belize) and Book Racetrack (first books).
 
 ## Adding a new app
 
@@ -29,3 +31,19 @@ Stops marked "Coming soon" on the homepage: Letter Road (letter sounds), Word Pa
 
 - Each app saves progress in the phone's browser storage. All apps share the website `teacherzoled.github.io`, so the hub can show progress from each app.
 - Spanish is used only as a spoken meaning bridge. English always comes first, and Spanish never appears written on the child's screens.
+
+## Letter Road and Blend Road
+
+- **Storage keys:** `nanoLetters.v1` (Letter Road: letters switched on, progress, laps, starting checks) and `nanoBlend.v1` (Blend Road: word progress, Read It To Me results, laps). Sound on/off, the Spanish bridge switch and the chosen voices are shared with every stop through the `settings` in `nanoNumbers.v1`.
+- **Strong:** a letter is strong when he finds it (Sound Horn and Pickup) right on the first try in 4 of his last 5 rounds. Say It and Twin Cars have their own lights and do not count toward strong. A word is strong on the same rule over Which Road? and Picture Stop; Read It To Me is kept separately (read it / sounded it out / not yet).
+- **Letters switched on:** Letter Road · Parents has a switch for each letter (s, a, t, p, i are on at first; at least 2 stay on). Blend Road reads the same `nanoLetters.v1` key and only uses words whose letters are all on; Parents shows which letters a locked word is waiting for.
+- **Recorded sounds:** the phone voice cannot say a letter sound on its own, so Letter Road · Parents lets a parent record each sound (2 seconds, stops by itself). Recordings are saved on the phone in IndexedDB (database `nanoSounds`, store `sounds`, one entry per letter) and both apps use them. Until a sound is recorded the games use the keyword instead ("Which letter starts sun?"), and Blend Road plays a soft engine blip for that tile. Recording needs the website address (https), not a saved file.
+- **Font:** the letters a-z and A-Z of Andika (SIL Open Font License) are embedded in both apps so the single-storey "a" shows even offline.
+
+### Adding the next letter and its words
+
+1. In `letters/index.html`, add one entry to `LETTERS`, for example `{l:'n',up:'N',on:false,look:['m','h'],kw:[{w:'nest',es:'nido'},{w:'net',es:'red'},{w:'nut',es:'nuez'}]}`.
+2. In the same file, draw its three pictures in `PIC` (one function per keyword, drawn in a 100 x 100 box; the name is the keyword, or set `pic:` in the keyword).
+3. In `blend/index.html`, add the new words to `WORDS`, for example `{w:'nap',pic:'nap',es:'siesta'}`, and draw any picture in that file's `PIC`. Words without `pic` still work in every game except Picture Stop.
+4. Commit and push. On the phone, switch the letter on in Letter Road · Parents and record its sound.
+

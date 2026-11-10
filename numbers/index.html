@@ -322,7 +322,8 @@ function blank(){var s={settings:{gear:1,flash:2000,voice:true,spanish:true,mute
   for(var n=1;n<=10;n++)s.stats[n]={t:0,c:0,last:[],pt:0,pf:0};return s;}
 function load(){var s=blank();
   try{var raw=localStorage.getItem(KEY);if(raw){var o=JSON.parse(raw);
-    if(o&&o.stats){Object.assign(s.settings,o.settings||{});for(var n=1;n<=10;n++)if(o.stats[n])Object.assign(s.stats[n],o.stats[n]);
+    if(o&&o.settings)Object.assign(s.settings,o.settings);
+    if(o&&o.stats){for(var n=1;n<=10;n++)if(o.stats[n])Object.assign(s.stats[n],o.stats[n]);
       if(o.laps)s.laps=o.laps;s.lapProg=o.lapProg||0;if(o.gNum)s.gNum=o.gNum;}}}catch(e){}
   return s;}
 var state=load();

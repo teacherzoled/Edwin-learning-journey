@@ -101,7 +101,8 @@ var STOPS=[
   {name:"Nano's Bible Road",about:"My Bible notes",href:"bible-road/",art:"bible",open:true,progress:function(){return quizProgress("bible");}},
   {name:"Fly Over Belize",about:"Our national symbols",href:"belize-symbols/",art:"belize",open:true,progress:function(){return quizProgress("belize");}},
   {name:"Ambulance Health Run",about:"Safe water and germs",href:"health/",art:"health",open:true,progress:function(){return quizProgress("health");}},
-  {name:"Letter Road",about:"Letter sounds",art:"letters",open:false},
+  {name:"Letter Road",about:"Letter sounds",href:"letters/",art:"letters",open:true,progress:lettersProgress},
+  {name:"Blend Road",about:"Build words",href:"blend/",art:"blend",open:true,progress:blendProgress},
   {name:"Word Parking",about:"Sight words",art:"words",open:false},
   {name:"Sentence Trip",about:"Read sentences around Belize",art:"trip",open:false},
   {name:"Book Racetrack",about:"My first books",art:"books",open:false}
@@ -113,6 +114,7 @@ function t(x,y,s,size,col){return '<text x="'+x+'" y="'+y+'" text-anchor="middle
 var ART={
   numbers:function(){return '<svg viewBox="0 0 84 84"><rect width="84" height="84" fill="#D6EAF4"/><path d="M8 38 L42 14 L76 38 Z" fill="'+C.red+'"/><rect x="14" y="38" width="56" height="40" fill="#fff" stroke="'+C.asph+'" stroke-width="3"/>'+t(42,70,'1 2 3',22,C.ink)+'</svg>';},
   letters:function(){var s='<svg viewBox="0 0 84 84"><rect width="84" height="84" fill="'+C.asph+'"/>';[['s',6],['a',31],['t',56]].forEach(function(p){s+='<rect x="'+p[1]+'" y="28" width="22" height="28" rx="5" fill="'+C.lane+'"/>'+t(p[1]+11,50,p[0],22,C.ink);});return s+'</svg>';},
+  blend:function(){var s='<svg viewBox="0 0 84 84"><rect width="84" height="84" fill="#D6EAF4"/><rect x="0" y="38" width="84" height="46" fill="'+C.asph+'"/><path d="M4 78 H80" stroke="'+C.lane+'" stroke-width="3" stroke-dasharray="9 6"/><rect x="10" y="46" width="64" height="26" rx="6" fill="'+C.lane+'"/>'+t(42,66,'sat',24,C.ink);return s+'<g transform="translate(4,6) scale(.75)">'+car().replace(/<\/?svg[^>]*>/g,'')+'</g></svg>';},
   words:function(){return '<svg viewBox="0 0 84 84"><rect width="84" height="84" fill="'+C.blue+'"/><path d="M10 14 V70 M74 14 V70" stroke="#fff" stroke-width="4"/>'+t(42,40,'the',24,'#fff')+'<g transform="translate(22,48) scale(.62)">'+car().replace(/<\/?svg[^>]*>/g,'')+'</g></svg>';},
   trip:function(){return '<svg viewBox="0 0 84 84"><rect width="84" height="84" fill="#CFE6C6"/><path d="M8 70 C 30 60, 20 40, 44 36 S 70 20, 76 12" stroke="'+C.asph+'" stroke-width="8" fill="none" stroke-linecap="round"/><path d="M60 8 a10 10 0 0 1 10 10 c0 8 -10 18 -10 18 s-10 -10 -10 -18 a10 10 0 0 1 10 -10 z" fill="'+C.red+'"/><circle cx="60" cy="18" r="4" fill="#fff"/></svg>';},
   bible:function(){return '<svg viewBox="0 0 84 84"><rect width="84" height="84" fill="#E6F1F3"/><rect x="0" y="62" width="84" height="22" fill="'+C.asph+'"/><path d="M42 8 V22 M36 14 H48" stroke="'+C.ink+'" stroke-width="3" stroke-linecap="round"/><path d="M20 40 L42 22 L64 40 Z" fill="'+C.red+'"/><rect x="25" y="39" width="34" height="23" fill="#FFF6E5" stroke="'+C.ink+'" stroke-width="2"/><path d="M37 62 V51 Q42 45 47 51 V62 Z" fill="#7A4A2A"/><circle cx="42" cy="33" r="3" fill="'+C.lane+'"/></svg>';},
@@ -128,6 +130,26 @@ function numbersProgress(){
     var strong=0;for(var n=1;n<=10;n++){var l=(o.stats[n]&&o.stats[n].last||[]).slice(-5);if(l.length>=5&&l.filter(Boolean).length>=4)strong++;}
     var d=new Date(),today=d.getFullYear()+'-'+(d.getMonth()+1)+'-'+d.getDate(),laps=(o.laps&&o.laps.date===today)?o.laps.count:0;
     return '★ '+strong+' of 10 numbers strong'+(laps?' · '+laps+' lap'+(laps>1?'s':'')+' today':'');
+  }catch(e){return '';}
+}
+
+/* Progress from Letter Road: a letter is strong when he finds it from its sound on the first try in 4 of his last 5 rounds */
+function lastStrong(l){l=(l||[]).slice(-5);return l.length>=5&&l.filter(Boolean).length>=4;}
+function todayKey(){var d=new Date();return d.getFullYear()+'-'+(d.getMonth()+1)+'-'+d.getDate();}
+function lapText(o){var n=(o.laps&&o.laps.date===todayKey())?o.laps.count:0;return n?' \u00b7 '+n+' lap'+(n>1?'s':'')+' today':'';}
+function lettersOn(){try{var o=JSON.parse(localStorage.getItem('nanoLetters.v1')||'null');if(o&&o.on)return o.on;}catch(e){}return {s:true,a:true,t:true,p:true,i:true};}
+function lettersProgress(){
+  try{var o=JSON.parse(localStorage.getItem('nanoLetters.v1')||'null');if(!o||!o.stats)return '';
+    var on=o.on||{},n=0,strong=0;for(var k in on){if(!on[k])continue;n++;if(o.stats[k]&&lastStrong(o.stats[k].last))strong++;}
+    return '\u2605 '+strong+' of '+n+' sounds strong'+lapText(o);
+  }catch(e){return '';}
+}
+/* Progress from Blend Road: counts only words whose letters are all switched on in Letter Road */
+function blendProgress(){
+  try{var o=JSON.parse(localStorage.getItem('nanoBlend.v1')||'null');if(!o||!o.stats)return '';
+    var on=lettersOn(),n=0,strong=0;
+    for(var w in o.stats){if(!w.split('').every(function(c){return on[c];}))continue;n++;if(lastStrong(o.stats[w].last))strong++;}
+    return '\u2605 '+strong+' of '+n+' words strong'+lapText(o);
   }catch(e){return '';}
 }
 

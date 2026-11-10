@@ -1,0 +1,732 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#2A2E35">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}[hidden]{display:none!important}</style>
+<title>Letter Road</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Andika:wght@400;700&family=Atkinson+Hyperlegible:wght@400;700&family=Bungee&display=swap">
+<style>
+/* Andika (SIL Open Font License 1.1), letters a-z and A-Z only, embedded so the schoolbook single-storey "a" shows even offline */
+@font-face{font-family:'Andika Kid';font-weight:400;font-display:block;src:url(data:font/woff2;base64,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) format('woff2')}
+@font-face{font-family:'Andika Kid';font-weight:700;font-display:block;src:url(data:font/woff2;base64,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) format('woff2')}
+/* Layout: a one-screen phone app in the Number Garage style. Home grid of game tiles; each game is top bar, play area, thumb-zone buttons. Parents screen scrolls. */
+:root{
+  --bg:#ECF0F2; --paper:#FFFFFF; --ink:#1D2127; --muted:#56606B; --line:#D2DAE0;
+  --asph:#2A2E35; --asph2:#3A3F48; --lane:#F5C116; --red:#DD3B2A; --green:#23955A;
+  --blue:#2B6BD3; --orange:#EE8A1A; --amber:#F2A516; --sky:#D6EAF4; --gold:#C99A06;
+  --f-display:'Bungee','Arial Black',Impact,sans-serif;
+  --f-kid:'Andika Kid','Andika','Century Gothic','Trebuchet MS',system-ui,sans-serif;
+  --f-body:'Atkinson Hyperlegible',Arial,system-ui,sans-serif;
+  color-scheme:light;
+}
+html{height:100%;box-sizing:border-box}
+*,*::before,*::after{box-sizing:border-box}
+body{height:100%;margin:0;overflow:hidden;background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:16px;line-height:1.5;
+  padding-left:max(16px, env(safe-area-inset-left, 0px));padding-right:max(16px, env(safe-area-inset-right, 0px));
+  -webkit-tap-highlight-color:transparent;-webkit-user-select:none;user-select:none}
+button{font:inherit;color:inherit;cursor:pointer;touch-action:manipulation}
+button:disabled{opacity:.35;cursor:default}
+:focus-visible{outline:4px solid var(--blue);outline-offset:3px}
+#app{height:100%;max-width:560px;margin:0 auto;display:flex;flex-direction:column}
+#app.wide{max-width:860px}
+.screen{flex:1;min-height:0;display:flex;flex-direction:column;gap:10px;padding-block:10px 14px}
+
+/* Top bar */
+.top{display:flex;align-items:center;gap:8px;flex:0 0 auto}
+.ib{width:54px;height:54px;border-radius:16px;border:none;display:grid;place-items:center;background:var(--asph);color:#fff;flex:0 0 auto;padding:0}
+.ib svg{width:28px;height:28px}
+.ib.blue{background:var(--blue)}
+.ib.out{background:var(--paper);color:var(--asph);border:3px solid var(--asph)}
+.ib.mute{width:46px;height:46px;border-radius:14px;background:var(--paper);color:var(--asph);border:3px solid var(--asph)}
+.ib.mute.off{background:#F8DCD8;color:#9B2618;border-color:#9B2618}
+.ib.blue:disabled{background:#9AA3AB;opacity:1}
+.top-title{flex:1;min-width:0;font-family:var(--f-display);font-size:16px;color:var(--asph);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dots{display:flex;gap:4px;flex:0 0 auto}
+.dots i{width:11px;height:11px;border-radius:50%;background:var(--line)}
+.dots i.on{background:var(--gold)}
+
+/* Play area */
+.play{flex:1;min-height:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;position:relative;width:100%}
+.bottom{flex:0 0 auto;display:flex;gap:10px;width:100%}
+.choice{flex:1;min-width:0;height:clamp(76px,13vh,118px);font-family:var(--f-kid);font-weight:700;font-size:clamp(42px,7.8vh,70px);line-height:1;border-radius:22px;border:4px solid var(--ink);background:var(--paper);box-shadow:0 6px 0 var(--ink);padding:0 0 .12em;transition:transform .08s,box-shadow .08s;color:var(--ink)}
+.choice:active{transform:translateY(4px);box-shadow:0 2px 0 var(--ink)}
+.choice.right{background:var(--green);color:#fff;border-color:var(--green);box-shadow:0 6px 0 #17663D}
+.choice.lp{box-shadow:inset 0 0 0 5px #fff,inset 0 0 0 8px var(--blue),0 6px 0 var(--ink)}
+.choice.lp:active{box-shadow:inset 0 0 0 5px #fff,inset 0 0 0 8px var(--blue),0 2px 0 var(--ink)}
+.choice.lp.right{box-shadow:0 6px 0 #17663D}
+.choice.dim{opacity:.45}
+.nope{animation:shake .45s}
+@keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-10px)}40%{transform:translateX(9px)}60%{transform:translateX(-6px)}80%{transform:translateX(4px)}}
+.cap{font-family:var(--f-body);font-size:15px;text-align:center;color:var(--muted);line-height:1.3;flex:0 0 auto}
+.cap b{color:var(--ink)}
+
+/* Home */
+.home-head{display:flex;align-items:center;gap:8px;flex:0 0 auto}
+.home-head .hcar{width:64px;flex:0 0 auto}
+.home-head h1{flex:1;min-width:0;margin:0;font-family:var(--f-display);font-weight:400;font-size:clamp(18px,5.4vw,26px);line-height:1.05;color:var(--asph)}
+.hub{display:flex;align-items:center;gap:2px;background:var(--asph);color:var(--lane);border-radius:16px;padding:6px 10px 6px 4px;flex:0 0 auto;text-decoration:none}
+.hub svg:first-child{width:24px;height:24px}.hub svg:last-child{width:46px}
+.pbtn{border:2px solid var(--asph);background:var(--paper);border-radius:12px;padding:8px 10px;font-weight:700;font-size:14px;flex:0 0 auto}
+.tiles{flex:1;min-height:0;display:grid;grid-template-columns:1fr 1fr;grid-template-rows:1.3fr 1fr 1fr;gap:10px}
+.tile{border:none;border-radius:20px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;padding:8px;min-height:0;min-width:0;box-shadow:0 5px 0 rgba(0,0,0,.22)}
+.tile:active{transform:translateY(3px);box-shadow:0 2px 0 rgba(0,0,0,.22)}
+.tile .art{flex:1;min-height:0;width:100%;display:flex;align-items:center;justify-content:center}
+.tile .art svg{width:100%;height:100%}
+.tile b{font-family:var(--f-display);font-weight:400;font-size:clamp(13px,3.6vw,17px);line-height:1.1;flex:0 0 auto}
+.tile.wide{grid-column:span 2}
+.tile.locked{opacity:.4}
+.t-sky{background:var(--sky);color:var(--asph)}
+.t-dark{background:var(--asph);color:var(--lane)}
+.t-blue{background:var(--blue);color:#fff}
+.t-grey{background:#5A616B;color:var(--lane)}
+.t-cream{background:#FFE6C7;color:#7A3F00}
+.t-plate{background:var(--paper);color:var(--blue);border:3px solid var(--blue)}
+.home-foot{flex:0 0 auto;display:flex;justify-content:center;align-items:center;gap:8px;font-weight:700;color:var(--muted);flex-wrap:wrap;text-align:center;line-height:1.2}
+.home-foot b{font-family:var(--f-display);font-weight:400;color:var(--gold);font-size:19px}
+.nudge{flex:0 0 auto;border:2px dashed var(--amber);background:#FFF6DF;color:#6E4A00;border-radius:12px;padding:6px 10px;font-weight:700;font-size:14px;line-height:1.25;text-align:left}
+
+/* Shared play pieces */
+.pic{flex:1;min-height:0;width:100%;background:var(--sky);border-radius:22px;display:flex;align-items:center;justify-content:center;padding:10px;position:relative;overflow:hidden;border:none}
+.pic > svg{width:100%;height:100%}
+.gb{flex:1;min-width:0;height:clamp(64px,10vh,84px);border-radius:18px;border:3px solid var(--asph);background:var(--paper);color:var(--asph);display:flex;align-items:center;justify-content:center;gap:2px;padding:0 0 .1em;font-family:var(--f-kid);font-weight:700;font-size:30px}
+.gb svg{width:30px;height:30px}
+.gb.on{background:var(--asph);color:var(--lane)}
+.j{flex:1;min-width:0;border:none;border-radius:16px;padding:10px 4px;font-weight:700;color:#fff;font-size:17px;line-height:1.15;min-height:72px}
+.j small{display:block;font-weight:400;font-size:12px;opacity:.92}
+.j.fast{background:var(--green)}.j.count{background:var(--amber);color:var(--ink)}.j.no{background:#6B737D}
+.ptag{flex:0 0 auto;font-weight:700;font-size:14px;color:#6E4A00;background:#FCEBC4;border-radius:999px;padding:3px 12px}
+
+/* Celebration */
+.celebrate{position:fixed;inset:0;background:rgba(29,33,39,.86);display:grid;place-items:center;z-index:20;cursor:pointer;padding:20px}
+.banner{background:var(--paper);border-radius:18px;padding:22px 30px;text-align:center;border:10px solid transparent;background-image:linear-gradient(var(--paper),var(--paper)),conic-gradient(#fff 25%,#111 0 50%,#fff 0 75%,#111 0);background-origin:border-box;background-clip:padding-box,border-box;background-size:auto,20px 20px}
+.banner b{display:block;font-family:var(--f-display);font-weight:400;font-size:32px;color:var(--gold)}
+.banner .bcar{width:110px;margin:6px auto 0}
+
+/* Parents */
+.screen.parents{overflow-y:auto;-webkit-user-select:text;user-select:text;gap:18px;padding-bottom:40px}
+.parents h2{font-family:var(--f-display);font-weight:400;font-size:22px;margin:0;color:var(--asph)}
+.parents h3{font-size:18px;margin:0 0 6px}
+.parents p{margin:0 0 8px}
+.psec{background:var(--paper);border:2px solid var(--line);border-radius:16px;padding:14px 16px}
+.pg{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px}
+.pg-item{border:2px solid var(--line);border-radius:12px;padding:8px 10px;display:grid;grid-template-columns:auto 1fr;gap:0 10px;align-items:center}
+.pg-n{font-family:var(--f-kid);font-weight:700;font-size:32px;grid-row:span 3;line-height:1}
+.pg-s{display:flex;align-items:center;gap:6px;font-weight:700;font-size:14px}
+.pg-d{font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums}
+.light{display:inline-block;width:12px;height:12px;border-radius:50%;background:#B7C0C8;flex:0 0 auto}
+.light.learning{background:var(--amber)}.light.strong{background:var(--green)}
+.list{margin:0;padding-left:20px}.list li{margin-bottom:6px}
+.tag{display:inline-block;font-size:12px;font-weight:700;border-radius:999px;padding:1px 9px;margin-right:4px}
+.tag.en{background:#DDE8FA;color:#1F4E9C}.tag.es{background:#DDF1E5;color:#17663D}.tag.amb{background:#FCEBC4;color:#7A5300}.tag.red{background:#F8DCD8;color:#9B2618}.tag.gold{background:#F6E7B0;color:#6E5300}
+.refs{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:8px}
+.ref{border:2px solid var(--line);border-radius:12px;padding:6px 10px;display:grid;grid-template-columns:52px 1fr;gap:0 10px;align-items:center}
+.ref svg{width:52px;height:52px;grid-row:span 2}
+.ref b{font-family:var(--f-kid);font-size:18px;line-height:1.2}
+.ref span{font-size:14px;color:var(--muted);line-height:1.3}
+.ref .es{color:#17663D;font-weight:700}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{min-width:64px;min-height:56px;border:3px solid var(--asph);background:var(--paper);border-radius:14px;font-family:var(--f-kid);font-weight:700;font-size:30px;line-height:1;padding:0 12px .1em}
+.chip[aria-pressed="true"]{background:var(--asph);color:var(--lane)}
+.chip small{font-family:var(--f-body);font-size:12px;display:block}
+.settings{display:flex;flex-direction:column;gap:10px}
+.settings label{display:flex;gap:10px;align-items:center;font-weight:700}
+.settings input[type=checkbox]{width:22px;height:22px}
+.danger{border:2px solid var(--red);color:var(--red);background:transparent;border-radius:10px;padding:8px 14px;font-weight:700}
+.danger.solid{background:var(--red);color:#fff}
+.ghost{border:2px solid var(--asph);background:transparent;border-radius:10px;padding:8px 14px;font-weight:700}
+.solid-go{border:none;background:var(--green);color:#fff;border-radius:12px;padding:10px 16px;font-weight:700;font-size:16px}
+.tbl{border-collapse:collapse;width:100%;font-size:15px}
+.tbl th,.tbl td{border-bottom:1px solid var(--line);padding:6px 8px;text-align:left}
+.tbl td.k{font-family:var(--f-kid);font-weight:700;font-size:22px}
+.yes{color:#17663D;font-weight:700}.notyet{color:#7A5300;font-weight:700}
+.warn{background:#FFF6DF;border:2px solid var(--amber);border-radius:12px;padding:8px 12px;font-weight:700;color:#6E4A00}
+a.plink{color:var(--blue);font-weight:700}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
+
+/* Letter Road */
+.lbig{gap:5%;align-items:center;cursor:pointer}
+.lbig .lo{font-family:var(--f-kid);font-weight:700;font-size:min(34vh,52vw);line-height:1;color:var(--ink);padding-bottom:.08em}
+.lbig .up{font-family:var(--f-kid);font-weight:700;font-size:min(14vh,22vw);line-height:1;color:var(--muted);align-self:center}
+.pop .lo{animation:pop .35s}
+@keyframes pop{50%{transform:scale(1.12)}}
+.kws{display:flex;gap:10px;width:100%;flex:0 0 auto}
+.kw{flex:1;min-width:0;height:clamp(84px,15vh,130px);background:var(--paper);border:3px solid var(--line);border-radius:18px;display:flex;align-items:center;justify-content:center;padding:6px}
+.kw svg{width:100%;height:100%}
+.kw.on{border-color:var(--green);background:#E8F5EC}
+.pic.dark{background:var(--asph)}
+.horn{cursor:pointer}
+.twinbox{flex:1;min-height:0;width:100%;background:var(--sky);border-radius:22px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0;padding:10px}
+.tplate,.bigplate{background:#fff;border:6px solid var(--ink);border-radius:18px;box-shadow:inset 0 0 0 6px #fff,inset 0 0 0 10px var(--blue);font-family:var(--f-kid);font-weight:700;line-height:1;display:grid;place-items:center;padding:0 .3em .3em}
+.tplate{font-size:clamp(70px,16vh,130px);min-width:44%}
+.tcar{width:min(64%,260px);margin-top:-4px}
+.tcar svg{width:100%;display:block}
+.bigplate{flex:0 1 auto;font-size:clamp(90px,24vh,190px);min-width:55%}
+.choice.on{background:var(--sky)}
+.rrow{display:grid;grid-template-columns:40px 1fr auto auto auto;gap:6px 8px;align-items:center;padding:8px 0;border-bottom:1px solid var(--line)}
+.rrow .pg-n{grid-row:auto}
+.rst{font-size:14px;color:var(--muted);line-height:1.2}
+.rbtn{border:2px solid var(--asph);background:var(--paper);border-radius:10px;min-height:44px;padding:4px 10px;font-weight:700;font-size:14px}
+.rbtn.rec{background:var(--red);border-color:var(--red);color:#fff}
+.rbtn.rec.live{background:#9B2618;animation:pulse 1s infinite}
+.rbtn.del{border-color:var(--muted);color:var(--muted)}
+.rbtn.sure{background:var(--red);border-color:var(--red);color:#fff}
+@keyframes pulse{50%{opacity:.65}}
+.note{font-size:14px;color:var(--muted);font-weight:400}
+@media (max-width:420px){.rrow{grid-template-columns:36px 1fr 1fr 1fr}.rrow .rst{grid-column:2 / -1}.rrow .pg-n{grid-row:span 2}}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script>
+(function(){
+"use strict";
+var C={ink:'#1D2127',red:'#DD3B2A',green:'#23955A',dgreen:'#17663D',lgreen:'#7DBB42',blue:'#2B6BD3',orange:'#EE8A1A',lane:'#F5C116',asph:'#2A2E35',asph2:'#3A3F48',silver:'#C9CED3',grey:'#8F98A2',dgrey:'#5A616B',white:'#FFFFFF',brown:'#9A6B3F',dbrown:'#6B4426',skin:'#B9774A',hair:'#2B1D14',sky:'#D6EAF4',pink:'#F28CA0',inkb:'#1F3F8F'};
+var K=C.ink;
+
+function $(s,r){return (r||document).querySelector(s);}
+function $$(s,r){return Array.prototype.slice.call((r||document).querySelectorAll(s));}
+function shuffle(a){for(var i=a.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=a[i];a[i]=a[j];a[j]=t;}return a;}
+function pick(a){return a[Math.floor(Math.random()*a.length)];}
+function cap1(s){return s.charAt(0).toUpperCase()+s.slice(1);}
+function esc(s){return String(s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
+
+/* ---------- Icons and Nano ---------- */
+var ICON={
+ home:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11.5 12 4l9 7.5"/><path d="M5.5 10v9.5h13V10"/><path d="M10 19.5v-5h4v5"/></svg>',
+ speak:'<svg viewBox="0 0 24 24"><path d="M4 9h4l5-4v14l-5-4H4z" fill="currentColor"/><path d="M16 8.5a5 5 0 0 1 0 7M18.5 6a8.5 8.5 0 0 1 0 12" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/></svg>',
+ left:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg>',
+ right:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7"/></svg>',
+ redo:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12a8 8 0 1 0 2.5-5.8"/><path d="M4 4v5h5"/></svg>',
+ soundOn:'<svg viewBox="0 0 24 24"><path d="M4 9h4l5-4v14l-5-4H4z" fill="currentColor"/><path d="M16 8.5a5 5 0 0 1 0 7" stroke="currentColor" stroke-width="2.2" fill="none" stroke-linecap="round"/></svg>',
+ soundOff:'<svg viewBox="0 0 24 24"><path d="M4 9h4l5-4v14l-5-4H4z" fill="currentColor"/><path d="M16 9l5 6M21 9l-5 6" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg>'
+};
+function carInner(col,face){
+  return '<path d="M6 24 Q6 16 14 15 L20 15 L27 6 Q29 4 32 4 L44 4 Q47 4 49 7 L55 15 Q60 16 60 22 L60 26 L6 26 Z" fill="'+col+'"/>'+
+   '<path d="M30 7 L37 7 L37 15 L24 15 Z" fill="#D9EEF7"/><path d="M39 7 L46 7 Q47 7 48 8 L53 15 L39 15 Z" fill="#D9EEF7"/>'+
+   (face?'<circle cx="44" cy="11" r="1.8" fill="'+C.ink+'"/><circle cx="49" cy="11.5" r="1.8" fill="'+C.ink+'"/>':'')+
+   '<rect x="56" y="17" width="4" height="3" rx="1" fill="'+C.lane+'"/>'+
+   '<circle cx="18" cy="27" r="6" fill="#20232A"/><circle cx="18" cy="27" r="2.5" fill="#C9CED3"/>'+
+   '<circle cx="48" cy="27" r="6" fill="#20232A"/><circle cx="48" cy="27" r="2.5" fill="#C9CED3"/>';
+}
+function carSVG(col,face,cls){return '<svg'+(cls?' class="'+cls+'"':'')+' viewBox="0 0 64 36" aria-hidden="true">'+carInner(col||C.red,face)+'</svg>';}
+/* Police car: Nano's shape in white and blue with a light bar */
+function policeInner(){return '<rect x="31" y="0" width="7" height="4" rx="1.5" fill="'+C.red+'"/><rect x="38" y="0" width="7" height="4" rx="1.5" fill="'+C.blue+'"/>'+
+  carInner('#FFFFFF',true).replace('<path d="M6 24','<path stroke="'+C.ink+'" stroke-width="1.2" d="M6 24')+'<rect x="7" y="19" width="52" height="4" fill="'+C.blue+'"/>';}
+function waves(x,y,col){return '<path d="M'+x+' '+(y-6)+' q5 6 0 12 M'+(x+6)+' '+(y-11)+' q9 11 0 22" stroke="'+(col||C.lane)+'" stroke-width="2.6" fill="none" stroke-linecap="round"/>';}
+
+/* ---------- Shared settings: voice, mute, Spanish bridge and voices live in the Number Garage key ---------- */
+var SKEY='nanoNumbers.v1';
+var SDEF={voice:true,spanish:true,mute:false,enVoice:'',esVoice:''};
+function readShared(){var s=Object.assign({},SDEF);try{var o=JSON.parse(localStorage.getItem(SKEY)||'null');if(o&&o.settings)Object.keys(SDEF).forEach(function(k){if(k in o.settings)s[k]=o.settings[k];});}catch(e){}return s;}
+var S=readShared();
+function setShared(k,v){S[k]=v;try{var o=JSON.parse(localStorage.getItem(SKEY)||'null');if(!o||typeof o!=='object')o={};if(!o.settings||typeof o.settings!=='object')o.settings={};o.settings[k]=v;localStorage.setItem(SKEY,JSON.stringify(o));}catch(e){}}
+
+/* ---------- Sound effects ---------- */
+var actx=null;
+function ac(){try{if(!actx){var A=window.AudioContext||window.webkitAudioContext;if(!A)return null;actx=new A();}if(actx.state==='suspended')actx.resume();return actx;}catch(e){return null;}}
+function tone(f,t0,dur,type,g){if(S.mute)return;var a=ac();if(!a)return;try{var o=a.createOscillator(),v=a.createGain();o.type=type||'square';o.frequency.value=f;
+  v.gain.setValueAtTime(0.0001,t0);v.gain.exponentialRampToValueAtTime(g||0.05,t0+0.02);v.gain.exponentialRampToValueAtTime(0.0001,t0+dur);o.connect(v);v.connect(a.destination);o.start(t0);o.stop(t0+dur+0.02);}catch(e){}}
+function now(){var a=ac();return a?a.currentTime:0;}
+function honk(){var t=now();[0,0.24].forEach(function(d){tone(392,t+d,0.17);tone(494,t+d,0.17);});}
+function beep(){tone(523,now(),0.08,'triangle',0.05);}
+function boop(){var t=now();tone(220,t,0.18,'sine',0.08);tone(165,t+0.16,0.22,'sine',0.08);}
+function blip(){var t=now();tone(110,t,0.12,'sawtooth',0.035);tone(150,t+0.1,0.14,'sawtooth',0.03);}
+function fanfare(){var t=now();[523,659,784,1047].forEach(function(f,i){tone(f,t+i*0.13,0.22,'triangle',0.08);});}
+
+/* ---------- Voices (same ranking as the Number Garage) ---------- */
+function vscore(v){var n=(v.name||'').toLowerCase(),sc=0;
+  if(/natural|neural|online/.test(n))sc+=60;
+  if(/premium|enhanced|siri/.test(n))sc+=50;
+  if(/google/.test(n))sc+=35;
+  if(/(samantha|ava|allison|susan|zoe|nicky|aria|jenny|libby|sonia|paulina|monica|dalia|sabina|jorge|paloma|elvira)/.test(n))sc+=15;
+  if(v.localService===false)sc+=5;
+  if(/compact|espeak|eloquence|fred|albert|bad news|bells|boing|bubbles|cellos|whisper|zarvox|trinoids|jester|organ|superstar|wobble|grandma|grandpa|rocko|shelley|flo|eddy|reed|sandy|junior|ralph|kathy|bahh/.test(n))sc-=80;
+  return sc;}
+var REGION={en:['en-US','en-GB','en-AU','en-CA','en-IN','en'],es:['es-MX','es-US','es-419','es-ES','es']};
+var synthOK=!!(window.speechSynthesis&&window.SpeechSynthesisUtterance);
+function allVoices(){try{return synthOK?(speechSynthesis.getVoices()||[]):[];}catch(e){return [];}}
+function voicesFor(base){var order=REGION[base]||[base];
+  return allVoices().filter(function(v){return v.lang&&v.lang.replace('_','-').toLowerCase().indexOf(base)===0;})
+    .sort(function(a,b){var ra=order.findIndex(function(r){return a.lang.replace('_','-').indexOf(r)===0;}),rb=order.findIndex(function(r){return b.lang.replace('_','-').indexOf(r)===0;});
+      return (vscore(b)-vscore(a))||((ra<0?99:ra)-(rb<0?99:rb));});}
+function voiceFor(lang){var base=lang.slice(0,2),list=voicesFor(base);if(!list.length)return null;
+  var want=base==='es'?S.esVoice:S.enVoice;
+  if(want){var f=list.find(function(v){return v.name===want;});if(f)return f;}
+  return list[0];}
+/* Spanish bridge plays only when switched on and the phone has a Spanish voice (an English voice reading "culebra" would not help) */
+function esReady(){if(!S.spanish)return false;var all=allVoices();return all.length===0?synthOK:voicesFor('es').length>0;}
+
+/* ---------- Speech and sequences ----------
+   sayP speaks and resolves when finished. run() chains steps and is cancelled by hush() or the next run(). */
+var tok=0,srcs=[];
+function hush(){tok++;try{if(synthOK)speechSynthesis.cancel();}catch(e){}srcs.forEach(function(s){try{s.stop();}catch(e){}});srcs=[];}
+function wait(ms){return new Promise(function(r){setTimeout(r,ms);});}
+function sayP(text,lang){return new Promise(function(res){
+  if(S.mute||!S.voice||!text||!synthOK)return res();
+  var done=false;function fin(){if(!done){done=true;res();}}
+  try{var u=new SpeechSynthesisUtterance(text);u.lang=lang||'en-US';u.rate=0.85;u.pitch=1.05;var v=voiceFor(u.lang);if(v){u.voice=v;u.lang=v.lang;}
+    u.onend=fin;u.onerror=fin;setTimeout(fin,1800+text.length*95);speechSynthesis.speak(u);}catch(e){fin();}});}
+function run(steps){hush();var my=tok,p=Promise.resolve();
+  steps.forEach(function(f){if(!f)return;p=p.then(function(r){if(my!==tok)return r;return f(r);});});
+  return p.catch(function(){});}
+function say(text,lang){return run([function(){return sayP(text,lang);}]);}
+function bridgeP(es){return esReady()&&es?wait(200).then(function(){return sayP(es,'es-MX');}):Promise.resolve();}
+function muteBtn(){var off=S.mute;return '<button class="ib mute'+(off?' off':'')+'" id="muteBtn" aria-pressed="'+off+'" aria-label="'+(off?'Sound is off. Turn sound on':'Sound is on. Turn sound off')+'">'+(off?ICON.soundOff:ICON.soundOn)+'</button>';}
+function bindMute(){var b=$('#muteBtn');if(!b)return;b.onclick=function(){setShared('mute',!S.mute);if(S.mute)hush();
+  b.outerHTML=muteBtn();bindMute();var sb=$('#sayBtn');if(sb)sb.disabled=S.mute;if(!S.mute)beep();};}
+
+/* ---------- Parent recordings of the letter sounds (IndexedDB "nanoSounds", shared by Letter Road and Blend Road) ---------- */
+var REC={};   /* letter -> {blob,date,url,buf,start,dur} */
+var dbP=null;
+function idb(){if(dbP)return dbP;dbP=new Promise(function(res){
+  try{if(!window.indexedDB)return res(null);var r=indexedDB.open('nanoSounds',1);
+    r.onupgradeneeded=function(){try{r.result.createObjectStore('sounds');}catch(e){}};
+    r.onsuccess=function(){res(r.result);};r.onerror=function(){res(null);};r.onblocked=function(){res(null);};}catch(e){res(null);}});
+  return dbP;}
+function dbDo(mode,fn){return idb().then(function(db){if(!db)return null;return new Promise(function(res){
+  try{var tx=db.transaction('sounds',mode),st=tx.objectStore('sounds'),out=fn(st);tx.oncomplete=function(){res(out&&out.result!==undefined?out.result:true);};tx.onerror=tx.onabort=function(){res(null);};}catch(e){res(null);}});});}
+function loadRecordings(){return idb().then(function(db){if(!db)return;return new Promise(function(res){
+  try{var tx=db.transaction('sounds','readonly'),cur=tx.objectStore('sounds').openCursor();
+    cur.onsuccess=function(){var c=cur.result;if(c){var v=c.value;if(v&&v.blob)setRec(c.key,v.blob,v.date);c.continue();}else res();};
+    cur.onerror=function(){res();};}catch(e){res();}});});}
+function setRec(l,blob,date){var old=REC[l];if(old&&old.url){try{URL.revokeObjectURL(old.url);}catch(e){}}
+  var url='';try{url=URL.createObjectURL(blob);}catch(e){}
+  REC[l]={blob:blob,date:date||'',url:url,buf:null,start:0,dur:0,tried:false};}
+function hasRec(l){return !!REC[l];}
+/* Decode once and trim the silence before and after the sound, so it plays the moment Nano reaches the tile */
+function decodeRec(r){if(r.tried)return Promise.resolve(r);r.tried=true;var a=ac();
+  if(!a||!r.blob||!r.blob.arrayBuffer)return Promise.resolve(r);
+  return r.blob.arrayBuffer().then(function(ab){return new Promise(function(res){
+    var ok=function(buf){try{var d=buf.getChannelData(0),pk=0,i;for(i=0;i<d.length;i++){var x=Math.abs(d[i]);if(x>pk)pk=x;}
+        var th=Math.max(0.01,pk*0.1),s=0,e=d.length-1;while(s<d.length&&Math.abs(d[s])<th)s++;while(e>s&&Math.abs(d[e])<th)e--;
+        var sr=buf.sampleRate;r.start=Math.max(0,s/sr-0.04);r.dur=Math.min(buf.duration-r.start,(e-s)/sr+0.16);if(!(r.dur>0.05)){r.start=0;r.dur=buf.duration;}r.buf=buf;}catch(x){}res(r);};
+    try{var p=a.decodeAudioData(ab,ok,function(){res(r);});if(p&&p.then)p.then(function(){},function(){res(r);});}catch(e){res(r);}});}).catch(function(){return r;});}
+/* Plays the parent's recording of a letter sound. Resolves true when it played, false when there is none (callers then use the keyword). */
+function playSound(l,force){
+  var r=REC[l];if(!r||(S.mute&&!force))return Promise.resolve(false);var my=tok;
+  return decodeRec(r).then(function(){if(my!==tok)return false;return new Promise(function(res){
+    var a=ac();
+    if(a&&r.buf){try{var src=a.createBufferSource();src.buffer=r.buf;var g=a.createGain();g.gain.value=1.4;src.connect(g);g.connect(a.destination);
+        srcs.push(src);src.onended=function(){res(true);};src.start(0,r.start,r.dur);setTimeout(function(){res(true);},r.dur*1000+500);return;}catch(e){}}
+    try{var au=new Audio(r.url);au.onended=function(){res(true);};au.onerror=function(){res(false);};var p=au.play();if(p&&p.catch)p.catch(function(){res(false);});
+      srcs.push({stop:function(){au.pause();}});setTimeout(function(){res(true);},2600);}catch(e){res(false);}
+  });});}
+var MIMES=['audio/webm;codecs=opus','audio/webm','audio/mp4','audio/ogg;codecs=opus','audio/ogg'];
+function recSupport(){
+  if(!window.indexedDB)return 'This browser cannot save recordings (private browsing can cause this). The games will use the keyword pictures instead.';
+  if(!window.MediaRecorder||!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia)
+    return 'This browser cannot record. Use Chrome on Android or Safari on iPhone (iOS 14.5 or newer), opened from the website address, not a saved file. The games use the keyword pictures until sounds are recorded.';
+  return '';}
+
+/* ---------- Timers ---------- */
+var timers=[],introT=null;
+function later(fn,ms){timers.push(setTimeout(fn,ms));}
+/* The spoken intro of a screen waits a moment; any tap before then cancels it so it cannot talk over (or cut off) his answer */
+function intro(fn,ms){clearTimeout(introT);introT=setTimeout(fn,ms);}
+function cancelIntro(){clearTimeout(introT);introT=null;}
+function clearTimers(){timers.forEach(clearTimeout);timers=[];cancelIntro();}
+
+/* ---------- Game screen ---------- */
+var app=$('#app'),view='home',prompt=null;
+app.addEventListener('click',function(e){if(e.target.closest&&e.target.closest('button'))cancelIntro();},true);
+function go(v){if((location.hash.slice(1)||'home')===v)render();else location.hash=v;}
+function dotsHTML(){var s='';for(var i=0;i<5;i++)s+='<i class="'+(i<state.lapProg?'on':'')+'"></i>';return s;}
+function gameScreen(title,play,bottom){
+  app.className='';
+  app.innerHTML='<div class="screen"><div class="top"><button class="ib" id="homeBtn" aria-label="Home">'+ICON.home+'</button><div class="top-title">'+title+'</div><div class="dots" id="dots" aria-label="Lap progress">'+dotsHTML()+'</div>'+muteBtn()+'<button class="ib blue" id="sayBtn" aria-label="Hear it again"'+(S.mute?' disabled':'')+'>'+ICON.speak+'</button></div>'+
+    '<div class="play" id="play">'+play+'</div>'+(bottom?'<div class="bottom" id="bottom">'+bottom+'</div>':'')+'</div>';
+  $('#homeBtn').onclick=function(){go('home');};
+  $('#sayBtn').onclick=function(){ac();if(typeof prompt==='function')prompt();};
+  bindMute();
+}
+function bump(el){if(!el)return;el.classList.remove('nope');void el.offsetWidth;el.classList.add('nope');}
+function today(){var d=new Date();return d.getFullYear()+'-'+(d.getMonth()+1)+'-'+d.getDate();}
+function niceDate(iso){try{var p=iso.split('-');return new Date(+p[0],+p[1]-1,+p[2]).toLocaleDateString(undefined,{day:'numeric',month:'short',year:'numeric'});}catch(e){return iso;}}
+function lapsToday(){return state.laps.date===today()?state.laps.count:0;}
+function lapStep(){state.lapProg++;
+  if(state.lapProg>=5){state.lapProg=0;if(state.laps.date!==today())state.laps={date:today(),count:0};state.laps.count++;save();celebrate();}
+  else save();
+  var d=$('#dots');if(d)d.innerHTML=dotsHTML();}
+function celebrate(){fanfare();later(function(){sayP('Lap complete! Great driving!');},700);
+  var el=document.createElement('div');el.className='celebrate';el.innerHTML='<div class="banner"><b>Lap '+lapsToday()+'!</b><div class="bcar">'+carSVG(C.red,true)+'</div></div>';
+  document.body.appendChild(el);var close=function(){if(el.parentNode)el.parentNode.removeChild(el);};el.onclick=close;setTimeout(close,2500);}
+function isStrongList(l){l=(l||[]).slice(-5);return l.length>=5&&l.filter(Boolean).length>=4;}
+function hubLink(){var onHub=/github\.io$/.test(location.hostname);
+  return onHub?'<a class="hub" href="../" aria-label="Back to the learning journey">'+ICON.left+carSVG(C.red,true)+'</a>':'<div class="hcar">'+carSVG(C.red,true)+'</div>';}
+
+/* ==========================================================================
+   LETTERS. To add the next letter: add one entry here (on:false so a parent
+   switches it on), and draw its three keyword pictures in PIC below.
+   kw: keyword pictures (w = English word, es = spoken Spanish bridge).
+   look: letters that are easy to confuse with it (used for the wrong choices).
+   ========================================================================== */
+var LETTERS=[
+ {l:'s',up:'S',on:true,look:['a','i'],kw:[{w:'sun',es:'sol'},{w:'snake',es:'culebra'},{w:'sock',es:'calcetín'}]},
+ {l:'a',up:'A',on:true,look:['s','i'],kw:[{w:'apple',es:'manzana'},{w:'ant',es:'hormiga'},{w:'astronaut',es:'astronauta'}]},
+ {l:'t',up:'T',on:true,look:['i','p'],kw:[{w:'tiger',es:'tigre'},{w:'turtle',es:'tortuga'},{w:'T-shirt',es:'camiseta',pic:'tshirt'}]},
+ {l:'p',up:'P',on:true,look:['t','a'],kw:[{w:'parrot',es:'loro'},{w:'pencil',es:'lápiz'},{w:'pot',es:'olla'}]},
+ {l:'i',up:'I',on:true,look:['t','a'],kw:[{w:'iguana',es:'iguana'},{w:'insect',es:'insecto'},{w:'ink',es:'tinta'}]}
+];
+var BY={};LETTERS.forEach(function(L){BY[L.l]=L;L.kw.forEach(function(k){if(!k.pic)k.pic=k.w;});});
+
+/* ---------- Keyword pictures: original, bold, drawn in a 100 x 100 box ---------- */
+function sw(w){return ' stroke="'+K+'" stroke-width="'+(w||3)+'" stroke-linejoin="round" stroke-linecap="round"';}
+var PIC={
+ sun:function(){var r='';for(var i=0;i<8;i++){var a=i*Math.PI/4;r+='<path d="M'+(50+31*Math.cos(a)).toFixed(1)+' '+(50+31*Math.sin(a)).toFixed(1)+' L'+(50+45*Math.cos(a)).toFixed(1)+' '+(50+45*Math.sin(a)).toFixed(1)+'" stroke="'+C.orange+'" stroke-width="7" stroke-linecap="round"/>';}
+   return r+'<circle cx="50" cy="50" r="25" fill="'+C.lane+'"'+sw()+'/><circle cx="42" cy="46" r="3" fill="'+K+'"/><circle cx="58" cy="46" r="3" fill="'+K+'"/><path d="M40 56 Q50 65 60 56" fill="none"'+sw()+'/>';},
+ snake:function(){var d='M10 76 C20 54 34 54 42 70 S62 92 72 72 L76 60';
+   return '<path d="'+d+'" fill="none" stroke="'+K+'" stroke-width="18" stroke-linecap="round" stroke-linejoin="round"/><path d="'+d+'" fill="none" stroke="'+C.green+'" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/>'+
+   '<circle cx="26" cy="61" r="2.6" fill="'+C.lane+'"/><circle cx="42" cy="70" r="2.6" fill="'+C.lane+'"/><circle cx="57" cy="83" r="2.6" fill="'+C.lane+'"/><circle cx="71" cy="74" r="2.6" fill="'+C.lane+'"/>'+
+   '<path d="M90 50 L99 47 M90 50 L98 55" stroke="'+C.red+'" stroke-width="2.6" stroke-linecap="round"/><ellipse cx="80" cy="50" rx="13" ry="10" fill="'+C.green+'"'+sw()+'/><circle cx="83" cy="46" r="2.8" fill="'+K+'"/>';},
+ sock:function(){var o='M34 10 H62 V56 L82 70 Q94 80 86 90 Q79 97 68 92 L42 81 Q30 76 32 64 Z';
+   return '<path d="'+o+'" fill="'+C.blue+'"/><path d="M32 64 Q30 76 42 81 L48 83 Q40 70 48 60 L34 58 Z" fill="'+C.lane+'"/><path d="M74 75 Q90 80 86 90 Q79 97 68 92 Z" fill="'+C.lane+'"/>'+
+   '<rect x="34" y="10" width="28" height="16" fill="#fff"/><path d="M34 17 H62" stroke="'+C.red+'" stroke-width="4"/><path d="'+o+'" fill="none"'+sw()+'/><path d="M34 26 H62" fill="none"'+sw(2.5)+'/>';},
+ apple:function(){return '<path d="M50 28 Q50 16 56 10" fill="none" stroke="'+C.dbrown+'" stroke-width="5" stroke-linecap="round"/><path d="M53 22 Q66 8 78 16 Q68 28 53 22 Z" fill="'+C.green+'"'+sw(2.5)+'/>'+
+   '<path d="M50 30 C32 18 12 32 16 56 C20 82 40 94 50 87 C60 94 80 82 84 56 C88 32 68 18 50 30 Z" fill="'+C.red+'"'+sw()+'/><path d="M28 44 Q30 36 38 34" fill="none" stroke="#fff" stroke-width="4" stroke-linecap="round"/>';},
+ ant:function(){return '<path d="M50 58 Q44 70 36 84 M58 60 Q60 72 58 88 M64 58 Q74 70 84 80" fill="none"'+sw(3.5)+'/>'+
+   '<path d="M80 40 Q84 24 94 22 M73 38 Q72 24 80 16" fill="none"'+sw(3)+'/>'+
+   '<ellipse cx="29" cy="56" rx="19" ry="14" fill="#7A2E1E"'+sw()+'/><ellipse cx="57" cy="55" rx="10" ry="7.5" fill="#7A2E1E"'+sw()+'/><circle cx="77" cy="47" r="11" fill="#7A2E1E"'+sw()+'/><circle cx="81" cy="45" r="3" fill="#fff"/><circle cx="82" cy="45" r="1.5" fill="'+K+'"/>';},
+ astronaut:function(){return '<rect x="28" y="44" width="44" height="34" rx="6" fill="'+C.silver+'"'+sw()+'/>'+
+   '<path d="M34 52 L20 64" stroke="'+K+'" stroke-width="13" stroke-linecap="round"/><path d="M34 52 L20 64" stroke="#fff" stroke-width="7" stroke-linecap="round"/>'+
+   '<path d="M66 52 L80 38" stroke="'+K+'" stroke-width="13" stroke-linecap="round"/><path d="M66 52 L80 38" stroke="#fff" stroke-width="7" stroke-linecap="round"/>'+
+   '<rect x="35" y="72" width="12" height="18" rx="4" fill="#fff"'+sw()+'/><rect x="53" y="72" width="12" height="18" rx="4" fill="#fff"'+sw()+'/><rect x="33" y="86" width="15" height="8" rx="3" fill="'+C.grey+'"'+sw(2.5)+'/><rect x="52" y="86" width="15" height="8" rx="3" fill="'+C.grey+'"'+sw(2.5)+'/>'+
+   '<rect x="33" y="44" width="34" height="32" rx="9" fill="#fff"'+sw()+'/><rect x="43" y="52" width="14" height="9" rx="2" fill="'+C.blue+'"/><circle cx="46" cy="66" r="2.5" fill="'+C.red+'"/><circle cx="54" cy="66" r="2.5" fill="'+C.lane+'"/>'+
+   '<circle cx="50" cy="26" r="20" fill="#fff"'+sw()+'/><rect x="36" y="17" width="28" height="18" rx="9" fill="'+C.blue+'"'+sw(2.5)+'/><path d="M41 22 Q44 19 49 20" stroke="#fff" stroke-width="3" fill="none" stroke-linecap="round"/>';},
+ tiger:function(){return '<circle cx="26" cy="28" r="11" fill="'+C.orange+'"'+sw()+'/><circle cx="74" cy="28" r="11" fill="'+C.orange+'"'+sw()+'/><circle cx="26" cy="28" r="5" fill="'+K+'"/><circle cx="74" cy="28" r="5" fill="'+K+'"/>'+
+   '<ellipse cx="50" cy="56" rx="36" ry="32" fill="'+C.orange+'"'+sw()+'/>'+
+   '<path d="M50 25 L45 38 L55 38 Z M36 29 L38 42 L44 33 Z M64 29 L62 42 L56 33 Z M14 50 L28 54 L15 60 Z M86 50 L72 54 L85 60 Z M16 66 L28 66 L20 74 Z M84 66 L72 66 L80 74 Z" fill="'+K+'"/>'+
+   '<ellipse cx="50" cy="69" rx="17" ry="12" fill="#fff"/><circle cx="37" cy="51" r="4.5" fill="'+K+'"/><circle cx="63" cy="51" r="4.5" fill="'+K+'"/>'+
+   '<path d="M44 61 H56 L50 67 Z" fill="'+K+'"/><path d="M50 67 V71 M50 71 Q44 77 39 72 M50 71 Q56 77 61 72" fill="none"'+sw(2.5)+'/>';},
+ turtle:function(){return '<path d="M12 66 L4 72 L16 72 Z" fill="'+C.lgreen+'"'+sw(2.5)+'/><ellipse cx="30" cy="74" rx="8" ry="10" fill="'+C.lgreen+'"'+sw()+'/><ellipse cx="68" cy="74" rx="8" ry="10" fill="'+C.lgreen+'"'+sw()+'/>'+
+   '<path d="M80 62 Q80 48 88 48 Q97 48 97 58 Q97 66 88 66 Z" fill="'+C.lgreen+'"'+sw()+'/><circle cx="90" cy="55" r="2.6" fill="'+K+'"/>'+
+   '<path d="M12 68 Q16 28 50 28 Q84 28 88 68 Z" fill="'+C.green+'"'+sw()+'/><path d="M30 68 L36 48 L50 42 L64 48 L70 68 M36 48 L24 44 M64 48 L76 44 M50 42 L50 30" fill="none" stroke="'+C.dgreen+'" stroke-width="3" stroke-linejoin="round"/><path d="M10 68 H90" fill="none"'+sw(3.5)+'/>';},
+ tshirt:function(){var o='M32 16 L42 12 Q50 22 58 12 L68 16 L90 34 L79 48 L70 41 V88 H30 V41 L21 48 L10 34 Z';
+   return '<path d="'+o+'" fill="'+C.red+'"/><path d="M30 41 V36 M70 41 V36" stroke="'+K+'" stroke-width="2.5"/><path d="M42 12 Q50 24 58 12" fill="none" stroke="#fff" stroke-width="3"/><path d="M40 62 L50 54 L60 62" fill="none" stroke="'+C.lane+'" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/><path d="'+o+'" fill="none"'+sw()+'/>';},
+ parrot:function(){return '<path d="M6 84 H94" stroke="'+C.dbrown+'" stroke-width="7" stroke-linecap="round"/>'+
+   '<path d="M40 70 L34 98 L44 98 L50 72 Z" fill="'+C.blue+'"'+sw(2.5)+'/>'+
+   '<path d="M44 30 C26 36 26 64 40 80 L58 80 C70 64 70 40 60 30 Z" fill="'+C.green+'"'+sw()+'/>'+
+   '<path d="M44 44 C34 52 36 70 46 76 C50 64 52 52 44 44 Z" fill="'+C.dgreen+'"/><path d="M40 70 C42 74 44 76 46 76" stroke="'+C.blue+'" stroke-width="4" fill="none"/>'+
+   '<circle cx="54" cy="26" r="15" fill="'+C.green+'"'+sw()+'/><path d="M44 16 Q52 8 62 14 Q54 16 50 22 Z" fill="'+C.red+'"/>'+
+   '<path d="M64 20 C80 20 80 40 68 40 L66 33 C70 33 70 27 64 28 Z" fill="'+C.lane+'"'+sw(2.5)+'/>'+
+   '<circle cx="56" cy="24" r="4.5" fill="#fff"'+sw(2)+'/><circle cx="57" cy="24" r="2" fill="'+K+'"/><path d="M46 82 l-3 6 M54 82 l3 6" stroke="'+K+'" stroke-width="3" stroke-linecap="round"/>';},
+ pencil:function(){return '<g transform="rotate(-35 50 50)"><rect x="8" y="41" width="12" height="18" rx="3" fill="'+C.pink+'"'+sw()+'/><rect x="18" y="41" width="8" height="18" fill="'+C.silver+'"'+sw()+'/>'+
+   '<rect x="26" y="41" width="46" height="18" fill="'+C.lane+'"'+sw()+'/><path d="M26 47 H72 M26 53 H72" stroke="#D9A40A" stroke-width="2"/>'+
+   '<path d="M72 41 L92 50 L72 59 Z" fill="#F3D9A6"'+sw()+'/><path d="M85 47 L92 50 L85 53 Z" fill="'+K+'"/></g>';},
+ pot:function(){return '<path d="M38 24 q-6 -8 0 -16 M50 22 q-6 -8 0 -16 M62 24 q-6 -8 0 -16" stroke="'+C.grey+'" stroke-width="4" fill="none" stroke-linecap="round"/>'+
+   '<rect x="6" y="46" width="18" height="9" rx="4.5" fill="'+K+'"/><rect x="76" y="46" width="18" height="9" rx="4.5" fill="'+K+'"/>'+
+   '<path d="M18 40 H82 V74 Q82 88 68 88 H32 Q18 88 18 74 Z" fill="'+C.dgrey+'"'+sw()+'/><path d="M28 50 V76" stroke="'+C.grey+'" stroke-width="5" stroke-linecap="round"/>'+
+   '<ellipse cx="50" cy="39" rx="35" ry="7" fill="'+C.grey+'"'+sw()+'/><rect x="43" y="27" width="14" height="8" rx="4" fill="'+K+'"/>';},
+ iguana:function(){return '<path d="M30 66 C12 68 6 82 14 90 C20 96 30 90 26 84" fill="none" stroke="'+K+'" stroke-width="10" stroke-linecap="round"/><path d="M30 66 C12 68 6 82 14 90 C20 96 30 90 26 84" fill="none" stroke="'+C.lgreen+'" stroke-width="5" stroke-linecap="round"/>'+
+   '<path d="M36 70 L28 84 M60 70 L68 84" stroke="'+K+'" stroke-width="9" stroke-linecap="round"/><path d="M36 70 L28 84 M60 70 L68 84" stroke="'+C.lgreen+'" stroke-width="4.5" stroke-linecap="round"/>'+
+   '<path d="M26 54 L30 44 L34 52 L38 42 L42 51 L46 41 L50 51 L54 42 L58 51 L62 44 L66 53 Z" fill="'+C.dgreen+'"'+sw(2.5)+'/>'+
+   '<ellipse cx="47" cy="62" rx="24" ry="11" fill="'+C.lgreen+'"'+sw()+'/><path d="M36 60 L40 68 M46 59 L50 68 M56 60 L60 67" stroke="'+C.dgreen+'" stroke-width="2.5"/>'+
+   '<path d="M70 66 Q74 80 84 66 Z" fill="'+C.lane+'"'+sw(2.5)+'/>'+
+   '<path d="M64 52 Q80 42 94 52 Q96 62 84 66 L66 68 Z" fill="'+C.lgreen+'"'+sw()+'/><circle cx="82" cy="53" r="4" fill="#fff"'+sw(2)+'/><circle cx="83" cy="53" r="1.8" fill="'+K+'"/>';},
+ insect:function(){return '<path d="M36 42 L16 32 M33 56 L12 58 M36 70 L18 84 M64 42 L84 32 M67 56 L88 58 M64 70 L82 84" fill="none"'+sw(3.5)+'/>'+
+   '<path d="M45 20 Q40 8 30 6 M55 20 Q60 8 70 6" fill="none"'+sw(3)+'/><circle cx="50" cy="25" r="10" fill="'+K+'"/>'+
+   '<ellipse cx="50" cy="60" rx="22" ry="28" fill="'+C.blue+'"'+sw()+'/><path d="M50 34 V88" fill="none"'+sw(3)+'/><path d="M38 44 Q40 38 46 38" stroke="#fff" stroke-width="3.5" fill="none" stroke-linecap="round"/>';},
+ ink:function(){return '<path d="M30 46 Q30 38 38 36 V26 H62 V36 Q70 38 70 46 V84 Q70 90 64 90 H36 Q30 90 30 84 Z" fill="#fff"/>'+
+   '<path d="M33 58 H67 V84 Q67 87 64 87 H36 Q33 87 33 84 Z" fill="'+C.inkb+'"/>'+
+   '<path d="M30 46 Q30 38 38 36 V26 H62 V36 Q70 38 70 46 V84 Q70 90 64 90 H36 Q30 90 30 84 Z" fill="none"'+sw()+'/><rect x="35" y="12" width="30" height="15" rx="3" fill="'+K+'"/>'+
+   '<path d="M37 64 V80" stroke="#6E8FD8" stroke-width="3" stroke-linecap="round"/><path d="M84 46 Q93 60 84 66 Q75 60 84 46 Z" fill="'+C.inkb+'"/><ellipse cx="84" cy="88" rx="10" ry="4" fill="'+C.inkb+'"/>';}
+};
+function picSVG(name,label){return '<svg viewBox="0 0 100 100" aria-hidden="'+(label?'false':'true')+'"'+(label?' role="img" aria-label="'+esc(label)+'"':'')+'>'+(PIC[name]?PIC[name]():'')+'</svg>';}
+
+/* ---------- State (nanoLetters.v1) ----------
+   last  = finding the letter from its sound or picture (Sound Horn, First Sound Pickup): drives "strong"
+   slast = Say It Check (parent heard him say the sound)
+   tlast = Twin Cars (capital to small letter), tracked on its own */
+var KEY='nanoLetters.v1';
+function blankStat(){return {t:0,c:0,last:[],st:0,sc:0,slast:[],tt:0,tc:0,tlast:[]};}
+function blank(){var s={on:{},stats:{},laps:{date:'',count:0},lapProg:0,gIdx:0,baseline:[]};
+  LETTERS.forEach(function(L){s.on[L.l]=!!L.on;s.stats[L.l]=blankStat();});return s;}
+function load(){var s=blank();
+  try{var raw=localStorage.getItem(KEY);if(raw){var o=JSON.parse(raw);
+    if(o&&o.stats){if(o.on)LETTERS.forEach(function(L){if(L.l in o.on)s.on[L.l]=!!o.on[L.l];});
+      LETTERS.forEach(function(L){if(o.stats[L.l])Object.assign(s.stats[L.l],o.stats[L.l]);});
+      if(o.laps)s.laps=o.laps;s.lapProg=o.lapProg||0;s.gIdx=o.gIdx||0;if(Array.isArray(o.baseline))s.baseline=o.baseline;}}}catch(e){}
+  return s;}
+var state=load();
+function save(){try{localStorage.setItem(KEY,JSON.stringify(state));}catch(e){}}
+function onList(){return LETTERS.filter(function(L){return state.on[L.l];}).map(function(L){return L.l;});}
+var HK={find:'last',say:'slast',twin:'tlast'};
+function strong(l,kind){return isStrongList(state.stats[l][HK[kind||'find']]);}
+function status(l){var s=state.stats[l];if(strong(l))return 'strong';if(s.t>0||s.st>0||s.tt>0)return 'learning';return 'new';}
+function statusOf(l,kind){var s=state.stats[l],n={find:s.t,say:s.st,twin:s.tt}[kind];if(strong(l,kind))return 'strong';return n>0?'learning':'new';}
+function record(l,ok,kind){var s=state.stats[l];kind=kind||'find';
+  if(kind==='find'){s.t++;if(ok)s.c++;s.last.push(!!ok);if(s.last.length>10)s.last=s.last.slice(-10);}
+  else if(kind==='say'){s.st++;if(ok)s.sc++;s.slast.push(!!ok);if(s.slast.length>10)s.slast=s.slast.slice(-10);}
+  else{s.tt++;if(ok)s.tc++;s.tlast.push(!!ok);if(s.tlast.length>10)s.tlast=s.tlast.slice(-10);}
+  save();}
+
+/* ---------- Picking ---------- */
+var lastTarget='';
+function pickTarget(kind){var on=onList(),pool=[];
+  on.forEach(function(l){if(l===lastTarget&&on.length>1)return;var w=strong(l,kind)?1:3;for(var i=0;i<w;i++)pool.push(l);});
+  var t=pick(pool);lastTarget=t;return t;}
+function choices(t,k){var on=onList(),set=[t];k=Math.min(k||3,on.length);
+  var look=shuffle((BY[t].look||[]).filter(function(x){return on.indexOf(x)>=0;}));
+  var rest=shuffle(on.filter(function(x){return x!==t&&look.indexOf(x)<0;}));
+  look.concat(rest).forEach(function(x){if(set.length<k&&set.indexOf(x)<0)set.push(x);});
+  return shuffle(set);}
+
+/* ---------- Spoken helpers. The bare letter is never given to the speech voice as if it were the sound. ---------- */
+function kwList(l){return BY[l].kw.map(function(k){return k.w;});}
+/* the sound itself (recording), or else the keyword */
+function soundOrKw(l,kw){kw=kw||BY[l].kw[0];return playSound(l).then(function(ok){return ok?wait(150).then(function(){return sayP('like '+kw.w);}):sayP(cap1(kw.w)+'!');});}
+
+/* ---------- Home art ---------- */
+function tl(x,y,t,size,col){return '<text x="'+x+'" y="'+y+'" text-anchor="middle" font-family="Andika Kid,Andika,sans-serif" font-weight="700" font-size="'+size+'" fill="'+col+'">'+t+'</text>';}
+function plateMini(x,y,w,h,t,size){return '<rect x="'+x+'" y="'+y+'" width="'+w+'" height="'+h+'" rx="6" fill="#fff" stroke="'+K+'" stroke-width="3"/><rect x="'+(x+4)+'" y="'+(y+4)+'" width="'+(w-8)+'" height="'+(h-8)+'" rx="4" fill="none" stroke="'+C.blue+'" stroke-width="2"/>'+tl(x+w/2,y+h*0.74,t,size,K);}
+var ART={
+ horn:function(){return '<svg viewBox="0 0 150 80"><g transform="translate(8,18) scale(1.45)">'+policeInner()+'</g>'+waves(104,30,C.lane)+'</svg>';},
+ pickup:function(){return '<svg viewBox="0 0 150 80"><g transform="translate(6,10) scale(.6)">'+PIC.apple()+'</g>'+plateMini(76,18,56,46,'a',40)+'</svg>';},
+ twin:function(){return '<svg viewBox="0 0 150 80"><g transform="translate(2,30) scale(1.08)">'+carInner(C.red,true)+'</g><g transform="translate(76,30) scale(1.08)">'+carInner(C.blue,true)+'</g>'+plateMini(14,0,40,32,'S',26)+plateMini(88,0,40,32,'s',28)+'</svg>';},
+ sayit:function(){return '<svg viewBox="0 0 150 80"><g transform="translate(2,34) scale(1.1)">'+carInner(C.red,true)+'</g><path d="M78 6 H140 Q146 6 146 12 V48 Q146 54 140 54 H96 L84 66 L86 54 H78 Q72 54 72 48 V12 Q72 6 78 6 Z" fill="#fff" stroke="'+K+'" stroke-width="3"/>'+tl(109,44,'p',40,K)+'</svg>';},
+ garage:function(l){var L=BY[l]||LETTERS[0];return '<svg viewBox="0 0 300 100"><path d="M10 40 L60 10 L110 40 Z" fill="'+C.red+'"/><rect x="18" y="40" width="84" height="56" fill="#fff" stroke="'+K+'" stroke-width="3"/>'+tl(60,86,L.l,56,K)+
+   '<g transform="translate(125,10) scale(.8)">'+PIC[L.kw[0].pic]()+'</g><g transform="translate(205,10) scale(.8)">'+PIC[L.kw[1].pic]()+'</g></svg>';}
+};
+
+/* ---------- Home ---------- */
+function home(){
+  app.className='';var on=onList(),few=on.length<2;
+  var strongN=on.filter(function(l){return strong(l);}).length;
+  var gl=on[state.gIdx%Math.max(1,on.length)]||'s';
+  app.innerHTML='<div class="screen"><div class="home-head">'+hubLink()+'<h1>Letter Road</h1>'+muteBtn()+'<button class="pbtn" id="pbtn">Parents</button></div>'+
+   (state.baseline.length?'':'<button class="nudge" id="nudge">Grown-ups: when you have 3 minutes, run the starting check in Parents.</button>')+
+   (few?'<div class="nudge">Grown-ups: switch on at least 2 letters in Parents.</div>':'')+
+   '<div class="tiles">'+
+   '<button class="tile wide t-sky" data-go="garage" aria-label="Garage: learn the letters"><span class="art">'+ART.garage(gl)+'</span><b>Garage</b></button>'+
+   '<button class="tile t-dark" data-go="horn" aria-label="Sound Horn"><span class="art">'+ART.horn()+'</span><b>Sound Horn</b></button>'+
+   '<button class="tile t-cream" data-go="pickup" aria-label="First Sound Pickup"><span class="art">'+ART.pickup()+'</span><b>Pickup</b></button>'+
+   '<button class="tile t-plate" data-go="twin" aria-label="Twin Cars"><span class="art">'+ART.twin()+'</span><b>Twin Cars</b></button>'+
+   '<button class="tile t-grey" data-go="sayit" aria-label="Say It Check, with a grown-up"><span class="art">'+ART.sayit()+'</span><b>Say It</b></button>'+
+   '</div><div class="home-foot"><span>★ <b>'+strongN+'</b> of '+on.length+' strong</span><span>Laps today <b>'+lapsToday()+'</b></span></div></div>';
+  $$('.tile').forEach(function(t){if(few&&t.dataset.go!=='garage')t.classList.add('locked');t.onclick=function(){ac();if(few&&t.dataset.go!=='garage'){boop();return;}go(t.dataset.go);};});
+  $('#pbtn').onclick=function(){go('parents');};
+  var n=$('#nudge');if(n)n.onclick=function(){go('parents');later(function(){var b=$('#baseSec');if(b)b.scrollIntoView();},60);};
+  bindMute();
+}
+
+/* ---------- Garage (learn, not scored) ---------- */
+function garage(){var on=onList();if(!on.length){go('home');return;}garageScreen(state.gIdx%on.length,true);}
+function garageScreen(i,speak){
+  var on=onList();state.gIdx=i;save();clearTimers();var l=on[i],L=BY[l],n=on.length;
+  var introSay=function(){run([function(){return playSound(l);},function(ok){return ok?wait(150).then(function(){return sayP('like '+kwList(l).join(', '));}):sayP(kwList(l).map(cap1).join('. ')+'.');}]);};
+  prompt=introSay;
+  gameScreen('Garage','<button class="pic lbig" id="lbig" aria-label="Hear the sound"><span class="lo">'+L.l+'</span><span class="up">'+L.up+'</span></button>'+
+    '<div class="kws">'+L.kw.map(function(k,j){return '<button class="kw" data-j="'+j+'" aria-label="'+esc(k.w)+'">'+picSVG(k.pic)+'</button>';}).join('')+'</div>',
+   '<button class="gb" id="gprev" aria-label="Previous letter"'+(n<2?' disabled':'')+'>'+ICON.left+on[(i-1+n)%n]+'</button>'+
+   '<button class="gb" id="gnext" aria-label="Next letter"'+(n<2?' disabled':'')+'>'+on[(i+1)%n]+ICON.right+'</button>');
+  $('#gprev').onclick=function(){hush();garageScreen((i-1+n)%n,true);};
+  $('#gnext').onclick=function(){hush();garageScreen((i+1)%n,true);};
+  $('#lbig').onclick=function(){ac();var b=$('#lbig');b.classList.remove('pop');void b.offsetWidth;b.classList.add('pop');run([function(){return soundOrKw(l);}]);};
+  $$('.kw').forEach(function(b){b.onclick=function(){ac();var k=L.kw[+b.dataset.j];$$('.kw').forEach(function(x){x.classList.toggle('on',x===b);});
+    run([function(){return sayP(k.w);},function(){return bridgeP(k.es);}]);};});
+  if(speak)intro(introSay,250);
+}
+
+/* ---------- Choice rows ---------- */
+function letterRow(opts){return opts.map(function(o){return '<button class="choice lp" data-v="'+o+'" aria-label="letter '+o+'">'+o+'</button>';}).join('');}
+
+/* ---------- Sound Horn: hear the sound, tap the letter ---------- */
+function hornRound(){
+  var l=pickTarget('find'),kw=pick(BY[l].kw),opts=choices(l,3),first=true,locked=false;
+  prompt=function(){run(hasRec(l)?[function(){return sayP('Which letter says');},function(){return wait(120);},function(){return playSound(l);}]:[function(){return sayP('Which letter starts '+kw.w+'?');}]);};
+  gameScreen('Sound Horn','<button class="pic dark horn" id="horn" aria-label="Hear it again"><svg viewBox="0 0 120 60" aria-hidden="true"><g transform="translate(6,14) scale(1.3)">'+policeInner()+'</g>'+waves(94,30,C.lane)+'</svg></button>',letterRow(opts));
+  $('#horn').onclick=function(){ac();prompt();};
+  intro(prompt,350);
+  $$('.choice').forEach(function(b){b.onclick=function(){if(locked)return;var v=b.dataset.v;
+    if(v===l){locked=true;b.classList.add('right');$$('.choice').forEach(function(x){if(x!==b)x.classList.add('dim');});honk();if(first)record(l,true);lapStep();
+      run([function(){return wait(550);},function(){return soundOrKw(l,kw);}]).then(function(){later(nextRound,700);});}
+    else{bump(b);boop();if(first){record(l,false);first=false;}
+      run([function(){return wait(350);},function(){return sayP('That one is for '+BY[v].kw[0].w+'.');},function(){return wait(250);},function(){prompt();}]);}};});
+}
+
+/* ---------- First Sound Pickup: picture, tap the first letter ---------- */
+function pickupRound(){
+  var l=pickTarget('find'),kw=pick(BY[l].kw),opts=choices(l,3),first=true,locked=false;
+  prompt=function(){run([function(){return sayP(cap1(kw.w)+'.');},function(){return wait(200);},function(){return sayP('Which letter starts '+kw.w+'?');}]);};
+  gameScreen('Pickup','<button class="pic" id="kpic" aria-label="Hear the word">'+picSVG(kw.pic)+'</button>',letterRow(opts));
+  $('#kpic').onclick=function(){ac();say(kw.w);};
+  intro(prompt,350);
+  $$('.choice').forEach(function(b){b.onclick=function(){if(locked)return;var v=b.dataset.v;
+    if(v===l){locked=true;b.classList.add('right');$$('.choice').forEach(function(x){if(x!==b)x.classList.add('dim');});honk();if(first)record(l,true);lapStep();
+      run([function(){return wait(550);},function(){return playSound(l);},function(ok){return (ok?wait(120):Promise.resolve()).then(function(){return sayP(cap1(kw.w)+'!');});},function(){return bridgeP(kw.es);}]).then(function(){later(nextRound,700);});}
+    else{bump(b);boop();if(first){record(l,false);first=false;}
+      run([function(){return wait(350);},function(){return sayP('That one is for '+BY[v].kw[0].w+'. Listen: '+kw.w+'.');}]);}};});
+}
+
+/* ---------- Twin Cars: capital and small letter (tracked on its own) ---------- */
+function twinRound(){
+  var l=pickTarget('twin'),up=Math.random()<0.5,opts=choices(l,3),first=true,locked=false;
+  var shown=up?BY[l].up:l;
+  prompt=function(){say(up?'This is a big letter. Find its little twin.':'This is a little letter. Find its big twin.');};
+  gameScreen('Twin Cars','<div class="twinbox"><div class="tplate">'+shown+'</div><div class="tcar">'+carSVG(C.blue,true)+'</div></div>',
+    opts.map(function(o){var t=up?o:BY[o].up;return '<button class="choice lp" data-v="'+o+'" aria-label="letter '+t+'">'+t+'</button>';}).join(''));
+  intro(prompt,350);
+  $$('.choice').forEach(function(b){b.onclick=function(){if(locked)return;var v=b.dataset.v;
+    if(v===l){locked=true;b.classList.add('right');$$('.choice').forEach(function(x){if(x!==b)x.classList.add('dim');});honk();if(first)record(l,true,'twin');lapStep();
+      run([function(){return wait(550);},function(){return sayP('Twins!');},function(){return playSound(l);}]).then(function(){later(nextRound,700);});}
+    else{bump(b);boop();if(first){record(l,false,'twin');first=false;}say('Look again.');}};});
+}
+
+/* ---------- Say It Check: parent-held. He says the sound, the parent taps. ---------- */
+function sayitRound(){
+  var l=pickTarget('say'),done=false;
+  prompt=function(){say('What sound does this letter make?');};
+  gameScreen('Say It','<span class="ptag">Parent check</span><div class="bigplate" id="bp">'+l+'</div><div class="kws" id="model" hidden>'+BY[l].kw.map(function(k){return '<span class="kw">'+picSVG(k.pic)+'</span>';}).join('')+'</div>',
+    '<button class="j fast" id="jy">Said it<small>clear sound</small></button><button class="j count" id="jn">Not yet<small>show him</small></button>');
+  intro(prompt,350);
+  $('#jy').onclick=function(){if(done)return;done=true;record(l,true,'say');honk();lapStep();run([function(){return wait(500);},function(){return sayP('Great sound!');}]).then(function(){later(nextRound,500);});};
+  $('#jn').onclick=function(){if(done)return;done=true;record(l,false,'say');$('#model').hidden=false;$('#jy').disabled=true;$('#jn').disabled=true;
+    run([function(){return playSound(l);},function(ok){return ok?wait(200).then(function(){return sayP('like '+kwList(l).join(', '));}):sayP(kwList(l).map(cap1).join('. ')+'.');},function(){return playSound(l);}]).then(function(){later(nextRound,1500);});};
+}
+
+var ROUNDS={horn:hornRound,pickup:pickupRound,twin:twinRound,sayit:sayitRound};
+function nextRound(){clearTimers();if(onList().length<2){go('home');return;}if(ROUNDS[view])ROUNDS[view]();}
+
+/* ---------- Starting check (baseline): Say It for every letter, then Sound Horn for every letter ---------- */
+var bl=null;
+function baseline(){var on=onList();if(on.length<1){go('parents');return;}
+  bl={items:on.map(function(l){return {k:'say',l:l};}).concat(shuffle(on.slice()).map(function(l){return {k:'horn',l:l};})),i:-1,rows:{}};
+  on.forEach(function(l){bl.rows[l]={say:null,find:null,mode:hasRec(l)?'sound':'keyword'};});
+  app.className='';
+  app.innerHTML='<div class="screen"><div class="top"><button class="ib" id="homeBtn" aria-label="Stop the check">'+ICON.home+'</button><div class="top-title">Starting check</div></div>'+
+   '<div class="play"><div class="psec" style="max-width:420px"><h3>Starting check · '+on.length+' letters</h3><p><b>Part 1, Say It.</b> A letter shows. Point and ask "What sound?" Tap <b>Said it</b> only for a clear, pure sound. No hints.</p><p><b>Part 2, Sound Horn.</b> He hears a sound'+(Object.keys(REC).length?'':' (or a keyword, since no sounds are recorded yet)')+' and taps a letter. His first tap counts.</p><p>No teaching during the check. Praise effort.</p></div></div>'+
+   '<div class="bottom"><button class="j fast" id="bstart">Start</button></div></div>';
+  $('#homeBtn').onclick=function(){bl=null;go('parents');};
+  $('#bstart').onclick=function(){ac();blNext();};
+}
+function blNext(){clearTimers();hush();if(!bl)return;bl.i++;var it=bl.items[bl.i];if(!it){blDone();return;}
+  var l=it.l,prog='<span class="ptag">Check '+(bl.i+1)+' of '+bl.items.length+'</span>';
+  if(it.k==='say'){
+    prompt=function(){say('What sound does this letter make?');};
+    gameScreen('Starting check',prog+'<div class="bigplate">'+l+'</div>','<button class="j fast" id="jy">Said it<small>clear sound</small></button><button class="j count" id="jn">Not yet</button>');
+    $('#dots').hidden=true;intro(prompt,300);
+    $('#jy').onclick=function(){bl.rows[l].say=true;beep();blNext();};
+    $('#jn').onclick=function(){bl.rows[l].say=false;beep();blNext();};
+  }else{
+    var kw=BY[l].kw[0],opts=choices(l,3),done=false;
+    prompt=function(){run(hasRec(l)?[function(){return sayP('Which letter says');},function(){return wait(120);},function(){return playSound(l);}]:[function(){return sayP('Which letter starts '+kw.w+'?');}]);};
+    gameScreen('Starting check',prog+'<button class="pic dark horn" id="horn" aria-label="Hear it again"><svg viewBox="0 0 120 60" aria-hidden="true"><g transform="translate(6,14) scale(1.3)">'+policeInner()+'</g>'+waves(94,30,C.lane)+'</svg></button>',letterRow(opts));
+    $('#dots').hidden=true;$('#horn').onclick=function(){ac();prompt();};intro(prompt,300);
+    $$('.choice').forEach(function(b){b.onclick=function(){if(done)return;done=true;bl.rows[l].find=(b.dataset.v===l);b.classList.add('on');beep();
+      run([function(){return sayP(pick(['Thank you!','Good listening!','Nice!']));}]);later(blNext,900);};});
+  }
+}
+function blDone(){var rec={date:today(),rows:bl.rows};state.baseline.push(rec);if(state.baseline.length>8)state.baseline=state.baseline.slice(-8);save();bl=null;
+  fanfare();say('All done! Great work!');
+  app.innerHTML='<div class="screen"><div class="top"><div class="top-title">Starting check saved</div></div><div class="play"><div class="banner"><b>Done!</b><div class="bcar">'+carSVG(C.red,true)+'</div></div></div><div class="bottom"><button class="j fast" id="bsee">See results</button></div></div>';
+  $('#bsee').onclick=function(){go('parents');later(function(){var b=$('#baseSec');if(b)b.scrollIntoView();},60);};}
+
+/* ---------- Parents ---------- */
+function parents(){
+  app.className='wide';hush();
+  var refs='';LETTERS.forEach(function(L){L.kw.forEach(function(k){refs+='<div class="ref">'+picSVG(k.pic)+'<b>'+L.l+' · '+esc(k.w)+'</b><span>Say "'+esc(k.w)+'", then <span class="es">'+esc(k.es)+'</span></span></div>';});});
+  var recMsg=recSupport();
+  app.innerHTML='<div class="screen parents">'+
+   '<div class="top"><button class="ib" id="homeBtn" aria-label="Back to games">'+ICON.home+'</button><h2 style="flex:1">Letter Road · Parents</h2></div>'+
+   '<div class="psec"><h3>Letters switched on</h3><div class="chips" id="chips"></div><p class="note" style="margin-top:8px">Switch a letter on when school has taught it. At least 2 stay on. Blend Road only uses words whose letters are all on.</p></div>'+
+   '<div class="psec" id="recSec"><h3>Record the sounds</h3><p>Record each sound once, in your voice. Say the pure sound, short and clear: <b>"sss"</b> not "suh", <b>"t"</b> as a short puff not "tuh", short <b>"a"</b> as in apple, short <b>"i"</b> as in iguana. Each recording stops by itself after 2 seconds. Hold the phone about a hand away.</p>'+
+     '<p class="note">Until a sound is recorded the games use the keyword instead ("Which letter starts sun?"). The phone voice cannot say letter sounds on their own.</p>'+
+     (recMsg?'<p class="warn">'+recMsg+'</p>':'')+'<div id="recRows"></div><p class="warn" id="recErr" hidden></p></div>'+
+   '<div class="psec" id="baseSec"><h3>Starting check</h3><p>About 3 minutes. For each letter that is on: <b>Say It</b> (you judge) and <b>Sound Horn</b> (his first tap counts). Run it now, then again in a few weeks to compare.</p><button class="solid-go" id="bgo">Start the check</button><div id="baseOut" style="margin-top:10px"></div></div>'+
+   '<div class="psec"><h3>Progress on this phone</h3><div class="pg" id="prog"></div>'+
+     '<p class="note" style="margin-top:8px"><b>Finds</b> = Sound Horn and Pickup together; this is the "strong" light: right on the first try in 4 of his last 5. <b>Says</b> = your Say It Check, same 4-of-5 rule. <b>Twins</b> = capital to small letter; it does not count toward strong. Advance a letter when Finds and Says are both green.</p></div>'+
+   '<div class="psec"><h3>The 15-minute session</h3><ul class="list">'+
+     '<li><span class="tag en">3 min</span><b>Say It</b>: 5 letters, known ones first so he wins early. Your check, your judgement.</li>'+
+     '<li><span class="tag en">4 min</span><b>Garage</b>: one new or shaky letter. Tap the letter for the sound, each picture for the word.</li>'+
+     '<li><span class="tag es">30 s</span><b>Spanish bridge</b>: spoken only, English first ("sun… sol"). Never drilled or written.</li>'+
+     '<li><span class="tag amb">5 min</span><b>One game</b>: Sound Horn or Pickup. A lap is 5 right answers. Twin Cars once a week.</li>'+
+     '<li><span class="tag amb">3 min</span><b>Off-screen</b>: race the letter cars on the floor; he says the sound to move. End on a win.</li></ul>'+
+     '<p class="note" style="margin-top:8px">Both parents: use the same pure sounds, and record them once so the app matches what he hears at home. Letters he gets wrong come up 3 times as often.</p></div>'+
+   '<div class="psec"><h3>Spanish bridge words</h3><p>English first, then the Spanish word, spoken only. The app plays the Spanish when he taps a picture in the Garage and after a right answer in Pickup.</p><div class="refs">'+refs+'</div></div>'+
+   '<div class="psec"><h3>Settings</h3><div class="settings">'+
+     '<label><input type="checkbox" id="setMute"'+(S.mute?'':' checked')+'> Sound on (voice and game sounds)</label>'+
+     '<label><input type="checkbox" id="setSpanish"'+(S.spanish?' checked':'')+'> Spanish bridge (spoken)</label>'+
+     '<p class="note" id="esNote"></p>'+
+     '<p class="note">These two settings and the voices are shared with every stop. Choose the English and Spanish voices in <a class="plink" href="../numbers/#parents">Number Garage · Parents</a>.</p>'+
+     '<div id="resetBox"></div></div></div></div>';
+  $('#homeBtn').onclick=function(){go('home');};
+  $('#setMute').onchange=function(e){setShared('mute',!e.target.checked);if(S.mute)hush();};
+  $('#setSpanish').onchange=function(e){setShared('spanish',e.target.checked);esNote();};
+  $('#bgo').onclick=function(){go('baseline');};
+  function esNote(){var n=$('#esNote');if(!n)return;n.textContent=S.spanish&&allVoices().length&&!voicesFor('es').length?'This phone has no Spanish voice, so the bridge stays silent. Say the Spanish word yourself.':'';}
+  esNote();try{if(synthOK)speechSynthesis.onvoiceschanged=esNote;}catch(e){}
+  renderChips();renderRecRows();renderBase();renderProgress();resetIdle();
+}
+function renderChips(){var el=$('#chips');if(!el)return;var on=onList();
+  el.innerHTML=LETTERS.map(function(L){var p=!!state.on[L.l];return '<button class="chip" data-l="'+L.l+'" aria-pressed="'+p+'">'+L.l+'<small>'+(p?'on':'off')+'</small></button>';}).join('');
+  $$('.chip',el).forEach(function(b){b.onclick=function(){var l=b.dataset.l;if(state.on[l]&&onList().length<=2){bump(b);return;}state.on[l]=!state.on[l];save();renderChips();renderRecRows();renderProgress();};});}
+function renderProgress(){var h='';onList().forEach(function(l){var s=state.stats[l],st=status(l),lab={strong:'Strong',learning:'Learning',new:'New'}[st];
+  function mini(kind,txt,c,t){var k=statusOf(l,kind);return '<span class="pg-d"><i class="light '+k+'"></i> '+txt+' '+c+'/'+t+'</span>';}
+  h+='<div class="pg-item"><span class="pg-n">'+l+'</span><span class="pg-s"><i class="light '+st+'"></i>'+lab+'</span>'+mini('find','Finds',s.c,s.t)+mini('say','Says',s.sc,s.st)+'<span></span>'+mini('twin','Twins',s.tc,s.tt)+'</div>';});
+  var el=$('#prog');if(el)el.innerHTML=h||'<p>No letters on.</p>';}
+function renderBase(){var el=$('#baseOut');if(!el)return;var b=state.baseline;if(!b.length){el.innerHTML='<p class="note">Not run yet.</p>';return;}
+  var last=b[b.length-1],keys=Object.keys(last.rows);
+  function cell(v){return v===true?'<span class="yes">Yes</span>':v===false?'<span class="notyet">Not yet</span>':'–';}
+  var h='<p><b>Latest: '+niceDate(last.date)+'</b></p><table class="tbl"><tr><th>Letter</th><th>Says the sound</th><th>Finds the letter</th></tr>'+
+    keys.map(function(k){var r=last.rows[k];return '<tr><td class="k">'+k+'</td><td>'+cell(r.say)+'</td><td>'+cell(r.find)+(r.mode==='keyword'?' <span class="note">(by keyword)</span>':'')+'</td></tr>';}).join('')+'</table>';
+  if(b.length>1){h+='<p class="note" style="margin-top:8px">Earlier checks: '+b.slice(0,-1).reverse().map(function(x){var ks=Object.keys(x.rows),s=ks.filter(function(k){return x.rows[k].say;}).length,f=ks.filter(function(k){return x.rows[k].find;}).length;return niceDate(x.date)+': says '+s+'/'+ks.length+', finds '+f+'/'+ks.length;}).join(' · ')+'</p>';}
+  el.innerHTML=h;}
+function resetIdle(){var b=$('#resetBox');if(!b)return;b.innerHTML='<button class="danger" id="resetBtn">Reset progress</button>';$('#resetBtn').onclick=resetAsk;}
+function resetAsk(){$('#resetBox').innerHTML='<p style="font-weight:700;margin:0 0 6px">Erase Letter Road progress, laps and starting checks? Letters on/off and recordings stay.</p><button class="danger solid" id="rYes">Yes, erase</button> <button class="ghost" id="rNo">Keep it</button>';
+  $('#rYes').onclick=function(){var on=state.on;state=blank();state.on=on;save();renderProgress();renderBase();resetIdle();};
+  $('#rNo').onclick=resetIdle;}
+
+/* ---------- Recording rows ---------- */
+var recBusy=false;
+function renderRecRows(){var el=$('#recRows');if(!el)return;var can=!recSupport();
+  el.innerHTML=onList().map(function(l){var r=REC[l];
+    return '<div class="rrow" data-l="'+l+'"><span class="pg-n">'+l+'</span><span class="rst">'+(r?'Recorded'+(r.date?' · '+niceDate(r.date):''):'Not recorded')+'</span>'+
+      '<button class="rbtn rec" data-a="rec"'+(can?'':' disabled')+'>'+(r?'Re-record':'Record')+'</button><button class="rbtn" data-a="play"'+(r?'':' disabled')+'>Play</button><button class="rbtn del" data-a="del"'+(r?'':' disabled')+'>Delete</button></div>';}).join('');
+  $$('.rrow',el).forEach(function(row){var l=row.dataset.l;
+    $$('.rbtn',row).forEach(function(b){b.onclick=function(){ac();var a=b.dataset.a;
+      if(a==='play'){run([function(){return playSound(l,true);}]);}
+      else if(a==='del'){if(!b.classList.contains('sure')){b.classList.add('sure');b.textContent='Sure?';setTimeout(function(){if(b.isConnected){b.classList.remove('sure');b.textContent='Delete';}},3000);return;}
+        dbDo('readwrite',function(st){return st.delete(l);}).then(function(){if(REC[l]&&REC[l].url){try{URL.revokeObjectURL(REC[l].url);}catch(e){}}delete REC[l];renderRecRows();});}
+      else recordLetter(l,row);};});});}
+function recErr(t){var e=$('#recErr');if(!e)return;e.hidden=!t;e.textContent=t||'';}
+function recordLetter(l,row){if(recBusy)return;var why=recSupport();if(why){recErr(why);return;}
+  recBusy=true;recErr('');hush();var st=$('.rst',row),btn=$('.rec',row);st.textContent='Starting the microphone…';
+  var fail=function(t){recBusy=false;recErr(t);renderRecRows();};
+  var gp;try{gp=navigator.mediaDevices.getUserMedia({audio:{echoCancellation:false,noiseSuppression:false,autoGainControl:true}});}catch(e){fail('Could not start the microphone on this browser.');return;}
+  gp.then(function(stream){
+    var mime='';for(var i=0;i<MIMES.length;i++){try{if(MediaRecorder.isTypeSupported&&MediaRecorder.isTypeSupported(MIMES[i])){mime=MIMES[i];break;}}catch(e){}}
+    var mr;try{mr=mime?new MediaRecorder(stream,{mimeType:mime}):new MediaRecorder(stream);}catch(e){stream.getTracks().forEach(function(t){t.stop();});fail('This browser could not start recording.');return;}
+    var chunks=[];mr.ondataavailable=function(e){if(e.data&&e.data.size)chunks.push(e.data);};
+    mr.onstop=function(){stream.getTracks().forEach(function(t){t.stop();});
+      var blob=new Blob(chunks,{type:mr.mimeType||mime||'audio/webm'});
+      if(!blob.size){fail('Nothing was recorded. Check the microphone and try again.');return;}
+      var date=today();dbDo('readwrite',function(s){return s.put({blob:blob,date:date},l);}).then(function(ok){
+        recBusy=false;setRec(l,blob,date);if(!ok)recErr('Recorded, but this browser could not save it. It will work until the page is closed.');renderRecRows();
+        run([function(){return wait(200);},function(){return playSound(l,true);}]);});};
+    btn.classList.add('live');btn.textContent='Say it now';var left=2;st.textContent='Recording… '+left;
+    var iv=setInterval(function(){left--;if(left>0)st.textContent='Recording… '+left;},1000);
+    try{mr.start();}catch(e){clearInterval(iv);stream.getTracks().forEach(function(t){t.stop();});fail('This browser could not start recording.');return;}
+    setTimeout(function(){clearInterval(iv);try{if(mr.state!=='inactive')mr.stop();}catch(e){}},2000);
+  }).catch(function(err){var n=err&&err.name;
+    fail(n==='NotAllowedError'||n==='SecurityError'?'The microphone is blocked. Allow the microphone for this website in the browser settings, then try again.':
+         n==='NotFoundError'||n==='OverconstrainedError'?'No microphone was found on this device.':'The microphone could not start ('+(n||'unknown error')+').');});
+}
+
+/* ---------- Router ---------- */
+var VIEWS={home:home,garage:garage,parents:parents,baseline:baseline,horn:nextRound,pickup:nextRound,twin:nextRound,sayit:nextRound};
+function render(){clearTimers();hush();var v=location.hash.slice(1)||'home';if(!VIEWS[v])v='home';view=v;S=readShared();VIEWS[v]();}
+window.addEventListener('hashchange',render);
+if(state.laps.date!==today()){state.laps={date:today(),count:0};}
+save();
+try{if(synthOK)speechSynthesis.getVoices();}catch(e){}
+render();
+loadRecordings().then(function(){if(view==='parents')renderRecRows();});
+})();
+</script>
+</body>
+</html>
