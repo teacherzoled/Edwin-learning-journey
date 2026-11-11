@@ -81,6 +81,7 @@ a.stop:hover{border-color:var(--asph)}
 .namebox input:focus{border-color:var(--blue);outline:none}
 .namebox button{font:inherit;font-weight:700;font-size:16px;border:none;border-radius:12px;padding:9px 16px;background:var(--asph);color:var(--lane);cursor:pointer}
 .namebox .saved{flex-basis:100%;font-size:14px;color:var(--green);min-height:1.2em}
+footer.copy{text-align:center;font-size:14px;color:var(--muted);padding:4px 0 8px}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style>
 </head>
@@ -115,6 +116,7 @@ a.stop:hover{border-color:var(--asph)}
       <span class="saved" id="nameSaved" role="status"></span>
     </form>
   </div>
+  <footer class="copy">&copy; <span id="year">2026</span> Edwin Lopez. All rights reserved.</footer>
 </div>
 
 <script>
@@ -209,6 +211,8 @@ STOPS.forEach(function(s,i){
 });
 document.getElementById('route').innerHTML=html;
 document.getElementById('heroCar').innerHTML=car();
+/* Copyright year follows the phone's clock, so it updates by itself each new year */
+document.getElementById('year').textContent=new Date().getFullYear();
 
 /* Child's name: set in the Parents box, saved on this phone (nanoHub.v1). Default is Edwin. */
 var NAME_KEY='nanoHub.v1',DEFAULT_NAME='Edwin',greet='';
