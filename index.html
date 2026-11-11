@@ -70,6 +70,11 @@ a.stop:hover{border-color:var(--asph)}
 .parents{background:rgba(255,255,255,.85);border-radius:16px;padding:12px 16px;font-size:15px;color:var(--muted)}
 .parents b{color:var(--ink)}
 .parents p{margin:0}
+.ptop{display:flex;align-items:flex-start;gap:10px}
+.ptop p{flex:1}
+.langsw{display:flex;flex:0 0 auto;border:2px solid var(--asph);border-radius:999px;overflow:hidden}
+.langsw button{font:inherit;font-size:13px;font-weight:700;border:none;background:#fff;color:var(--asph);padding:4px 10px;cursor:pointer}
+.langsw button[aria-pressed="true"]{background:var(--asph);color:var(--lane)}
 .namebox{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-top:10px;padding-top:10px;border-top:1px solid var(--line)}
 .namebox label{font-weight:700;color:var(--ink)}
 .namebox input{flex:1 1 140px;min-width:0;font:inherit;font-size:17px;padding:8px 12px;border:2px solid var(--line);border-radius:12px;background:#fff;color:var(--ink)}
@@ -96,12 +101,17 @@ a.stop:hover{border-color:var(--asph)}
   <main class="route" id="route" aria-label="Learning stops"></main>
   <div class="finish"><i aria-hidden="true"></i>More stops are coming down the road!</div>
 
-  <div class="parents">
-    <p><b>Parents:</b> open this page on the phone and use <b>Add to Home Screen</b>. Each stop saves its own progress on this phone.</p>
+  <div class="parents" id="parents" lang="en">
+    <div class="ptop">
+      <p id="pNote"><b>Parents:</b> open this page on the phone and use <b>Add to Home Screen</b>. Each stop saves its own progress on this phone.</p>
+      <div class="langsw" role="group" aria-label="Language for parents' notes / Idioma de las notas">
+        <button type="button" data-lang="en" lang="en" aria-pressed="true">English</button><button type="button" data-lang="es" lang="es" aria-pressed="false">Español</button>
+      </div>
+    </div>
     <form class="namebox" id="nameForm" autocomplete="off">
-      <label for="childName">Child's name</label>
+      <label for="childName" id="pLabel">Child's name</label>
       <input id="childName" maxlength="20" placeholder="Type the name" enterkeyhint="done">
-      <button type="submit">Save</button>
+      <button type="submit" id="pSave">Save</button>
       <span class="saved" id="nameSaved" role="status"></span>
     </form>
   </div>
@@ -203,7 +213,32 @@ document.getElementById('heroCar').innerHTML=car();
 /* Child's name: set in the Parents box, saved on this phone (nanoHub.v1). Default is Edwin. */
 var NAME_KEY='nanoHub.v1',DEFAULT_NAME='Edwin',greet='';
 function loadName(){try{var o=JSON.parse(localStorage.getItem(NAME_KEY)||'null');if(o&&typeof o.name==='string')return o.name;}catch(e){}return DEFAULT_NAME;}
-function saveName(n){try{var o=JSON.parse(localStorage.getItem(NAME_KEY)||'null')||{};o.name=n;localStorage.setItem(NAME_KEY,JSON.stringify(o));return true;}catch(e){return false;}}
+function saveHub(key,val){try{var o=JSON.parse(localStorage.getItem(NAME_KEY)||'null')||{};o[key]=val;localStorage.setItem(NAME_KEY,JSON.stringify(o));return true;}catch(e){return false;}}
+function saveName(n){return saveHub('name',n);}
+/* Parents' notes only: English or Spanish. The child's screens stay in English. */
+var PTXT={
+  en:{note:'<b>Parents:</b> open this page on the phone and use <b>Add to Home Screen</b>. Each stop saves its own progress on this phone.',
+      label:"Child's name",ph:'Type the name',save:'Save',
+      ok:function(n){return 'Saved. The welcome now says '+(n||'My Learning Journey')+'.';},
+      fail:'Could not save on this phone. The name shows until the page is closed.'},
+  es:{note:'<b>Padres:</b> abran esta página en el teléfono y elijan <b>Agregar a pantalla de inicio</b>. Cada parada guarda su propio progreso en este teléfono.',
+      label:'Nombre del niño o la niña',ph:'Escriba el nombre',save:'Guardar',
+      ok:function(n){return 'Guardado. La bienvenida ahora dice '+(n||'My Learning Journey')+'.';},
+      fail:'No se pudo guardar en este teléfono. El nombre se verá hasta que se cierre la página.'}
+};
+function loadLang(){try{var o=JSON.parse(localStorage.getItem(NAME_KEY)||'null');if(o&&o.lang==='es')return 'es';}catch(e){}return 'en';}
+var pLang=loadLang();
+function applyLang(l){pLang=l;var T=PTXT[l];
+  document.getElementById('parents').lang=l;
+  document.getElementById('pNote').innerHTML=T.note;
+  document.getElementById('pLabel').textContent=T.label;
+  document.getElementById('childName').placeholder=T.ph;
+  document.getElementById('pSave').textContent=T.save;
+  document.getElementById('nameSaved').textContent='';
+  [].forEach.call(document.querySelectorAll('.langsw button'),function(b){b.setAttribute('aria-pressed',b.getAttribute('data-lang')===l?'true':'false');});
+}
+[].forEach.call(document.querySelectorAll('.langsw button'),function(b){b.onclick=function(){var l=b.getAttribute('data-lang');saveHub('lang',l);applyLang(l);};});
+applyLang(pLang);
 function cleanName(n){n=String(n||'').replace(/\s+/g,' ').trim().slice(0,20);return n?n.charAt(0).toUpperCase()+n.slice(1):'';}
 function applyName(n){
   var h=new Date().getHours(),part=h<12?'Good morning':h<18?'Good afternoon':'Good evening';
@@ -219,7 +254,7 @@ var nameInput=document.getElementById('childName');nameInput.value=childName;
 document.getElementById('nameForm').onsubmit=function(e){
   e.preventDefault();var n=cleanName(nameInput.value);nameInput.value=n;
   var ok=saveName(n);applyName(n);nameInput.blur();
-  document.getElementById('nameSaved').textContent=!ok?'Could not save on this phone. The name shows until the page is closed.':n?'Saved. The welcome now says '+n+'.':'Saved. The welcome now says My Learning Journey.';
+  var T=PTXT[pLang];document.getElementById('nameSaved').textContent=ok?T.ok(n):T.fail;
 };
 /* Uses the sound setting and voice chosen in the Number Garage's Parents screen */
 function settings(){try{var o=JSON.parse(localStorage.getItem('nanoNumbers.v1')||'null');return (o&&o.settings)||{};}catch(e){return {};}}
