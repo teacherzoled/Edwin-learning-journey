@@ -73,7 +73,16 @@ button:disabled{opacity:.35;cursor:default}
 .hub{display:flex;align-items:center;gap:2px;background:var(--asph);color:var(--lane);border-radius:16px;padding:6px 10px 6px 4px;flex:0 0 auto;text-decoration:none}
 .hub svg:first-child{width:24px;height:24px}.hub svg:last-child{width:46px}
 .pbtn{border:2px solid var(--asph);background:var(--paper);border-radius:12px;padding:8px 10px;font-weight:700;font-size:14px;flex:0 0 auto}
-.tiles{flex:1;min-height:0;display:grid;grid-template-columns:1fr 1fr;grid-template-rows:1.3fr 1fr 1fr;gap:10px}
+.tiles{flex:1;min-height:0;display:grid;grid-template-columns:1fr 1fr;grid-template-rows:1.15fr 1fr 1fr;gap:10px}
+.tower{flex:1;min-height:0;width:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;background:var(--sky);border-radius:22px;padding:10px}
+.trow{visibility:hidden;border:none;border-radius:14px;background:#5A616B;color:#C3CAD0;font-family:var(--f-kid);font-weight:700;font-size:clamp(44px,9vh,72px);line-height:1;padding:.06em .3em .2em;display:flex;gap:.12em;min-height:64px;min-width:64px;justify-content:center;box-shadow:0 5px 0 rgba(0,0,0,.25)}
+.trow.show{visibility:visible}
+.trow:disabled{opacity:1;cursor:default}
+.trow.next{background:var(--lane);color:var(--ink);animation:glow 1.1s ease-in-out infinite}
+.trow.lit{background:var(--lane);color:var(--ink)}
+.trow span{border-radius:8px;padding:0 .04em;transition:background .15s}
+.trow span.on{background:#fff}
+.pchoice.wait{visibility:hidden}
 .tile{border:none;border-radius:20px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;padding:8px;min-height:0;min-width:0;box-shadow:0 5px 0 rgba(0,0,0,.22)}
 .tile:active{transform:translateY(3px);box-shadow:0 2px 0 rgba(0,0,0,.22)}
 .tile .art{flex:1;min-height:0;width:100%;display:flex;align-items:center;justify-content:center}
@@ -391,14 +400,23 @@ function hubLink(){var onHub=/github\.io$/.test(location.hostname);
    "is" says /z/, so that tile plays sounds/z.mp3).
    ========================================================================== */
 var WORDS=[
- {w:'at'},{w:'as',say:{1:'z'}},{w:'it'},{w:'is',say:{1:'z'}},
+ {w:'at'},{w:'as',say:{1:'z'}},{w:'it'},{w:'is',say:{1:'z'}},{w:'an'},{w:'in'},{w:'am'},
  {w:'sat',pic:'sat'},{w:'pat',pic:'pat',es:'palmadita'},{w:'tap',pic:'tap',es:'chorro'},{w:'sap'},
- {w:'sit',pic:'sit',es:'sentarse'},{w:'sip',pic:'sip',es:'sorbo'},{w:'tip',pic:'tip',es:'punta'},{w:'pit',pic:'pit',es:'hoyo'}
+ {w:'sit',pic:'sit',es:'sentarse'},{w:'sip',pic:'sip',es:'sorbo'},{w:'tip',pic:'tip',es:'punta'},{w:'pit',pic:'pit',es:'hoyo'},
+ {w:'rat',pic:'rat',es:'rata'},{w:'rip',pic:'rip',es:'romper'},
+ {w:'pin',pic:'pin',es:'chinche'},{w:'rim',pic:'rim',es:'aro'},{w:'ran',pic:'ran'},
+ {w:'man',pic:'man',es:'hombre'},{w:'map',pic:'map',es:'mapa'},{w:'mat',pic:'mat',es:'tapete'},{w:'nap',pic:'nap',es:'siesta'},
+ {w:'tin',pic:'tin',es:'lata'},
+ /* English "pan" is a frying pan; Spanish "pan" is bread. Said lightly: he finds it funny. */
+ {w:'pan',pic:'pan',es:'una sartén. ¡No el pan que comemos!'}
 ];
 /* Pictures that are too alike to appear together in Picture Stop (both show sitting) */
 var APART=[['sit','sat']];
 /* Letters that start switched on if Letter Road has never been opened on this phone */
-var DEFAULT_ON=['s','a','t','p','i'];
+var DEFAULT_ON=['s','a','t','p','i','r','n','m'];
+/* Same one-time switch-on as Letter Road (keep the two lists in step): a phone that already had
+   Letter Road gets these letters on once, even if Blend Road is opened first. */
+var SWITCH_ON_ONCE=[{id:'nov10-rnm',on:['r','n','m']}];
 var WBY={};WORDS.forEach(function(W){WBY[W.w]=W;});
 
 /* ---------- Word pictures: original, bold, drawn in a 100 x 100 box ---------- */
@@ -436,12 +454,54 @@ var PIC={
  tip:function(){return '<g transform="rotate(-35 50 50) translate(-8 0)"><rect x="8" y="41" width="12" height="18" rx="3" fill="'+C.pink+'"'+sw()+'/><rect x="18" y="41" width="8" height="18" fill="'+C.silver+'"'+sw()+'/>'+
    '<rect x="26" y="41" width="46" height="18" fill="'+C.lane+'"'+sw()+'/><path d="M72 41 L92 50 L72 59 Z" fill="#F3D9A6"'+sw()+'/><path d="M85 47 L92 50 L85 53 Z" fill="'+K+'"/></g>'+
    '<circle cx="77" cy="30" r="14" fill="none" stroke="'+C.red+'" stroke-width="4"/>'+
-   '<path d="M62 92 L76 50" stroke="'+C.red+'" stroke-width="5" stroke-linecap="round"/><path d="M68 52 L77 46 L80 57" fill="none" stroke="'+C.red+'" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>';}
+   '<path d="M62 92 L76 50" stroke="'+C.red+'" stroke-width="5" stroke-linecap="round"/><path d="M68 52 L77 46 L80 57" fill="none" stroke="'+C.red+'" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>';},
+ rat:function(){return '<path d="M26 70 Q6 72 8 86 Q10 96 24 92" fill="none" stroke="'+K+'" stroke-width="6.5" stroke-linecap="round"/><path d="M26 70 Q6 72 8 86 Q10 96 24 92" fill="none" stroke="'+C.pink+'" stroke-width="3" stroke-linecap="round"/>'+
+   '<path d="M38 74 L34 84 M60 76 L62 86" stroke="'+K+'" stroke-width="4" stroke-linecap="round"/>'+
+   '<ellipse cx="48" cy="64" rx="26" ry="16" fill="'+C.grey+'"'+sw()+'/><path d="M66 52 Q86 54 94 64 Q86 72 68 74 Z" fill="'+C.grey+'"'+sw()+'/>'+
+   '<circle cx="70" cy="46" r="9" fill="'+C.grey+'"'+sw()+'/><circle cx="70" cy="46" r="4.5" fill="'+C.pink+'"/><circle cx="80" cy="60" r="2.6" fill="'+K+'"/><circle cx="94" cy="64" r="3" fill="'+C.pink+'"'+sw(1.5)+'/>'+
+   '<path d="M88 68 L98 72 M88 66 L99 64" stroke="'+K+'" stroke-width="1.3"/>';},
+ rip:function(){var lines=function(x1,x2){var h='';for(var y=34;y<76;y+=10)h+='<path d="M'+x1+' '+y+' H'+x2+'" stroke="#9FB4C2" stroke-width="2"/>';return h;};
+   return '<g transform="rotate(-10 30 50)"><path d="M10 20 H46 L40 32 L48 42 L38 54 L46 66 L40 80 H10 Z" fill="#fff"'+sw()+'/>'+lines(16,36)+'</g>'+
+   '<g transform="rotate(10 70 50)"><path d="M58 20 H90 V80 H54 L60 66 L52 54 L62 42 L54 32 Z" fill="#fff"'+sw()+'/>'+lines(64,84)+'</g>'+
+   '<path d="M48 8 L50 16 M40 10 L44 16 M56 10 L54 16 M48 92 L50 86" stroke="'+C.red+'" stroke-width="3" stroke-linecap="round"/>';},
+ pin:function(){return '<g transform="rotate(35 50 50)"><path d="M50 50 L50 96" stroke="'+K+'" stroke-width="6" stroke-linecap="round"/><path d="M50 50 L50 95" stroke="'+C.silver+'" stroke-width="3" stroke-linecap="round"/>'+
+   '<rect x="28" y="42" width="44" height="10" rx="4" fill="'+C.red+'"'+sw()+'/><path d="M41 16 H59 L55 42 H45 Z" fill="'+C.red+'"'+sw()+'/><rect x="36" y="6" width="28" height="11" rx="4" fill="'+C.red+'"'+sw()+'/>'+
+   '<path d="M46 20 L44 38" stroke="#fff" stroke-width="2.5" stroke-linecap="round" opacity=".7"/></g>';},
+ rim:function(){var sp='';for(var i=0;i<5;i++){var a=i*Math.PI*2/5-Math.PI/2;sp+='<path d="M'+(50+8*Math.cos(a)).toFixed(1)+' '+(50+8*Math.sin(a)).toFixed(1)+' L'+(50+24*Math.cos(a)).toFixed(1)+' '+(50+24*Math.sin(a)).toFixed(1)+'" stroke="'+C.dgrey+'" stroke-width="6" stroke-linecap="round"/>';}
+   return '<circle cx="50" cy="50" r="44" fill="#20232A"'+sw()+'/><circle cx="50" cy="50" r="44" fill="none" stroke="#3A3F48" stroke-width="3" stroke-dasharray="4 5"/>'+
+   '<circle cx="50" cy="50" r="28" fill="'+C.silver+'"'+sw()+'/><circle cx="50" cy="50" r="28" fill="none" stroke="'+C.lane+'" stroke-width="4"/>'+sp+'<circle cx="50" cy="50" r="8" fill="'+C.grey+'"'+sw(2.5)+'/><path d="M32 38 Q36 30 44 26" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round"/>';},
+ ran:function(){return '<path d="M4 40 H22 M8 52 H24 M4 64 H20" stroke="'+C.grey+'" stroke-width="3.5" stroke-linecap="round"/>'+
+   limb('M50 62 L40 76 L26 78',C.blue,9)+limb('M52 62 L66 74 L62 92',C.blue,9)+'<path d="M18 74 H30 V82 H18 Z M56 90 H72 V97 H56 Z" fill="'+K+'"/>'+
+   limb('M56 36 L42 44 L36 34',C.skin,6)+'<path d="M48 30 L60 32 L56 64 L46 62 Z" fill="'+C.red+'"'+sw()+'/>'+limb('M58 38 L70 48 L82 42',C.skin,6)+
+   '<circle cx="60" cy="18" r="11" fill="'+C.skin+'"'+sw()+'/><path d="M49 16 Q50 5 61 6 Q72 7 71 16 Q63 11 49 16 Z" fill="'+C.hair+'"/><circle cx="65" cy="18" r="1.9" fill="'+K+'"/><path d="M63 24 Q66 26 69 23" fill="none"'+sw(2)+'/>';},
+ man:function(){return limb('M44 66 L42 92',C.dgrey,10)+limb('M56 66 L58 92',C.dgrey,10)+'<path d="M34 90 H46 V96 H34 Z M54 90 H66 V96 H54 Z" fill="'+K+'"/>'+
+   limb('M36 38 L28 62',C.skin,7)+limb('M64 38 L72 62',C.skin,7)+'<path d="M34 32 H66 L64 68 H36 Z" fill="'+C.blue+'"'+sw()+'/><path d="M46 32 L50 40 L54 32" fill="#fff"'+sw(2)+'/>'+
+   '<circle cx="50" cy="17" r="12" fill="'+C.skin+'"'+sw()+'/><path d="M38 15 Q38 4 50 4 Q62 4 62 15 Q56 9 38 15 Z" fill="'+C.hair+'"/><circle cx="45" cy="16" r="1.8" fill="'+K+'"/><circle cx="55" cy="16" r="1.8" fill="'+K+'"/>'+
+   '<path d="M43 22 Q50 19 57 22 Q50 26 43 22 Z" fill="'+C.hair+'"/>';},
+ map:function(){return '<path d="M8 22 L36 14 L64 22 L92 14 V80 L64 88 L36 80 L8 88 Z" fill="#F6EDD2"/><path d="M8 22 L36 14 V80 L8 88 Z" fill="#EADFBE"/><path d="M64 22 L92 14 V80 L64 88 Z" fill="#EADFBE"/>'+
+   '<path d="M14 40 Q26 30 34 44 Q40 56 30 62 Q18 66 14 56 Z M66 50 Q80 40 88 52 L86 74 Q72 80 66 70 Z" fill="#9BD08A"/><path d="M40 16 Q52 40 46 56 Q40 72 58 86" fill="none" stroke="#5DADE2" stroke-width="5"/>'+
+   '<path d="M20 74 Q40 60 52 48 Q66 34 76 32" fill="none" stroke="'+C.red+'" stroke-width="3" stroke-dasharray="4 4" stroke-linecap="round"/>'+
+   '<path d="M76 18 a8 8 0 0 1 8 8 c0 6 -8 14 -8 14 s-8 -8 -8 -14 a8 8 0 0 1 8 -8 z" fill="'+C.red+'"'+sw(2)+'/><circle cx="76" cy="26" r="3" fill="#fff"/>'+
+   '<path d="M8 22 L36 14 L64 22 L92 14 V80 L64 88 L36 80 L8 88 Z M36 14 V80 M64 22 V88" fill="none"'+sw()+'/>';},
+ mat:function(){var f='';for(var x=14;x<=78;x+=8)f+='<path d="M'+x+' '+(x<46?84+x*0.02:84)+' l-2 8" stroke="'+C.dbrown+'" stroke-width="2.5" stroke-linecap="round"/>';
+   return '<path d="M20 40 H80 L92 84 H8 Z" fill="'+C.orange+'"'+sw()+'/><path d="M17 51 H83 M14 62 H86 M11 73 H89" stroke="'+C.red+'" stroke-width="4"/><path d="M20 40 H80 L92 84 H8 Z" fill="none"'+sw()+'/>'+f;},
+ nap:function(){return '<path d="M8 30 V96 M92 30 V96" stroke="'+C.dbrown+'" stroke-width="6" stroke-linecap="round"/>'+
+   '<path d="M8 40 Q24 64 40 66 Q66 70 92 40 Q74 86 48 84 Q20 82 8 40 Z" fill="'+C.blue+'"'+sw()+'/><path d="M14 52 Q48 92 86 52" fill="none" stroke="'+C.lane+'" stroke-width="3"/>'+
+   '<circle cx="28" cy="56" r="13" fill="'+C.skin+'"'+sw()+'/><path d="M15 54 Q16 41 29 42 Q40 43 41 52 Q31 47 15 54 Z" fill="'+C.hair+'"/><path d="M24 58 Q27 61 30 58 M33 57 Q35 59 37 57" fill="none"'+sw(2.2)+'/>'+
+   '<path d="M50 30 h8 l-8 8 h8 M64 18 h10 l-10 10 h10 M80 4 h12 l-12 12 h12" fill="none" stroke="'+C.blue+'" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>';},
+ tin:function(){var r='';for(var y=36;y<=76;y+=8)r+='<path d="M24 '+y+' Q50 '+(y+6)+' 76 '+y+'" fill="none" stroke="'+C.grey+'" stroke-width="2"/>';
+   return '<path d="M24 22 V80 Q50 92 76 80 V22 Z" fill="'+C.silver+'"/>'+r+'<path d="M24 42 Q50 50 76 42 V64 Q50 72 24 64 Z" fill="'+C.red+'"/><path d="M24 22 V80 Q50 92 76 80 V22" fill="none"'+sw()+'/>'+
+   '<ellipse cx="50" cy="22" rx="26" ry="8" fill="#E6EAED"'+sw()+'/><ellipse cx="50" cy="22" rx="20" ry="5" fill="none" stroke="'+C.grey+'" stroke-width="2"/><path d="M32 30 V76" stroke="#fff" stroke-width="4" stroke-linecap="round" opacity=".8"/>';},
+ pan:function(){return '<path d="M70 60 L96 84" stroke="'+K+'" stroke-width="12" stroke-linecap="round"/><path d="M70 60 L95 83" stroke="'+C.dbrown+'" stroke-width="7" stroke-linecap="round"/>'+
+   '<ellipse cx="42" cy="52" rx="38" ry="32" fill="'+C.asph+'"'+sw()+'/><ellipse cx="42" cy="50" rx="30" ry="24" fill="#4A5059"/><path d="M22 40 Q28 32 38 30" fill="none" stroke="#8F98A2" stroke-width="3.5" stroke-linecap="round"/>';}
 };
 function picSVG(name,label){return '<svg viewBox="0 0 100 100" aria-hidden="'+(label?'false':'true')+'"'+(label?' role="img" aria-label="'+esc(label)+'"':'')+'>'+(PIC[name]?PIC[name]():'')+'</svg>';}
 
 /* ---------- Which letters are on (read from Letter Road) ---------- */
-function lettersOn(){var on={};try{var o=JSON.parse(localStorage.getItem('nanoLetters.v1')||'null');if(o&&o.on){Object.keys(o.on).forEach(function(k){if(o.on[k])on[k]=true;});return on;}}catch(e){}
+function lettersOn(){var on={};try{var o=JSON.parse(localStorage.getItem('nanoLetters.v1')||'null');if(o&&o.on){
+    var mig=Array.isArray(o.mig)?o.mig:[],ch=false;SWITCH_ON_ONCE.forEach(function(m){if(mig.indexOf(m.id)<0){m.on.forEach(function(l){o.on[l]=true;});mig.push(m.id);ch=true;}});
+    if(ch){o.mig=mig;try{localStorage.setItem('nanoLetters.v1',JSON.stringify(o));}catch(e){}}
+    Object.keys(o.on).forEach(function(k){if(o.on[k])on[k]=true;});return on;}}catch(e){}
   DEFAULT_ON.forEach(function(k){on[k]=true;});return on;}
 var ON=lettersOn();
 function wordOpen(w){return w.split('').every(function(ch){return ON[ch];});}
@@ -492,21 +552,24 @@ var ART={
    return s+'<g transform="translate(6,6) scale(1)">'+carInner(C.red,true)+'</g></svg>';},
  which:function(){return '<svg viewBox="0 0 150 90">'+[0,1,2].map(function(i){var y=4+i*29;return '<rect x="30" y="'+y+'" width="116" height="25" rx="5" fill="#fff" stroke="'+K+'" stroke-width="2.5"/>'+tl(88,y+20,['sit','sat','sip'][i],21,K);}).join('')+'<g transform="translate(0,30) scale(.5)">'+carInner(C.red,true)+'</g></svg>';},
  picture:function(){return '<svg viewBox="0 0 150 90"><rect x="6" y="8" width="78" height="44" rx="6" fill="'+C.green+'" stroke="#fff" stroke-width="3"/>'+tl(45,42,'tap',30,'#fff')+'<path d="M45 52 V86" stroke="'+C.grey+'" stroke-width="5"/><g transform="translate(90,22) scale(.6)">'+PIC.tap()+'</g></svg>';},
- readit:function(){return '<svg viewBox="0 0 300 90"><g transform="translate(10,40) scale(1.2)">'+carInner(C.red,true)+'</g><path d="M104 8 H276 Q286 8 286 18 V58 Q286 68 276 68 H128 L112 82 L116 68 H104 Q94 68 94 58 V18 Q94 8 104 8 Z" fill="#fff" stroke="'+K+'" stroke-width="3"/>'+tl(190,56,'sat',46,K)+'</svg>';}
+ readit:function(){return '<svg viewBox="0 0 150 90"><g transform="translate(0,52) scale(.9)">'+carInner(C.red,true)+'</g><path d="M60 6 H140 Q146 6 146 12 V52 Q146 58 140 58 H78 L66 70 L68 58 H60 Q54 58 54 52 V12 Q54 6 60 6 Z" fill="#fff" stroke="'+K+'" stroke-width="3"/>'+tl(100,46,'sat',36,K)+'</svg>';},
+ tower:function(){var r=['r','ri','rip'],h='<svg viewBox="0 0 150 90">';r.forEach(function(t,i){var w=20+i*20,x=48-w/2+10;h+='<rect x="'+x+'" y="'+(4+i*28)+'" width="'+(w+16)+'" height="24" rx="5" fill="'+C.lane+'"/>'+tl(x+(w+16)/2,22+i*28,t,20,K);});
+   return h+'<g transform="translate(100,30) scale(.55)">'+PIC.rip()+'</g></svg>';}
 };
 
 /* ---------- Home ---------- */
 function home(){
   app.className='';var un=unlocked(),pw=picWords();
   var strongN=un.filter(strong).length;
-  var lock={which:un.length<2,picture:pw.length<2,readit:un.length<1,drive:un.length<1};
+  var lock={which:un.length<2,picture:pw.length<2,tower:pw.length<2,readit:un.length<1,drive:un.length<1};
   app.innerHTML='<div class="screen"><div class="home-head">'+hubLink()+'<h1>Blend Road</h1>'+muteBtn()+'<button class="pbtn" id="pbtn">Parents</button></div>'+
    (un.length<2?'<div class="nudge">Grown-ups: switch on more letters in Letter Road · Parents to open more words.</div>':'')+
    '<div class="tiles">'+
    '<button class="tile wide t-sky" data-go="drive" aria-label="Drive the Road"><span class="art">'+ART.drive()+'</span><b>Drive the Road</b></button>'+
    '<button class="tile t-plate" data-go="which" aria-label="Which Road?"><span class="art">'+ART.which()+'</span><b>Which Road?</b></button>'+
    '<button class="tile t-cream" data-go="picture" aria-label="Picture Stop"><span class="art">'+ART.picture()+'</span><b>Picture Stop</b></button>'+
-   '<button class="tile wide t-grey" data-go="readit" aria-label="Read It To Me, with a grown-up"><span class="art">'+ART.readit()+'</span><b>Read It To Me</b></button>'+
+   '<button class="tile t-blue" data-go="tower" aria-label="Build-Up Tower"><span class="art">'+ART.tower()+'</span><b>Tower</b></button>'+
+   '<button class="tile t-grey" data-go="readit" aria-label="Read It To Me, with a grown-up"><span class="art">'+ART.readit()+'</span><b>Read It</b></button>'+
    '</div><div class="home-foot"><span>★ <b>'+strongN+'</b> of '+un.length+' words strong</span><span>Laps today <b>'+lapsToday()+'</b></span></div></div>';
   $$('.tile').forEach(function(t){var g=t.dataset.go;if(lock[g])t.classList.add('locked');t.onclick=function(){ac();if(lock[g]){boop();bump(t);return;}go(g);};});
   $('#pbtn').onclick=function(){go('parents');};
@@ -588,7 +651,33 @@ function readitRound(){
     run(steps).then(function(){later(nextRound,1600);});};
 }
 
-var ROUNDS={which:whichRound,picture:pictureRound,readit:readitRound};
+
+/* ---------- Build-Up Tower: the school's word pyramid. Rows build r, ri, rip; only the picture pick is scored. ---------- */
+function towerRound(){
+  var pw=picWords();if(pw.length<2){go('home');return;}
+  var w=pickFrom(pw),W=WBY[w],n=w.length,opts=wordChoices(w,pw,3),row=1,busy=false,built=false,first=true,locked=false;
+  prompt=function(){if(built)run([function(){return sayP(cap1(w)+'.');},function(){return sayP('Which picture is it?');}]);else say('Tap the yellow row.');};
+  var rows='';for(var i=1;i<=n;i++)rows+='<button class="trow'+(i===1?' show next':'')+'" data-i="'+i+'"'+(i===1?'':' disabled')+' aria-label="row '+i+'">'+w.slice(0,i).split('').map(function(ch){return '<span>'+ch+'</span>';}).join('')+'</button>';
+  gameScreen('Tower','<div class="tower" id="tower">'+rows+'</div>',
+    opts.map(function(o){return '<button class="pchoice wait" data-v="'+o+'" aria-label="picture" disabled>'+picSVG(WBY[o].pic)+'</button>';}).join(''));
+  intro(prompt,350);
+  $$('.trow').forEach(function(b){b.onclick=function(){var i=+b.dataset.i;if(busy||i!==row)return;ac();busy=true;b.classList.remove('next');b.classList.add('lit');
+    var spans=$$('span',b),steps=[];
+    for(var j=0;j<i;j++)(function(j){steps.push(function(){spans.forEach(function(s,k){s.classList.toggle('on',k===j);});return tileSound(W,j);});steps.push(function(){return wait(60);});})(j);
+    steps.push(function(){spans.forEach(function(s){s.classList.remove('on');});});
+    if(i===n){steps.push(function(){return wait(250);});steps.push(function(){return sayP(cap1(w)+'.');});
+      steps.push(function(){built=true;$$('.pchoice').forEach(function(x){x.classList.remove('wait');x.disabled=false;});return sayP('Which picture is it?');});}
+    run(steps).then(function(){busy=false;
+      if(i<n){row=i+1;var nb=$('.trow[data-i="'+row+'"]');if(nb){nb.classList.add('show','next');nb.disabled=false;}}
+      else if(!built){built=true;$$('.pchoice').forEach(function(x){x.classList.remove('wait');x.disabled=false;});}});};});
+  $$('.pchoice').forEach(function(b){b.onclick=function(){if(locked||!built)return;ac();var v=b.dataset.v;
+    if(v===w){locked=true;b.classList.add('right');$$('.pchoice').forEach(function(x){if(x!==b)x.classList.add('dim');});honk();if(first)record(w,true);lapStep();
+      run([function(){return wait(600);},function(){return sayP(cap1(w)+'!');},function(){return bridgeP(W.es);}]).then(function(){later(nextRound,900);});}
+    else{bump(b);boop();if(first){record(w,false);first=false;}
+      run([function(){return wait(350);},function(){return sayP('That picture is '+v+'.');},function(){return wait(150);},function(){return sayP('Find '+w+'.');}]);}};});
+}
+
+var ROUNDS={which:whichRound,picture:pictureRound,readit:readitRound,tower:towerRound};
 function nextRound(){clearTimers();if(unlocked().length<2&&view==='which'){go('home');return;}if(ROUNDS[view])ROUNDS[view]();}
 
 /* ---------- Parents ---------- */
@@ -597,17 +686,17 @@ function parents(){
   var refs='';WORDS.forEach(function(W){if(!W.es)return;refs+='<div class="ref">'+picSVG(W.pic)+'<b>'+W.w+'</b><span>Say "'+W.w+'", then <span class="es">'+esc(W.es)+'</span></span></div>';});
   app.innerHTML='<div class="screen parents">'+
    '<div class="top"><button class="ib" id="homeBtn" aria-label="Back to games">'+ICON.home+'</button><h2 style="flex:1">Blend Road · Parents</h2></div>'+
-   '<div class="psec"><h3>Letter sounds</h3><p>Blend Road plays the sounds you recorded in <a class="plink" href="../letters/#parents">Letter Road · Parents</a>. Record them there; both stops use the same recordings on this phone.</p>'+
+   '<div class="psec"><h3>Letter sounds</h3><p>Blend Road plays the built-in letter sounds, or your own recording of a letter if you made one in <a class="plink" href="../letters/#parents">Letter Road · Parents</a>. Both stops use the same sounds on this phone.</p>'+
      '<p id="recLine"></p><p>Letter sounds recorded by Kathryn J. Davis, used with permission.</p><p class="note">A letter without a recording plays a soft engine blip and lights up; the whole word is always spoken. In <b>as</b> and <b>is</b> the s says /z/, so that tile plays the /z/ sound.</p></div>'+
-   '<div class="psec"><h3>Words</h3><p class="note">Strong = right on the first try in 4 of his last 5 rounds of Which Road? and Picture Stop. Read It To Me is your check: R read it, S sounded it out then blended, N not yet (his last 5 shown).</p><div id="wordTbl"></div></div>'+
+   '<div class="psec"><h3>Words</h3><p class="note">Strong = right on the first try in 4 of his last 5 rounds of Which Road?, Picture Stop and the picture pick in Build-Up Tower. Read It To Me is your check: R read it, S sounded it out then blended, N not yet (his last 5 shown).</p><div id="wordTbl"></div></div>'+
    '<div class="psec"><h3>The 15-minute session</h3><ul class="list">'+
      '<li><span class="tag en">3 min</span><b>Letter warm-up</b>: Say It in Letter Road for the letters in today\'s words.</li>'+
      '<li><span class="tag en">4 min</span><b>Drive the Road</b>: 2 or 3 words. He taps each letter, says the sound with the car, then says the word when the tiles slide together.</li>'+
      '<li><span class="tag es">30 s</span><b>Spanish bridge</b>: spoken only, English first ("sip… sorbo"). Never drilled or written.</li>'+
-     '<li><span class="tag amb">5 min</span><b>Which Road?</b> or <b>Picture Stop</b>. A lap is 5 right answers.</li>'+
+     '<li><span class="tag amb">5 min</span><b>Which Road?</b>, <b>Picture Stop</b> or <b>Build-Up Tower</b> (the school\'s word pyramid: r, ri, rip, then pick the picture). A lap is 5 right answers.</li>'+
      '<li><span class="tag amb">3 min</span><b>Read It To Me</b>: 5 words. End on a word he can read.</li></ul>'+
-     '<p class="note" style="margin-top:8px">Two-letter words (at, as, it, is) come first in Drive the Road. Words he misses come up 3 times as often. Picture Stop never shows sit and sat together; both pictures are about sitting.</p></div>'+
-   '<div class="psec"><h3>Spanish bridge words</h3><p>English first, then the Spanish word, spoken only. No bridge for at, as, it, is, sat or sap.</p><div class="refs">'+refs+'</div></div>'+
+     '<p class="note" style="margin-top:8px">Two-letter words (at, as, it, is, an, in, am) come first in Drive the Road. They have no picture, so they are used in Which Road?, Drive the Road and Read It To Me only. Words he misses come up 3 times as often. Picture Stop never shows sit and sat together; both pictures are about sitting.</p></div>'+
+   '<div class="psec"><h3>Spanish bridge words</h3><p>English first, then the Spanish word, spoken only. No bridge for at, as, it, is, an, in, am, sat, sap or ran. For <b>pan</b> the Spanish voice adds the joke: English pan is a frying pan, Spanish pan is bread.</p><div class="refs">'+refs+'</div></div>'+
    '<div class="psec"><h3>Settings</h3><div class="settings">'+
      '<label><input type="checkbox" id="setMute"'+(S.mute?'':' checked')+'> Sound on (voice and game sounds)</label>'+
      '<label><input type="checkbox" id="setSpanish"'+(S.spanish?' checked':'')+'> Spanish bridge (spoken)</label>'+
@@ -619,8 +708,8 @@ function parents(){
   renderRecLine();renderWords();resetIdle();
 }
 function renderRecLine(){var el=$('#recLine');if(!el)return;var letters=Object.keys(ON).sort();
-  var rec=letters.filter(hasRec),no=letters.filter(function(l){return !hasRec(l);});
-  el.innerHTML='Letters on: <b>'+(letters.join(', ')||'none')+'</b>. Recorded: <b>'+(rec.join(', ')||'none yet')+'</b>'+(no.length?'. Not recorded: <b>'+no.join(', ')+'</b>':'')+'.';}
+  var own=letters.filter(function(l){return hasRec(l)&&!REC[l].bundled;}),built=letters.filter(function(l){return hasRec(l)&&REC[l].bundled;}),no=letters.filter(function(l){return !hasRec(l);});
+  el.innerHTML='Letters on: <b>'+(letters.join(', ')||'none')+'</b>.'+(built.length?' Built-in sound: <b>'+built.join(', ')+'</b>.':'')+' Recorded on this phone: <b>'+(own.join(', ')||'none')+'</b>.'+(no.length?' No sound yet: <b>'+no.join(', ')+'</b>.':'');}
 function renderWords(){var el=$('#wordTbl');if(!el)return;
   var h='<table class="tbl"><tr><th>Word</th><th>Status</th><th>Read It</th></tr>';
   WORDS.forEach(function(W){var w=W.w,s=state.stats[w];
@@ -634,7 +723,7 @@ function resetAsk(){$('#resetBox').innerHTML='<p style="font-weight:700;margin:0
   $('#rNo').onclick=resetIdle;}
 
 /* ---------- Router ---------- */
-var VIEWS={home:home,drive:drive,parents:parents,which:nextRound,picture:nextRound,readit:nextRound};
+var VIEWS={home:home,drive:drive,parents:parents,which:nextRound,picture:nextRound,readit:nextRound,tower:nextRound};
 function render(){clearTimers();hush();ON=lettersOn();S=readShared();var v=location.hash.slice(1)||'home';if(!VIEWS[v])v='home';view=v;VIEWS[v]();}
 window.addEventListener('hashchange',render);
 window.addEventListener('storage',function(e){if(e.key==='nanoLetters.v1'&&view==='home')render();});

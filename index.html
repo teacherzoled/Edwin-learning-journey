@@ -103,7 +103,7 @@ var STOPS=[
   {name:"Ambulance Health Run",about:"Safe water, germs and clean hands",href:"health/",art:"health",open:true,progress:function(){return quizProgress("health");}},
   {name:"Letter Road",about:"Letter sounds",href:"letters/",art:"letters",open:true,progress:lettersProgress},
   {name:"Blend Road",about:"Build words",href:"blend/",art:"blend",open:true,progress:blendProgress},
-  {name:"Word Parking",about:"Sight words",art:"words",open:false},
+  {name:"Word Parking",about:"Sight words",href:"words/",art:"words",open:true,progress:wordsProgress},
   {name:"Sentence Trip",about:"Read sentences around Belize",art:"trip",open:false},
   {name:"Book Racetrack",about:"My first books",art:"books",open:false}
 ];
@@ -137,11 +137,22 @@ function numbersProgress(){
 function lastStrong(l){l=(l||[]).slice(-5);return l.length>=5&&l.filter(Boolean).length>=4;}
 function todayKey(){var d=new Date();return d.getFullYear()+'-'+(d.getMonth()+1)+'-'+d.getDate();}
 function lapText(o){var n=(o.laps&&o.laps.date===todayKey())?o.laps.count:0;return n?' \u00b7 '+n+' lap'+(n>1?'s':'')+' today':'';}
-function lettersOn(){try{var o=JSON.parse(localStorage.getItem('nanoLetters.v1')||'null');if(o&&o.on)return o.on;}catch(e){}return {s:true,a:true,t:true,p:true,i:true};}
+/* Letters switched on in Letter Road. Mirrors the apps' one-time switch-on (r, n, m on 10 Nov) without writing anything. */
+var SWITCH_ON_ONCE=[{id:'nov10-rnm',on:['r','n','m']}];
+function lettersOnFrom(o){var on={};if(o&&o.on)for(var k in o.on)on[k]=o.on[k];else 'satpirnm'.split('').forEach(function(k){on[k]=true;});
+  var mig=(o&&Array.isArray(o.mig))?o.mig:[];if(o&&o.on)SWITCH_ON_ONCE.forEach(function(m){if(mig.indexOf(m.id)<0)m.on.forEach(function(l){on[l]=true;});});return on;}
+function lettersOn(){try{return lettersOnFrom(JSON.parse(localStorage.getItem('nanoLetters.v1')||'null'));}catch(e){return lettersOnFrom(null);}}
 function lettersProgress(){
   try{var o=JSON.parse(localStorage.getItem('nanoLetters.v1')||'null');if(!o||!o.stats)return '';
-    var on=o.on||{},n=0,strong=0;for(var k in on){if(!on[k])continue;n++;if(o.stats[k]&&lastStrong(o.stats[k].last))strong++;}
+    var on=lettersOnFrom(o),n=0,strong=0;for(var k in on){if(!on[k])continue;n++;if(o.stats[k]&&lastStrong(o.stats[k].last))strong++;}
     return '\u2605 '+strong+' of '+n+' sounds strong'+lapText(o);
+  }catch(e){return '';}
+}
+/* Progress from Word Parking: sight words switched on, strong on the same 4-of-5 rule */
+function wordsProgress(){
+  try{var o=JSON.parse(localStorage.getItem('nanoWords.v1')||'null');if(!o||!o.stats)return '';
+    var on=o.on||{},n=0,strong=0;for(var w in o.stats){if(on[w]===false)continue;n++;if(lastStrong(o.stats[w].last))strong++;}
+    return '\u2605 '+strong+' of '+n+' sight words strong'+lapText(o);
   }catch(e){return '';}
 }
 /* Progress from Blend Road: counts only words whose letters are all switched on in Letter Road */
