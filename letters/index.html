@@ -298,9 +298,9 @@ function loadRecordings(){return idb().then(function(db){if(!db)return;return ne
 function setRec(l,blob,date){var old=REC[l];if(old&&old.url){try{URL.revokeObjectURL(old.url);}catch(e){}}
   var url='';try{url=URL.createObjectURL(blob);}catch(e){}
   REC[l]={blob:blob,date:date||'',url:url,buf:null,start:0,dur:0,tried:false};}
-var BUNDLED=['s','a','t','p','i'];   /* built-in clips in ../sounds/<letter>.mp3; a recording made on this phone replaces one */
+var BUNDLED='abcdefghijklmnopqrstuvwxyz'.split('');   /* built-in clips in ../sounds/<letter>.mp3 (Kathryn J. Davis); only letters switched on are fetched; a recording made on this phone replaces one */
 function loadBundled(){if(!window.fetch)return Promise.resolve();
-  return Promise.all(BUNDLED.map(function(l){if(REC[l])return null;
+  var on=(state.on)||{};return Promise.all(BUNDLED.filter(function(l){return on[l];}).map(function(l){if(REC[l])return null;
     return fetch('../sounds/'+l+'.mp3').then(function(r){return r.ok?r.blob():null;}).then(function(b){if(b&&!REC[l]){setRec(l,b,'');REC[l].bundled=true;}}).catch(function(){});}));}
 function hasRec(l){return !!REC[l];}
 /* Decode once and trim the silence before and after the sound, so it plays the moment Nano reaches the tile */
