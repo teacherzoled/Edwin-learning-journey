@@ -187,6 +187,9 @@ a.plink{color:var(--blue);font-weight:700}
 @keyframes pulse{50%{opacity:.65}}
 .note{font-size:14px;color:var(--muted);font-weight:400}
 @media (max-width:420px){.rrow{grid-template-columns:36px 1fr 1fr 1fr}.rrow .rst{grid-column:2 / -1}.rrow .pg-n{grid-row:span 2}}
+.langsw{display:flex;flex:0 0 auto;border:2px solid var(--asph);border-radius:999px;overflow:hidden}
+.langsw button{font:inherit;font-size:13px;font-weight:700;border:none;background:#fff;color:var(--asph);padding:5px 10px;cursor:pointer;min-height:0;min-width:0;box-shadow:none;border-radius:0}
+.langsw button[aria-pressed="true"]{background:var(--asph);color:var(--lane)}
 </style>
 </head>
 <body>
@@ -204,6 +207,13 @@ function pick(a){return a[Math.floor(Math.random()*a.length)];}
 function cap1(s){return s.charAt(0).toUpperCase()+s.slice(1);}
 function esc(s){return String(s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
 
+/* ---------- Parents' language: English or Español. Shared by every stop and the hub (lang in nanoHub.v1).
+   Only text for parents switches. The child's screens and everything spoken stay in English. ---------- */
+function pl(){try{var o=JSON.parse(localStorage.getItem('nanoHub.v1')||'null');return o&&o.lang==='es'?'es':'en';}catch(e){return 'en';}}
+function tr(en,es){return pl()==='es'?es:en;}
+function setPl(l){try{var o=JSON.parse(localStorage.getItem('nanoHub.v1')||'null')||{};o.lang=l;localStorage.setItem('nanoHub.v1',JSON.stringify(o));}catch(e){}}
+function langSw(){var l=pl();return '<div class="langsw" role="group" aria-label="Language / Idioma"><button type="button" data-lang="en" lang="en" aria-pressed="'+(l==='en')+'">English</button><button type="button" data-lang="es" lang="es" aria-pressed="'+(l==='es')+'">Español</button></div>';}
+function bindLangSw(redraw){[].forEach.call(document.querySelectorAll('.langsw button'),function(b){b.onclick=function(){setPl(b.getAttribute('data-lang'));redraw();};});}
 /* ---------- Icons and Nano ---------- */
 var ICON={
  home:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11.5 12 4l9 7.5"/><path d="M5.5 10v9.5h13V10"/><path d="M10 19.5v-5h4v5"/></svg>',
@@ -331,9 +341,9 @@ function playSound(l,force){
   });});}
 var MIMES=['audio/webm;codecs=opus','audio/webm','audio/mp4','audio/ogg;codecs=opus','audio/ogg'];
 function recSupport(){
-  if(!window.indexedDB)return 'This browser cannot save recordings (private browsing can cause this). The games will use the keyword pictures instead.';
+  if(!window.indexedDB)return tr('This browser cannot save recordings (private browsing can cause this). The games will use the keyword pictures instead.','Este navegador no puede guardar grabaciones (la navegación privada puede causarlo). Los juegos usarán los dibujos de las palabras clave.');
   if(!window.MediaRecorder||!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia)
-    return 'This browser cannot record. Use Chrome on Android or Safari on iPhone (iOS 14.5 or newer), opened from the website address, not a saved file. The games use the keyword pictures until sounds are recorded.';
+    return tr('This browser cannot record. Use Chrome on Android or Safari on iPhone (iOS 14.5 or newer), opened from the website address, not a saved file. The games use the keyword pictures until sounds are recorded.','Este navegador no puede grabar. Use Chrome en Android o Safari en iPhone (iOS 14.5 o más nuevo), abierto desde la dirección del sitio web, no desde un archivo guardado. Los juegos usan los dibujos de las palabras clave hasta que se graben los sonidos.');
   return '';}
 
 /* ---------- Timers ---------- */
@@ -359,7 +369,7 @@ function gameScreen(title,play,bottom){
 }
 function bump(el){if(!el)return;el.classList.remove('nope');void el.offsetWidth;el.classList.add('nope');}
 function today(){var d=new Date();return d.getFullYear()+'-'+(d.getMonth()+1)+'-'+d.getDate();}
-function niceDate(iso){try{var p=iso.split('-');return new Date(+p[0],+p[1]-1,+p[2]).toLocaleDateString(undefined,{day:'numeric',month:'short',year:'numeric'});}catch(e){return iso;}}
+function niceDate(iso){try{var p=iso.split('-');return new Date(+p[0],+p[1]-1,+p[2]).toLocaleDateString(pl()==='es'?'es':undefined,{day:'numeric',month:'short',year:'numeric'});}catch(e){return iso;}}
 function lapsToday(){return state.laps.date===today()?state.laps.count:0;}
 function lapStep(){state.lapProg++;
   if(state.lapProg>=5){state.lapProg=0;if(state.laps.date!==today())state.laps={date:today(),count:0};state.laps.count++;save();celebrate();}
@@ -547,9 +557,9 @@ function home(){
   app.className='';var on=onList(),few=on.length<2;
   var strongN=on.filter(function(l){return strong(l);}).length;
   var gl=on[state.gIdx%Math.max(1,on.length)]||'s';
-  app.innerHTML='<div class="screen"><div class="home-head">'+hubLink()+'<h1>Letter Road</h1>'+muteBtn()+'<button class="pbtn" id="pbtn">Parents</button></div>'+
-   (state.baseline.length?'':'<button class="nudge" id="nudge">Grown-ups: when you have 3 minutes, run the starting check in Parents.</button>')+
-   (few?'<div class="nudge">Grown-ups: switch on at least 2 letters in Parents.</div>':'')+
+  app.innerHTML='<div class="screen"><div class="home-head">'+hubLink()+'<h1>Letter Road</h1>'+muteBtn()+'<button class="pbtn" id="pbtn">'+tr('Parents','Padres')+'</button></div>'+
+   (state.baseline.length?'':'<button class="nudge" id="nudge">'+tr('Grown-ups: when you have 3 minutes, run the starting check in Parents.','Adultos: cuando tengan 3 minutos, hagan la revisión inicial en Padres.')+'</button>')+
+   (few?'<div class="nudge">'+tr('Grown-ups: switch on at least 2 letters in Parents.','Adultos: activen al menos 2 letras en Padres.')+'</div>':'')+
    '<div class="tiles">'+
    '<button class="tile t-sky" data-go="garage" aria-label="Garage: learn the letters"><span class="art">'+ART.garage(gl)+'</span><b>Garage</b></button>'+
    '<button class="tile t-blue" data-go="trace" aria-label="Trace Track"><span class="art">'+ART.trace()+'</span><b>Trace Track</b></button>'+
@@ -631,8 +641,8 @@ function twinRound(){
 function sayitRound(){
   var l=pickTarget('say'),done=false;
   prompt=function(){say('What sound does this letter make?');};
-  gameScreen('Say It','<span class="ptag">Parent check</span><div class="bigplate" id="bp">'+l+'</div><div class="kws" id="model" hidden>'+BY[l].kw.map(function(k){return '<span class="kw">'+picSVG(k.pic)+'</span>';}).join('')+'</div>',
-    '<button class="j fast" id="jy">Said it<small>clear sound</small></button><button class="j count" id="jn">Not yet<small>show him</small></button>');
+  gameScreen('Say It','<span class="ptag">'+tr('Parent check','Revisión del adulto')+'</span><div class="bigplate" id="bp">'+l+'</div><div class="kws" id="model" hidden>'+BY[l].kw.map(function(k){return '<span class="kw">'+picSVG(k.pic)+'</span>';}).join('')+'</div>',
+    '<button class="j fast" id="jy">'+tr('Said it<small>clear sound</small>','Lo dijo<small>sonido claro</small>')+'</button><button class="j count" id="jn">'+tr('Not yet<small>show him</small>','Todavía no<small>muéstrele</small>')+'</button>');
   intro(prompt,350);
   $('#jy').onclick=function(){if(done)return;done=true;record(l,true,'say');honk();lapStep();run([function(){return wait(500);},function(){return sayP('Great sound!');}]).then(function(){later(nextRound,500);});};
   $('#jn').onclick=function(){if(done)return;done=true;record(l,false,'say');$('#model').hidden=false;$('#jy').disabled=true;$('#jn').disabled=true;
@@ -742,24 +752,25 @@ function baseline(){var on=onList();if(on.length<1){go('parents');return;}
   bl={items:on.map(function(l){return {k:'say',l:l};}).concat(shuffle(on.slice()).map(function(l){return {k:'horn',l:l};})),i:-1,rows:{}};
   on.forEach(function(l){bl.rows[l]={say:null,find:null,mode:hasRec(l)?'sound':'keyword'};});
   app.className='';
-  app.innerHTML='<div class="screen"><div class="top"><button class="ib" id="homeBtn" aria-label="Stop the check">'+ICON.home+'</button><div class="top-title">Starting check</div></div>'+
-   '<div class="play"><div class="psec" style="max-width:420px"><h3>Starting check · '+on.length+' letters</h3><p><b>Part 1, Say It.</b> A letter shows. Point and ask "What sound?" Tap <b>Said it</b> only for a clear, pure sound. No hints.</p><p><b>Part 2, Sound Horn.</b> He hears a sound'+(Object.keys(REC).length?'':' (or a keyword, since no sounds are recorded yet)')+' and taps a letter. His first tap counts.</p><p>No teaching during the check. Praise effort.</p></div></div>'+
-   '<div class="bottom"><button class="j fast" id="bstart">Start</button></div></div>';
+  app.innerHTML='<div class="screen"><div class="top"><button class="ib" id="homeBtn" aria-label="'+tr('Stop the check','Parar la revisión')+'">'+ICON.home+'</button><div class="top-title">'+tr('Starting check','Revisión inicial')+'</div></div>'+
+   '<div class="play"><div class="psec" style="max-width:420px"><h3>'+tr('Starting check · '+on.length+' letters','Revisión inicial · '+on.length+' letras')+'</h3>'+tr('<p><b>Part 1, Say It.</b> A letter shows. Point and ask "What sound?" Tap <b>Said it</b> only for a clear, pure sound. No hints.</p><p><b>Part 2, Sound Horn.</b> He hears a sound'+(Object.keys(REC).length?'':' (or a keyword, since no sounds are recorded yet)')+' and taps a letter. His first tap counts.</p><p>No teaching during the check. Praise effort.</p>',
+     '<p><b>Parte 1, Say It.</b> Aparece una letra. Señálela y pregunte en inglés: "What sound?" Toque <b>Lo dijo</b> solo si el sonido es claro y puro. Sin pistas.</p><p><b>Parte 2, Sound Horn.</b> El niño oye un sonido'+(Object.keys(REC).length?'':' (o una palabra clave, porque todavía no hay sonidos grabados)')+' y toca una letra. Cuenta su primer toque.</p><p>No enseñe durante la revisión. Elogie el esfuerzo.</p>')+'</div></div>'+
+   '<div class="bottom"><button class="j fast" id="bstart">'+tr('Start','Empezar')+'</button></div></div>';
   $('#homeBtn').onclick=function(){bl=null;go('parents');};
   $('#bstart').onclick=function(){ac();blNext();};
 }
 function blNext(){clearTimers();hush();if(!bl)return;bl.i++;var it=bl.items[bl.i];if(!it){blDone();return;}
-  var l=it.l,prog='<span class="ptag">Check '+(bl.i+1)+' of '+bl.items.length+'</span>';
+  var l=it.l,prog='<span class="ptag">'+tr('Check ','Revisión ')+(bl.i+1)+tr(' of ',' de ')+bl.items.length+'</span>';
   if(it.k==='say'){
     prompt=function(){say('What sound does this letter make?');};
-    gameScreen('Starting check',prog+'<div class="bigplate">'+l+'</div>','<button class="j fast" id="jy">Said it<small>clear sound</small></button><button class="j count" id="jn">Not yet</button>');
+    gameScreen(tr('Starting check','Revisión inicial'),prog+'<div class="bigplate">'+l+'</div>','<button class="j fast" id="jy">'+tr('Said it<small>clear sound</small>','Lo dijo<small>sonido claro</small>')+'</button><button class="j count" id="jn">'+tr('Not yet','Todavía no')+'</button>');
     $('#dots').hidden=true;intro(prompt,300);
     $('#jy').onclick=function(){bl.rows[l].say=true;beep();blNext();};
     $('#jn').onclick=function(){bl.rows[l].say=false;beep();blNext();};
   }else{
     var kw=BY[l].kw[0],opts=choices(l,3),done=false;
     prompt=function(){run(hasRec(l)?[function(){return sayP('Which letter says');},function(){return wait(120);},function(){return playSound(l);}]:[function(){return sayP('Which letter starts '+kw.w+'?');}]);};
-    gameScreen('Starting check',prog+'<button class="pic dark horn" id="horn" aria-label="Hear it again"><svg viewBox="0 0 120 60" aria-hidden="true"><g transform="translate(6,14) scale(1.3)">'+policeInner()+'</g>'+waves(94,30,C.lane)+'</svg></button>',letterRow(opts));
+    gameScreen(tr('Starting check','Revisión inicial'),prog+'<button class="pic dark horn" id="horn" aria-label="Hear it again"><svg viewBox="0 0 120 60" aria-hidden="true"><g transform="translate(6,14) scale(1.3)">'+policeInner()+'</g>'+waves(94,30,C.lane)+'</svg></button>',letterRow(opts));
     $('#dots').hidden=true;$('#horn').onclick=function(){ac();prompt();};intro(prompt,300);
     $$('.choice').forEach(function(b){b.onclick=function(){if(done)return;done=true;bl.rows[l].find=(b.dataset.v===l);b.classList.add('on');beep();
       run([function(){return sayP(pick(['Thank you!','Good listening!','Nice!']));}]);later(blNext,900);};});
@@ -767,61 +778,70 @@ function blNext(){clearTimers();hush();if(!bl)return;bl.i++;var it=bl.items[bl.i
 }
 function blDone(){var rec={date:today(),rows:bl.rows};state.baseline.push(rec);if(state.baseline.length>8)state.baseline=state.baseline.slice(-8);save();bl=null;
   fanfare();say('All done! Great work!');
-  app.innerHTML='<div class="screen"><div class="top"><div class="top-title">Starting check saved</div></div><div class="play"><div class="banner"><b>Done!</b><div class="bcar">'+carSVG(C.red,true)+'</div></div></div><div class="bottom"><button class="j fast" id="bsee">See results</button></div></div>';
+  app.innerHTML='<div class="screen"><div class="top"><div class="top-title">'+tr('Starting check saved','Revisión inicial guardada')+'</div></div><div class="play"><div class="banner"><b>Done!</b><div class="bcar">'+carSVG(C.red,true)+'</div></div></div><div class="bottom"><button class="j fast" id="bsee">'+tr('See results','Ver resultados')+'</button></div></div>';
   $('#bsee').onclick=function(){go('parents');later(function(){var b=$('#baseSec');if(b)b.scrollIntoView();},60);};}
 
 /* ---------- Parents ---------- */
 function parents(){
   app.className='wide';hush();
-  var refs='';LETTERS.forEach(function(L){L.kw.forEach(function(k){refs+='<div class="ref">'+picSVG(k.pic)+'<b>'+L.l+' · '+esc(k.w)+'</b><span>Say "'+esc(k.w)+'", then <span class="es">'+esc(k.es)+'</span></span></div>';});});
+  var refs='';LETTERS.forEach(function(L){L.kw.forEach(function(k){refs+='<div class="ref">'+picSVG(k.pic)+'<b>'+L.l+' · '+esc(k.w)+'</b><span>'+tr('Say "'+esc(k.w)+'", then ','Diga "'+esc(k.w)+'", luego ')+'<span class="es">'+esc(k.es)+'</span></span></div>';});});
   var recMsg=recSupport();
   app.innerHTML='<div class="screen parents">'+
-   '<div class="top"><button class="ib" id="homeBtn" aria-label="Back to games">'+ICON.home+'</button><h2 style="flex:1">Letter Road · Parents</h2></div>'+
-   '<div class="psec"><h3>Letters switched on</h3><div class="chips" id="chips"></div><p class="note" style="margin-top:8px">Switch a letter on when school has taught it. At least 2 stay on. Blend Road only uses words whose letters are all on.</p></div>'+
-   '<div class="psec" id="recSec"><h3>Letter sounds</h3><p>Every letter comes <b>built in</b>. Letter sounds recorded by Kathryn J. Davis, used with permission. You only need to record here to replace one on this phone.</p><p>Record each sound once, in your voice. Say the pure sound, short and clear: <b>"sss"</b> not "suh", <b>"t"</b> as a short puff not "tuh", short <b>"a"</b> as in apple, short <b>"i"</b> as in iguana. Each recording stops by itself after 2 seconds. Hold the phone about a hand away.</p>'+
-     '<p class="note">Until a sound is recorded the games use the keyword instead ("Which letter starts sun?"). The phone voice cannot say letter sounds on their own.</p>'+
+   '<div class="top"><button class="ib" id="homeBtn" aria-label="'+tr('Back to games','Volver a los juegos')+'">'+ICON.home+'</button><h2 style="flex:1">Letter Road · '+tr('Parents','Padres')+'</h2>'+langSw()+'</div>'+
+   '<div class="psec"><h3>'+tr('Letters switched on','Letras activadas')+'</h3><div class="chips" id="chips"></div><p class="note" style="margin-top:8px">'+tr('Switch a letter on when school has taught it. At least 2 stay on. Blend Road only uses words whose letters are all on.','Active una letra cuando la escuela ya la haya enseñado. Siempre quedan al menos 2 activadas. Blend Road solo usa palabras cuyas letras están todas activadas.')+'</p></div>'+
+   '<div class="psec" id="recSec"><h3>'+tr('Letter sounds','Sonidos de las letras')+'</h3>'+tr('<p>Every letter comes <b>built in</b>. Letter sounds recorded by Kathryn J. Davis, used with permission. You only need to record here to replace one on this phone.</p><p>Record each sound once, in your voice. Say the pure sound, short and clear: <b>"sss"</b> not "suh", <b>"t"</b> as a short puff not "tuh", short <b>"a"</b> as in apple, short <b>"i"</b> as in iguana. Each recording stops by itself after 2 seconds. Hold the phone about a hand away.</p>'+
+     '<p class="note">Until a sound is recorded the games use the keyword instead ("Which letter starts sun?"). The phone voice cannot say letter sounds on their own.</p>',
+     '<p>Cada letra ya viene <b>incluida</b>. Sonidos de las letras grabados por Kathryn J. Davis, usados con permiso. Solo necesita grabar aquí si quiere reemplazar uno en este teléfono.</p><p>Grabe cada sonido una vez, con su voz. Diga el sonido puro del inglés, corto y claro: <b>"sss"</b> y no "su", <b>"t"</b> como un soplo corto y no "te", la <b>"a"</b> corta de apple, la <b>"i"</b> corta de iguana. Cada grabación se detiene sola a los 2 segundos. Sostenga el teléfono a una mano de distancia.</p>'+
+     '<p class="note">Mientras un sonido no esté grabado, los juegos usan la palabra clave ("Which letter starts sun?"). La voz del teléfono no puede decir los sonidos de las letras solos.</p>')+
      (recMsg?'<p class="warn">'+recMsg+'</p>':'')+'<div id="recRows"></div><p class="warn" id="recErr" hidden></p></div>'+
-   '<div class="psec" id="baseSec"><h3>Starting check</h3><p>About 3 minutes. For each letter that is on: <b>Say It</b> (you judge) and <b>Sound Horn</b> (his first tap counts). Run it now, then again in a few weeks to compare.</p><button class="solid-go" id="bgo">Start the check</button><div id="baseOut" style="margin-top:10px"></div></div>'+
-   '<div class="psec"><h3>Progress on this phone</h3><div class="pg" id="prog"></div>'+
-     '<p class="note" style="margin-top:8px"><b>Finds</b> = Sound Horn and Pickup together; this is the "strong" light: right on the first try in 4 of his last 5. <b>Says</b> = your Say It Check, same 4-of-5 rule. <b>Traced</b> = Trace Track letters finished; tracing counts toward laps, never toward strong, and is never marked wrong. <b>Twins</b> = capital to small letter; it does not count toward strong. Advance a letter when Finds and Says are both green.</p></div>'+
-   '<div class="psec"><h3>The 15-minute session</h3><ul class="list">'+
+   '<div class="psec" id="baseSec"><h3>'+tr('Starting check','Revisión inicial')+'</h3><p>'+tr('About 3 minutes. For each letter that is on: <b>Say It</b> (you judge) and <b>Sound Horn</b> (his first tap counts). Run it now, then again in a few weeks to compare.','Unos 3 minutos. Para cada letra activada: <b>Say It</b> (usted juzga) y <b>Sound Horn</b> (cuenta su primer toque). Hágala ahora y otra vez en unas semanas para comparar.')+'</p><button class="solid-go" id="bgo">'+tr('Start the check','Empezar la revisión')+'</button><div id="baseOut" style="margin-top:10px"></div></div>'+
+   '<div class="psec"><h3>'+tr('Progress on this phone','Progreso en este teléfono')+'</h3><div class="pg" id="prog"></div>'+
+     '<p class="note" style="margin-top:8px">'+tr('<b>Finds</b> = Sound Horn and Pickup together; this is the "strong" light: right on the first try in 4 of his last 5. <b>Says</b> = your Say It Check, same 4-of-5 rule. <b>Traced</b> = Trace Track letters finished; tracing counts toward laps, never toward strong, and is never marked wrong. <b>Twins</b> = capital to small letter; it does not count toward strong. Advance a letter when Finds and Says are both green.',
+     '<b>Encuentra</b> = Sound Horn y Pickup juntos; es la luz de "firme": correcto al primer intento en 4 de sus últimos 5. <b>Dice</b> = su revisión Say It, con la misma regla de 4 de 5. <b>Trazó</b> = letras terminadas en Trace Track; el trazo cuenta para las vueltas, nunca para "firme", y nunca se marca como error. <b>Gemelas</b> = de mayúscula a minúscula; no cuenta para "firme". Avance una letra cuando Encuentra y Dice estén los dos en verde.')+'</p></div>'+
+   '<div class="psec"><h3>'+tr('The 15-minute session','La sesión de 15 minutos')+'</h3><ul class="list">'+tr(
      '<li><span class="tag en">3 min</span><b>Say It</b>: 5 letters, known ones first so he wins early. Your check, your judgement.</li>'+
      '<li><span class="tag en">4 min</span><b>Garage</b>: one new or shaky letter. Tap the letter for the sound, each picture for the word.</li>'+
      '<li><span class="tag es">30 s</span><b>Spanish bridge</b>: spoken only, English first ("sun… sol"). Never drilled or written.</li>'+
      '<li><span class="tag amb">5 min</span><b>One game</b>: Sound Horn or Pickup. A lap is 5 right answers. Twin Cars once a week.</li>'+
-     '<li><span class="tag amb">3 min</span><b>Trace Track</b> or off-screen: he traces the small letter, then the capital, starting at the green dot; or race the letter cars on the floor. End on a win.</li></ul>'+
-     '<p class="note" style="margin-top:8px">Both parents: use the same pure sounds, and record them once so the app matches what he hears at home. Letters he gets wrong come up 3 times as often.</p></div>'+
-   '<div class="psec"><h3>Spanish bridge words</h3><p>English first, then the Spanish word, spoken only. The app plays the Spanish when he taps a picture in the Garage and after a right answer in Pickup.</p><div class="refs">'+refs+'</div></div>'+
-   '<div class="psec"><h3>Settings</h3><div class="settings">'+
-     '<label><input type="checkbox" id="setMute"'+(S.mute?'':' checked')+'> Sound on (voice and game sounds)</label>'+
-     '<label><input type="checkbox" id="setSpanish"'+(S.spanish?' checked':'')+'> Spanish bridge (spoken)</label>'+
+     '<li><span class="tag amb">3 min</span><b>Trace Track</b> or off-screen: he traces the small letter, then the capital, starting at the green dot; or race the letter cars on the floor. End on a win.</li>',
+     '<li><span class="tag en">3 min</span><b>Say It</b>: 5 letras, primero las que ya sabe para que gane desde el inicio. Su revisión, su criterio.</li>'+
+     '<li><span class="tag en">4 min</span><b>Garage</b>: una letra nueva o que todavía duda. Toque la letra para oír el sonido y cada dibujo para oír la palabra.</li>'+
+     '<li><span class="tag es">30 s</span><b>Puente al español</b>: solo hablado, primero en inglés ("sun… sol"). Nunca se practica ni se escribe.</li>'+
+     '<li><span class="tag amb">5 min</span><b>Un juego</b>: Sound Horn o Pickup. Una vuelta son 5 respuestas correctas. Twin Cars una vez por semana.</li>'+
+     '<li><span class="tag amb">3 min</span><b>Trace Track</b> o sin pantalla: traza la letra minúscula y luego la mayúscula, empezando en el punto verde; o carreras con los carros de letras en el piso. Termine con un logro.</li>')+'</ul>'+
+     '<p class="note" style="margin-top:8px">'+tr('Both parents: use the same pure sounds, and record them once so the app matches what he hears at home. Letters he gets wrong come up 3 times as often.','Los dos padres: usen los mismos sonidos puros y grábenlos una vez para que la app suene igual que en casa. Las letras que falla salen 3 veces más seguido.')+'</p></div>'+
+   '<div class="psec"><h3>'+tr('Spanish bridge words','Palabras del puente al español')+'</h3><p>'+tr('English first, then the Spanish word, spoken only. The app plays the Spanish when he taps a picture in the Garage and after a right answer in Pickup.','Primero en inglés, luego la palabra en español, solo hablada. La app dice el español cuando toca un dibujo en el Garage y después de una respuesta correcta en Pickup.')+'</p><div class="refs">'+refs+'</div></div>'+
+   '<div class="psec"><h3>'+tr('Settings','Ajustes')+'</h3><div class="settings">'+
+     '<label><input type="checkbox" id="setMute"'+(S.mute?'':' checked')+'> '+tr('Sound on (voice and game sounds)','Sonido activado (voz y sonidos del juego)')+'</label>'+
+     '<label><input type="checkbox" id="setSpanish"'+(S.spanish?' checked':'')+'> '+tr('Spanish bridge (spoken)','Puente al español (hablado)')+'</label>'+
      '<p class="note" id="esNote"></p>'+
-     '<p class="note">These two settings and the voices are shared with every stop. Choose the English and Spanish voices in <a class="plink" href="../numbers/#parents">Number Garage · Parents</a>.</p>'+
+     '<p class="note">'+tr('These two settings and the voices are shared with every stop. Choose the English and Spanish voices in <a class="plink" href="../numbers/#parents">Number Garage · Parents</a>.','Estos dos ajustes y las voces son los mismos en todas las paradas. Escoja las voces en inglés y en español en <a class="plink" href="../numbers/#parents">Number Garage · Padres</a>.')+'</p>'+
      '<div id="resetBox"></div></div></div></div>';
+  bindLangSw(parents);
   $('#homeBtn').onclick=function(){go('home');};
   $('#setMute').onchange=function(e){setShared('mute',!e.target.checked);if(S.mute)hush();};
   $('#setSpanish').onchange=function(e){setShared('spanish',e.target.checked);esNote();};
   $('#bgo').onclick=function(){go('baseline');};
-  function esNote(){var n=$('#esNote');if(!n)return;n.textContent=S.spanish&&allVoices().length&&!voicesFor('es').length?'This phone has no Spanish voice, so the bridge stays silent. Say the Spanish word yourself.':'';}
+  function esNote(){var n=$('#esNote');if(!n)return;n.textContent=S.spanish&&allVoices().length&&!voicesFor('es').length?tr('This phone has no Spanish voice, so the bridge stays silent. Say the Spanish word yourself.','Este teléfono no tiene voz en español, así que el puente queda en silencio. Diga usted la palabra en español.'):'';}
   esNote();try{if(synthOK)speechSynthesis.onvoiceschanged=esNote;}catch(e){}
   renderChips();renderRecRows();renderBase();renderProgress();resetIdle();
 }
 function renderChips(){var el=$('#chips');if(!el)return;var on=onList();
-  el.innerHTML=LETTERS.map(function(L){var p=!!state.on[L.l];return '<button class="chip" data-l="'+L.l+'" aria-pressed="'+p+'">'+L.l+'<small>'+(p?'on':'off')+'</small></button>';}).join('');
+  el.innerHTML=LETTERS.map(function(L){var p=!!state.on[L.l];return '<button class="chip" data-l="'+L.l+'" aria-pressed="'+p+'">'+L.l+'<small>'+(p?tr('on','sí'):tr('off','no'))+'</small></button>';}).join('');
   $$('.chip',el).forEach(function(b){b.onclick=function(){var l=b.dataset.l;if(state.on[l]&&onList().length<=2){bump(b);return;}state.on[l]=!state.on[l];save();renderChips();renderRecRows();renderProgress();loadBundled().then(renderRecRows);};});}
-function renderProgress(){var h='';onList().forEach(function(l){var s=state.stats[l],st=status(l),lab={strong:'Strong',learning:'Learning',new:'New'}[st];
+function renderProgress(){var h='';onList().forEach(function(l){var s=state.stats[l],st=status(l),lab={strong:tr('Strong','Firme'),learning:tr('Learning','Aprendiendo'),new:tr('New','Nueva')}[st];
   function mini(kind,txt,c,t){var k=statusOf(l,kind);return '<span class="pg-d"><i class="light '+k+'"></i> '+txt+' '+c+'/'+t+'</span>';}
-  h+='<div class="pg-item"><span class="pg-n">'+l+'</span><span class="pg-s"><i class="light '+st+'"></i>'+lab+'</span>'+mini('find','Finds',s.c,s.t)+mini('say','Says',s.sc,s.st)+'<span></span>'+mini('twin','Twins',s.tc,s.tt)+'<span class="pg-d">Traced '+(s.tr||0)+'</span></div>';});
-  var el=$('#prog');if(el)el.innerHTML=h||'<p>No letters on.</p>';}
-function renderBase(){var el=$('#baseOut');if(!el)return;var b=state.baseline;if(!b.length){el.innerHTML='<p class="note">Not run yet.</p>';return;}
+  h+='<div class="pg-item"><span class="pg-n">'+l+'</span><span class="pg-s"><i class="light '+st+'"></i>'+lab+'</span>'+mini('find',tr('Finds','Encuentra'),s.c,s.t)+mini('say',tr('Says','Dice'),s.sc,s.st)+'<span></span>'+mini('twin',tr('Twins','Gemelas'),s.tc,s.tt)+'<span class="pg-d">'+tr('Traced ','Trazó ')+(s.tr||0)+'</span></div>';});
+  var el=$('#prog');if(el)el.innerHTML=h||'<p>'+tr('No letters on.','No hay letras activadas.')+'</p>';}
+function renderBase(){var el=$('#baseOut');if(!el)return;var b=state.baseline;if(!b.length){el.innerHTML='<p class="note">'+tr('Not run yet.','Todavía no se ha hecho.')+'</p>';return;}
   var last=b[b.length-1],keys=Object.keys(last.rows);
-  function cell(v){return v===true?'<span class="yes">Yes</span>':v===false?'<span class="notyet">Not yet</span>':'–';}
-  var h='<p><b>Latest: '+niceDate(last.date)+'</b></p><table class="tbl"><tr><th>Letter</th><th>Says the sound</th><th>Finds the letter</th></tr>'+
-    keys.map(function(k){var r=last.rows[k];return '<tr><td class="k">'+k+'</td><td>'+cell(r.say)+'</td><td>'+cell(r.find)+(r.mode==='keyword'?' <span class="note">(by keyword)</span>':'')+'</td></tr>';}).join('')+'</table>';
-  if(b.length>1){h+='<p class="note" style="margin-top:8px">Earlier checks: '+b.slice(0,-1).reverse().map(function(x){var ks=Object.keys(x.rows),s=ks.filter(function(k){return x.rows[k].say;}).length,f=ks.filter(function(k){return x.rows[k].find;}).length;return niceDate(x.date)+': says '+s+'/'+ks.length+', finds '+f+'/'+ks.length;}).join(' · ')+'</p>';}
+  function cell(v){return v===true?'<span class="yes">'+tr('Yes','Sí')+'</span>':v===false?'<span class="notyet">'+tr('Not yet','Todavía no')+'</span>':'–';}
+  var h='<p><b>'+tr('Latest: ','Última: ')+niceDate(last.date)+'</b></p><table class="tbl"><tr><th>'+tr('Letter','Letra')+'</th><th>'+tr('Says the sound','Dice el sonido')+'</th><th>'+tr('Finds the letter','Encuentra la letra')+'</th></tr>'+
+    keys.map(function(k){var r=last.rows[k];return '<tr><td class="k">'+k+'</td><td>'+cell(r.say)+'</td><td>'+cell(r.find)+(r.mode==='keyword'?' <span class="note">'+tr('(by keyword)','(por palabra clave)')+'</span>':'')+'</td></tr>';}).join('')+'</table>';
+  if(b.length>1){h+='<p class="note" style="margin-top:8px">'+tr('Earlier checks: ','Revisiones anteriores: ')+b.slice(0,-1).reverse().map(function(x){var ks=Object.keys(x.rows),s=ks.filter(function(k){return x.rows[k].say;}).length,f=ks.filter(function(k){return x.rows[k].find;}).length;return niceDate(x.date)+tr(': says ',': dice ')+s+'/'+ks.length+tr(', finds ',', encuentra ')+f+'/'+ks.length;}).join(' · ')+'</p>';}
   el.innerHTML=h;}
-function resetIdle(){var b=$('#resetBox');if(!b)return;b.innerHTML='<button class="danger" id="resetBtn">Reset progress</button>';$('#resetBtn').onclick=resetAsk;}
-function resetAsk(){$('#resetBox').innerHTML='<p style="font-weight:700;margin:0 0 6px">Erase Letter Road progress, laps and starting checks? Letters on/off and recordings stay.</p><button class="danger solid" id="rYes">Yes, erase</button> <button class="ghost" id="rNo">Keep it</button>';
+function resetIdle(){var b=$('#resetBox');if(!b)return;b.innerHTML='<button class="danger" id="resetBtn">'+tr('Reset progress','Borrar progreso')+'</button>';$('#resetBtn').onclick=resetAsk;}
+function resetAsk(){$('#resetBox').innerHTML='<p style="font-weight:700;margin:0 0 6px">'+tr('Erase Letter Road progress, laps and starting checks? Letters on/off and recordings stay.','¿Borrar el progreso de Letter Road, las vueltas y las revisiones iniciales? Las letras activadas y las grabaciones se quedan.')+'</p><button class="danger solid" id="rYes">'+tr('Yes, erase','Sí, borrar')+'</button> <button class="ghost" id="rNo">'+tr('Keep it','No, dejarlo')+'</button>';
   $('#rYes').onclick=function(){var on=state.on;state=blank();state.on=on;save();renderProgress();renderBase();resetIdle();};
   $('#rNo').onclick=resetIdle;}
 
@@ -829,36 +849,36 @@ function resetAsk(){$('#resetBox').innerHTML='<p style="font-weight:700;margin:0
 var recBusy=false;
 function renderRecRows(){var el=$('#recRows');if(!el)return;var can=!recSupport();
   el.innerHTML=onList().map(function(l){var r=REC[l];
-    return '<div class="rrow" data-l="'+l+'"><span class="pg-n">'+l+'</span><span class="rst">'+(r?(r.bundled?'Built in':'Recorded'+(r.date?' · '+niceDate(r.date):'')):'Not recorded')+'</span>'+
-      '<button class="rbtn rec" data-a="rec"'+(can?'':' disabled')+'>'+(r?(r.bundled?'Record my own':'Re-record'):'Record')+'</button><button class="rbtn" data-a="play"'+(r?'':' disabled')+'>Play</button><button class="rbtn del" data-a="del"'+(r&&!r.bundled?'':' disabled')+'>Delete</button></div>';}).join('');
+    return '<div class="rrow" data-l="'+l+'"><span class="pg-n">'+l+'</span><span class="rst">'+(r?(r.bundled?tr('Built in','Incluido'):tr('Recorded','Grabado')+(r.date?' · '+niceDate(r.date):'')):tr('Not recorded','Sin grabar'))+'</span>'+
+      '<button class="rbtn rec" data-a="rec"'+(can?'':' disabled')+'>'+(r?(r.bundled?tr('Record my own','Grabar el mío'):tr('Re-record','Volver a grabar')):tr('Record','Grabar'))+'</button><button class="rbtn" data-a="play"'+(r?'':' disabled')+'>'+tr('Play','Oír')+'</button><button class="rbtn del" data-a="del"'+(r&&!r.bundled?'':' disabled')+'>'+tr('Delete','Borrar')+'</button></div>';}).join('');
   $$('.rrow',el).forEach(function(row){var l=row.dataset.l;
     $$('.rbtn',row).forEach(function(b){b.onclick=function(){ac();var a=b.dataset.a;
       if(a==='play'){run([function(){return playSound(l,true);}]);}
-      else if(a==='del'){if(!b.classList.contains('sure')){b.classList.add('sure');b.textContent='Sure?';setTimeout(function(){if(b.isConnected){b.classList.remove('sure');b.textContent='Delete';}},3000);return;}
+      else if(a==='del'){if(!b.classList.contains('sure')){b.classList.add('sure');b.textContent=tr('Sure?','¿Seguro?');setTimeout(function(){if(b.isConnected){b.classList.remove('sure');b.textContent=tr('Delete','Borrar');}},3000);return;}
         dbDo('readwrite',function(st){return st.delete(l);}).then(function(){if(REC[l]&&REC[l].url){try{URL.revokeObjectURL(REC[l].url);}catch(e){}}delete REC[l];loadBundled().then(renderRecRows);});}
       else recordLetter(l,row);};});});}
 function recErr(t){var e=$('#recErr');if(!e)return;e.hidden=!t;e.textContent=t||'';}
 function recordLetter(l,row){if(recBusy)return;var why=recSupport();if(why){recErr(why);return;}
-  recBusy=true;recErr('');hush();var st=$('.rst',row),btn=$('.rec',row);st.textContent='Starting the microphone…';
+  recBusy=true;recErr('');hush();var st=$('.rst',row),btn=$('.rec',row);st.textContent=tr('Starting the microphone…','Encendiendo el micrófono…');
   var fail=function(t){recBusy=false;recErr(t);renderRecRows();};
-  var gp;try{gp=navigator.mediaDevices.getUserMedia({audio:{echoCancellation:false,noiseSuppression:false,autoGainControl:true}});}catch(e){fail('Could not start the microphone on this browser.');return;}
+  var gp;try{gp=navigator.mediaDevices.getUserMedia({audio:{echoCancellation:false,noiseSuppression:false,autoGainControl:true}});}catch(e){fail(tr('Could not start the microphone on this browser.','No se pudo encender el micrófono en este navegador.'));return;}
   gp.then(function(stream){
     var mime='';for(var i=0;i<MIMES.length;i++){try{if(MediaRecorder.isTypeSupported&&MediaRecorder.isTypeSupported(MIMES[i])){mime=MIMES[i];break;}}catch(e){}}
-    var mr;try{mr=mime?new MediaRecorder(stream,{mimeType:mime}):new MediaRecorder(stream);}catch(e){stream.getTracks().forEach(function(t){t.stop();});fail('This browser could not start recording.');return;}
+    var mr;try{mr=mime?new MediaRecorder(stream,{mimeType:mime}):new MediaRecorder(stream);}catch(e){stream.getTracks().forEach(function(t){t.stop();});fail(tr('This browser could not start recording.','Este navegador no pudo empezar a grabar.'));return;}
     var chunks=[];mr.ondataavailable=function(e){if(e.data&&e.data.size)chunks.push(e.data);};
     mr.onstop=function(){stream.getTracks().forEach(function(t){t.stop();});
       var blob=new Blob(chunks,{type:mr.mimeType||mime||'audio/webm'});
-      if(!blob.size){fail('Nothing was recorded. Check the microphone and try again.');return;}
+      if(!blob.size){fail(tr('Nothing was recorded. Check the microphone and try again.','No se grabó nada. Revise el micrófono e intente otra vez.'));return;}
       var date=today();dbDo('readwrite',function(s){return s.put({blob:blob,date:date},l);}).then(function(ok){
-        recBusy=false;setRec(l,blob,date);if(!ok)recErr('Recorded, but this browser could not save it. It will work until the page is closed.');renderRecRows();
+        recBusy=false;setRec(l,blob,date);if(!ok)recErr(tr('Recorded, but this browser could not save it. It will work until the page is closed.','Se grabó, pero este navegador no pudo guardarlo. Funcionará hasta que se cierre la página.'));renderRecRows();
         run([function(){return wait(200);},function(){return playSound(l,true);}]);});};
-    btn.classList.add('live');btn.textContent='Say it now';var left=2;st.textContent='Recording… '+left;
-    var iv=setInterval(function(){left--;if(left>0)st.textContent='Recording… '+left;},1000);
-    try{mr.start();}catch(e){clearInterval(iv);stream.getTracks().forEach(function(t){t.stop();});fail('This browser could not start recording.');return;}
+    btn.classList.add('live');btn.textContent=tr('Say it now','Dígalo ahora');var left=2;st.textContent=tr('Recording… ','Grabando… ')+left;
+    var iv=setInterval(function(){left--;if(left>0)st.textContent=tr('Recording… ','Grabando… ')+left;},1000);
+    try{mr.start();}catch(e){clearInterval(iv);stream.getTracks().forEach(function(t){t.stop();});fail(tr('This browser could not start recording.','Este navegador no pudo empezar a grabar.'));return;}
     setTimeout(function(){clearInterval(iv);try{if(mr.state!=='inactive')mr.stop();}catch(e){}},2000);
   }).catch(function(err){var n=err&&err.name;
-    fail(n==='NotAllowedError'||n==='SecurityError'?'The microphone is blocked. Allow the microphone for this website in the browser settings, then try again.':
-         n==='NotFoundError'||n==='OverconstrainedError'?'No microphone was found on this device.':'The microphone could not start ('+(n||'unknown error')+').');});
+    fail(n==='NotAllowedError'||n==='SecurityError'?tr('The microphone is blocked. Allow the microphone for this website in the browser settings, then try again.','El micrófono está bloqueado. Permita el micrófono para este sitio en los ajustes del navegador e intente otra vez.'):
+         n==='NotFoundError'||n==='OverconstrainedError'?tr('No microphone was found on this device.','No se encontró un micrófono en este teléfono.'):tr('The microphone could not start (','El micrófono no pudo encender (')+(n||tr('unknown error','error desconocido'))+').');});
 }
 
 /* ---------- Router ---------- */

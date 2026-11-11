@@ -166,6 +166,10 @@ h1,h2{font-family:var(--display);line-height:1.1;text-wrap:balance;margin:0}
 .home svg{width:26px;height:26px}
 .home:focus-visible{outline:3px solid #1F6FD6;outline-offset:3px}
 body{margin:0}
+.plrow{display:flex;justify-content:flex-end;margin:0 0 6px}
+.langsw{display:inline-flex;border:2px solid #2A2E35;border-radius:999px;overflow:hidden}
+.langsw button{font:inherit;font-size:13px;font-weight:700;border:none;background:#fff;color:#2A2E35;padding:5px 10px;cursor:pointer;min-height:0;box-shadow:none;border-radius:0;margin:0}
+.langsw button[aria-pressed="true"]{background:#2A2E35;color:#F5C116}
 </style>
 </head>
 <body>
@@ -183,11 +187,12 @@ body{margin:0}
   <section class="card hero" id="start">
     <h1>Ambulance Health Run!</h1>
     <div class="scene" id="startScene"></div>
-    <p class="parent"><b>For Mom or Dad:</b> Pick one road for today. Each question is read aloud, then each picture is named. Some questions ask him to tap one picture, some to <b>find all</b> the right pictures, some are <b>yes or no</b>, and some are counting. Tap the red speaker to hear it again, or <b>Español</b> for Spanish. Every right answer drives the ambulance closer to the clinic.</p>
+    <div class="plrow pl-slot"></div>
+    <p class="parent" data-es="&lt;b&gt;Para mamá o papá:&lt;/b&gt; Escoja un camino para hoy. Cada pregunta se lee en voz alta y luego se nombra cada dibujo. Algunas preguntas piden tocar un dibujo, otras &lt;b&gt;encontrar todos&lt;/b&gt; los dibujos correctos, otras son de &lt;b&gt;sí o no&lt;/b&gt; y otras son de contar. Toque la bocina roja para oírla otra vez, o &lt;b&gt;Español&lt;/b&gt; para oírla en español. Cada respuesta correcta acerca la ambulancia a la clínica."><b>For Mom or Dad:</b> Pick one road for today. Each question is read aloud, then each picture is named. Some questions ask him to tap one picture, some to <b>find all</b> the right pictures, some are <b>yes or no</b>, and some are counting. Tap the red speaker to hear it again, or <b>Español</b> for Spanish. Every right answer drives the ambulance closer to the clinic.</p>
     <div class="routes" id="routes"></div>
-    <p class="safety"><b>Safety:</b> the Safe water road teaches that river water is made safe with a drop of bleach (Clorox), and the Clean hands road shows a nail clipper. The quiz says only grown-ups use bleach and a grown-up helps cut nails. Please say that too.</p>
+    <p class="safety" data-es="&lt;b&gt;Seguridad:&lt;/b&gt; el camino Safe water enseña que el agua del río se hace segura con una gota de cloro (Clorox), y el camino Clean hands muestra un cortaúñas. El juego dice que solo los adultos usan cloro y que un adulto ayuda a cortar las uñas. Por favor dígaselo usted también."><b>Safety:</b> the Safe water road teaches that river water is made safe with a drop of bleach (Clorox), and the Clean hands road shows a nail clipper. The quiz says only grown-ups use bleach and a grown-up helps cut nails. Please say that too.</p>
     <p class="strongline" id="startProg" hidden></p>
-    <p class="note" id="noVoice" hidden>This device cannot read aloud. Please read each question to your child.</p>
+    <p class="note" id="noVoice" hidden data-es="Este teléfono no puede leer en voz alta. Por favor léale cada pregunta a su niño.">This device cannot read aloud. Please read each question to your child.</p>
   </section>
 
   <section class="card" id="quiz" hidden>
@@ -205,7 +210,7 @@ body{margin:0}
     <div class="opts" id="opts"></div>
     <div class="feedback" id="feedback" aria-live="polite"></div>
     <button class="go" id="next" hidden>Drive on!</button>
-    <p class="note" id="esNote" hidden>No Spanish voice on this device. Say the question in Spanish yourself.</p>
+    <p class="note" id="esNote" hidden data-es="Este teléfono no tiene voz en español. Diga usted la pregunta en español.">No Spanish voice on this device. Say the question in Spanish yourself.</p>
   </section>
 
   <section class="card hero" id="end" hidden>
@@ -216,11 +221,12 @@ body{margin:0}
     </div>
     <div class="facts" id="facts"></div>
     <p class="parent" style="margin:0" id="endLine"></p>
-    <p class="safety" id="doIt" hidden><b>Do it for real:</b> go to the sink together. Wet, soap, scrub and sing the ABC song all the way to Z, rinse, then dry on a clean towel.</p>
+    <p class="safety" id="doIt" hidden data-es="&lt;b&gt;Háganlo de verdad:&lt;/b&gt; vayan juntos al lavamanos. Mojar, enjabonar, frotar y cantar la canción del ABC hasta la Z, enjuagar y secar con una toalla limpia."><b>Do it for real:</b> go to the sink together. Wet, soap, scrub and sing the ABC song all the way to Z, rinse, then dry on a clean towel.</p>
     <div class="stars" id="stars"></div>
     <div class="strongline" id="strongline"></div>
     <div>
-      <p class="parent" style="margin:0 0 8px"><b>Parent check:</b> green = strong (right on the first try in 4 of his last 5 drives), red outline = still practising, plain = needs more drives. The marks show his last 5 tries, newest last.</p>
+      <div class="plrow pl-slot"></div>
+      <p class="parent" style="margin:0 0 8px" data-es="&lt;b&gt;Revisión para los padres:&lt;/b&gt; verde = firme (correcta al primer intento en 4 de sus últimos 5 viajes), borde rojo = todavía practicando, sin color = necesita más viajes. Las marcas muestran sus últimos 5 intentos; el más reciente va al final."><b>Parent check:</b> green = strong (right on the first try in 4 of his last 5 drives), red outline = still practising, plain = needs more drives. The marks show his last 5 tries, newest last.</p>
       <ul class="results" id="results"></ul>
     </div>
     <button class="go" id="again">Drive this road again</button>
@@ -230,6 +236,18 @@ body{margin:0}
 
 <script>
 (function(){
+/* ---------- Parents' language: English or Español. Shared by every stop and the hub (lang in nanoHub.v1).
+   Only text for parents switches. The child's screens and everything spoken stay in English. ---------- */
+function pl(){try{var o=JSON.parse(localStorage.getItem('nanoHub.v1')||'null');return o&&o.lang==='es'?'es':'en';}catch(e){return 'en';}}
+function tr(en,es){return pl()==='es'?es:en;}
+function setPl(l){try{var o=JSON.parse(localStorage.getItem('nanoHub.v1')||'null')||{};o.lang=l;localStorage.setItem('nanoHub.v1',JSON.stringify(o));}catch(e){}}
+function langSw(){var l=pl();return '<div class="langsw" role="group" aria-label="Language / Idioma"><button type="button" data-lang="en" lang="en" aria-pressed="'+(l==='en')+'">English</button><button type="button" data-lang="es" lang="es" aria-pressed="'+(l==='es')+'">Español</button></div>';}
+function bindLangSw(redraw){[].forEach.call(document.querySelectorAll('.langsw button'),function(b){b.onclick=function(){setPl(b.getAttribute('data-lang'));redraw();};});}
+/* Parent text marked data-es switches; everything the child sees and hears stays English. */
+function applyPl(){var l=pl();
+  document.querySelectorAll('[data-es]').forEach(function(el){if(el._en==null)el._en=el.innerHTML;el.innerHTML=l==='es'?el.getAttribute('data-es'):el._en;el.lang=l;});
+  document.querySelectorAll('.pl-slot').forEach(function(s){s.innerHTML=langSw();});bindLangSw(applyPl);
+  try{showStartProg();var sl=document.getElementById('strongline');if(sl)sl.textContent=progLine();}catch(e){}}
 const K='#2b1a10';
 const S='stroke="'+K+'" stroke-width="3" stroke-linejoin="round"';
 const S2='stroke="'+K+'" stroke-width="2" stroke-linejoin="round"';
@@ -657,7 +675,7 @@ function routeLine(r){ const p=loadP(), ids=ROUTES[r].list.filter(q=>!q.noScore)
   return '\u2605 '+ids.filter(i=>qState(p.hist[i])==='strong').length+' of '+ids.length+' strong'; }
 function progLine(){ const p=loadP(), ids=CANON.map(q=>QID(q)); if(!ids.some(i=>p.hist[i])) return '';
   const strong=ids.filter(i=>qState(p.hist[i])==='strong').length, d=(p.drives&&p.drives.date===todayStr())?p.drives.count:0;
-  return '\u2605 '+strong+' of '+TOTAL+' strong (all roads)'+(d?' \u00b7 '+d+' drive'+(d>1?'s':'')+' today':''); }
+  return '\u2605 '+strong+tr(' of ',' de ')+TOTAL+tr(' strong (all roads)',' firmes (todos los caminos)')+(d?' \u00b7 '+d+tr(' drive'+(d>1?'s':'')+' today',' viaje'+(d>1?'s':'')+' hoy'):''); }
 function progChips(){ const p=loadP();
   return ROUTES[route].list.filter(q=>!q.noScore).map(q=>{ const id=QID(q), h=p.hist[id]||[];
     return '<li class="'+qState(h)+'">'+QLABEL(q)+(h.length?'<small>'+h.map(x=>x?'\u2713':'\u2717').join('')+'</small>':'')+'</li>'; }).join(''); }
@@ -709,6 +727,7 @@ $('next').addEventListener('click',()=>{ stopSpeech(); if(idx<N-1){ idx++; showQ
 $('hearRecap').addEventListener('click',()=>speakSeq([{text:ROUTES[route].recap}],'en'));
 document.addEventListener('visibilitychange',()=>{ if(document.hidden) stopSpeech(); });
 setRoad(0);
+applyPl();
 })();
 </script>
 </body>

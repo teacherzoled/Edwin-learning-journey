@@ -232,6 +232,9 @@ button:disabled{opacity:.35;cursor:default}
 .ghost{border:2px solid var(--asph);background:transparent;border-radius:10px;padding:8px 14px;font-weight:700}
 
 @media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
+.langsw{display:flex;flex:0 0 auto;border:2px solid var(--asph);border-radius:999px;overflow:hidden}
+.langsw button{font:inherit;font-size:13px;font-weight:700;border:none;background:#fff;color:var(--asph);padding:5px 10px;cursor:pointer;min-height:0;min-width:0;box-shadow:none;border-radius:0}
+.langsw button[aria-pressed="true"]{background:var(--asph);color:var(--lane)}
 </style>
 </head>
 <body>
@@ -448,11 +451,18 @@ function celebrate(){fanfare();say('Lap complete! Great driving!');
   var el=document.createElement('div');el.className='celebrate';el.innerHTML='<div class="banner"><b>Lap '+lapsToday()+'!</b><span>Honk honk!</span></div>';
   document.body.appendChild(el);var close=function(){if(el.parentNode)el.parentNode.removeChild(el);};el.onclick=close;setTimeout(close,2500);}
 
+/* ---------- Parents' language: English or Español. Shared by every stop and the hub (lang in nanoHub.v1).
+   Only text for parents switches. The child's screens and everything spoken stay in English. ---------- */
+function pl(){try{var o=JSON.parse(localStorage.getItem('nanoHub.v1')||'null');return o&&o.lang==='es'?'es':'en';}catch(e){return 'en';}}
+function tr(en,es){return pl()==='es'?es:en;}
+function setPl(l){try{var o=JSON.parse(localStorage.getItem('nanoHub.v1')||'null')||{};o.lang=l;localStorage.setItem('nanoHub.v1',JSON.stringify(o));}catch(e){}}
+function langSw(){var l=pl();return '<div class="langsw" role="group" aria-label="Language / Idioma"><button type="button" data-lang="en" lang="en" aria-pressed="'+(l==='en')+'">English</button><button type="button" data-lang="es" lang="es" aria-pressed="'+(l==='es')+'">Español</button></div>';}
+function bindLangSw(redraw){[].forEach.call(document.querySelectorAll('.langsw button'),function(b){b.onclick=function(){setPl(b.getAttribute('data-lang'));redraw();};});}
 /* ---------- Home ---------- */
 function home(){
   app.className='';
   var onHub=/github\.io$/.test(location.hostname);
-  app.innerHTML='<div class="screen"><div class="home-head">'+(onHub?'<a class="hub" href="../" aria-label="Back to the learning journey">'+ICON.left+carSVG(C.red,true)+'</a>':'<div class="hcar">'+carSVG(C.red,true)+'</div>')+'<h1>Nano\'s Number Garage</h1>'+muteBtn()+'<button class="pbtn" id="pbtn">Parents</button></div>'+
+  app.innerHTML='<div class="screen"><div class="home-head">'+(onHub?'<a class="hub" href="../" aria-label="Back to the learning journey">'+ICON.left+carSVG(C.red,true)+'</a>':'<div class="hcar">'+carSVG(C.red,true)+'</div>')+'<h1>Nano\'s Number Garage</h1>'+muteBtn()+'<button class="pbtn" id="pbtn">'+tr('Parents','Padres')+'</button></div>'+
    '<div class="tiles">'+
    '<button class="tile t-garage" data-go="garage"><span class="art">'+cueSVG(state.gNum)+'</span><b>Garage</b></button>'+
    '<button class="tile t-gp" data-go="gp"><span class="art">'+ART.gp()+'</span><b>Grand Prix</b></button>'+
@@ -608,8 +618,8 @@ function truckRound(){
 function plateRound(){
   var n=pickTarget(),t0=Date.now(),done=false;
   prompt='What number is this?';
-  gameScreen(gtitle('Plate Check'),'<div class="cap">Ask: “What number is this?” Then tap.</div><div class="plate"><span class="plate-top">BELIZE</span><span class="plate-num">'+n+'</span></div><div class="timer" id="timer">0.0 s</div><div id="pmodel" class="mini-cue" hidden></div>',
-    '<button class="j fast" id="jf">Fast<small>about 2 s</small></button><button class="j count" id="jc">Counted<small>counted up</small></button><button class="j no" id="jn">Not yet<small>did not know</small></button>');
+  gameScreen(gtitle('Plate Check'),'<div class="cap">'+tr('Ask: “What number is this?” Then tap.','Pregunte: “What number is this?” Luego toque.')+'</div><div class="plate"><span class="plate-top">BELIZE</span><span class="plate-num">'+n+'</span></div><div class="timer" id="timer">0.0 s</div><div id="pmodel" class="mini-cue" hidden></div>',
+    '<button class="j fast" id="jf">'+tr('Fast<small>about 2 s</small>','Rápido<small>unos 2 s</small>')+'</button><button class="j count" id="jc">'+tr('Counted<small>counted up</small>','Contó<small>contó desde 1</small>')+'</button><button class="j no" id="jn">'+tr('Not yet<small>did not know</small>','Todavía no<small>no lo sabía</small>')+'</button>');
   var tk=setInterval(function(){var el=$('#timer');if(el)el.textContent=((Date.now()-t0)/1000).toFixed(1)+' s';},100);ticks.push(tk);
   function finish(kind){if(done)return;done=true;clearInterval(tk);var s=state.stats[n];s.pt++;
     if(kind==='fast'){s.pf++;record(n,true);honk();say(NUMS[n].w+'!');lapStep();later(nextRound,1200);}
@@ -746,46 +756,71 @@ function parents(){
   var refs='';for(var n=1;n<=10;n++){var N=NUMS[n];
     refs+='<div class="ref">'+cueSVG(n)+'<b>'+n+' · '+cap1(N.cue)+'</b><span>'+N.chant+'</span><span>'+cap1(N.hand)+(n>5&&n<10?' (5 and '+(n-5)+')':'')+' · <span class="es">“'+N.w+'… '+N.es+'”</span></span></div>';}
   app.innerHTML='<div class="screen parents">'+
-   '<div class="top"><button class="ib" id="homeBtn" aria-label="Back to games">'+ICON.home+'</button><h2 style="flex:1">Pit Crew Guide</h2></div>'+
-   '<div class="psec"><h3>Gear: numbers in play</h3><div class="gears">'+
-     [[1,'1–5'],[2,'1–7'],[3,'1–10']].map(function(g){return '<button class="gear" data-gear="'+g[0]+'" aria-pressed="'+(state.settings.gear===g[0])+'">Gear '+g[0]+'<small>'+g[1]+'</small></button>';}).join('')+
-   '</div><p style="margin-top:8px">Shift up when every number in the gear is green (4 of his last 5 right) and Plate Check is mostly "Fast". Expect about 2 weeks per gear. Teach 6–10 as "5 and more", never by counting from 1.</p></div>'+
-   '<div class="psec"><h3>Progress on this phone</h3><div class="pg" id="prog"></div></div>'+
-   '<div class="psec"><h3>The 15-minute session</h3><ul class="list">'+
-     '<li><span class="tag en">3 min</span><b>Plate Check</b>: 5 plates, known numbers first so he wins early.</li>'+
+   '<div class="top"><button class="ib" id="homeBtn" aria-label="'+tr('Back to games','Volver a los juegos')+'">'+ICON.home+'</button><h2 style="flex:1">'+tr('Pit Crew Guide','Guía del equipo de pits')+'</h2>'+langSw()+'</div>'+
+   '<div class="psec"><h3>'+tr('Gear: numbers in play','Marcha: números en juego')+'</h3><div class="gears">'+
+     [[1,'1–5'],[2,'1–7'],[3,'1–10']].map(function(g){return '<button class="gear" data-gear="'+g[0]+'" aria-pressed="'+(state.settings.gear===g[0])+'">'+tr('Gear ','Marcha ')+g[0]+'<small>'+g[1]+'</small></button>';}).join('')+
+   '</div><p style="margin-top:8px">'+tr('Shift up when every number in the gear is green (4 of his last 5 right) and Plate Check is mostly "Fast". Expect about 2 weeks per gear. Teach 6–10 as "5 and more", never by counting from 1.',
+     'Suba de marcha cuando todos los números de la marcha estén en verde (4 de sus últimos 5 correctos) y en Plate Check salga casi siempre "Rápido". Cuente con unas 2 semanas por marcha. Enseñe del 6 al 10 como "5 y más", nunca contando desde 1.')+'</p></div>'+
+   '<div class="psec"><h3>'+tr('Progress on this phone','Progreso en este teléfono')+'</h3><div class="pg" id="prog"></div></div>'+
+   '<div class="psec"><h3>'+tr('The 15-minute session','La sesión de 15 minutos')+'</h3><ul class="list">'+
+     tr('<li><span class="tag en">3 min</span><b>Plate Check</b>: 5 plates, known numbers first so he wins early.</li>'+
      '<li><span class="tag en">4 min</span><b>Garage</b>: one new or shaky number. Picture, trace, cars.</li>'+
      '<li><span class="tag es">30 s</span><b>Spanish bridge</b>: spoken only. The speaker says "seven… siete" when the Spanish echo is on.</li>'+
      '<li><span class="tag amb">5 min</span><b>One game</b>: a lap is 5 right answers. Rotate games or play Grand Prix.</li>'+
-     '<li><span class="tag amb">3 min</span><b>Off-screen</b>: one real car game below. End on a win.</li></ul></div>'+
-   '<div class="psec"><h3>Why he counts up</h3><p>He has the counting chant, but each numeral is not yet linked straight to its name and amount, so he runs the chant as a lookup. Each game trains one direct link:</p>'+
-     '<div class="triad"><div class="tri"><b>7</b><small>symbol</small></div>↔<div class="tri"><b>seven</b><small>name</small></div>↔<div class="tri"><b>5+2</b><small>amount</small></div></div>'+
-     '<ul class="list"><li><b>Garage</b>: symbol ↔ picture ↔ name, plus tracing.</li><li><b>Plate Check</b>: symbol → name. The real test.</li><li><b>Park It</b>: name → symbol, numbers out of order.</li><li><b>Flash Lights</b>: amount → symbol. Too fast to count.</li><li><b>Citrus Truck</b>: symbol → amount in a ten-frame.</li><li><b>Pothole Road</b>: missing number; the road does not always start at 1.</li></ul></div>'+
-   '<div class="psec"><h3>Games from his school pages</h3><p>These follow the school\'s "All About Number" pages, but for every number in the gear, mixed. Grand Prix mixes them with the games above.</p><ul class="list">'+
-     '<li><b>Number Hunt</b> ("circle the number", "I can find the number"): find every 7 among 12 plates. Look-alikes (1 and 7, 6 and 9, 2 and 5) are planted on purpose.</li>'+
+     '<li><span class="tag amb">3 min</span><b>Off-screen</b>: one real car game below. End on a win.</li>',
+     '<li><span class="tag en">3 min</span><b>Plate Check</b>: 5 placas, primero los números que ya sabe para que gane desde el inicio.</li>'+
+     '<li><span class="tag en">4 min</span><b>Garage</b>: un número nuevo o que todavía duda. Dibujo, trazo, carros.</li>'+
+     '<li><span class="tag es">30 s</span><b>Puente al español</b>: solo hablado. La bocina dice "seven… siete" cuando el eco en español está activado.</li>'+
+     '<li><span class="tag amb">5 min</span><b>Un juego</b>: una vuelta son 5 respuestas correctas. Cambie de juego o juegue Grand Prix.</li>'+
+     '<li><span class="tag amb">3 min</span><b>Sin pantalla</b>: uno de los juegos con carros de abajo. Termine con un logro.</li>')+'</ul></div>'+
+   '<div class="psec"><h3>'+tr('Why he counts up','Por qué cuenta desde 1')+'</h3><p>'+tr('He has the counting chant, but each numeral is not yet linked straight to its name and amount, so he runs the chant as a lookup. Each game trains one direct link:',
+     'Ya sabe contar de memoria, pero cada número todavía no está unido directamente a su nombre y a su cantidad, así que recorre la cuenta para encontrarlo. Cada juego entrena una unión directa:')+'</p>'+
+     '<div class="triad"><div class="tri"><b>7</b><small>'+tr('symbol','símbolo')+'</small></div>↔<div class="tri"><b>seven</b><small>'+tr('name','nombre')+'</small></div>↔<div class="tri"><b>5+2</b><small>'+tr('amount','cantidad')+'</small></div></div>'+
+     '<ul class="list">'+tr('<li><b>Garage</b>: symbol ↔ picture ↔ name, plus tracing.</li><li><b>Plate Check</b>: symbol → name. The real test.</li><li><b>Park It</b>: name → symbol, numbers out of order.</li><li><b>Flash Lights</b>: amount → symbol. Too fast to count.</li><li><b>Citrus Truck</b>: symbol → amount in a ten-frame.</li><li><b>Pothole Road</b>: missing number; the road does not always start at 1.</li>',
+     '<li><b>Garage</b>: símbolo ↔ dibujo ↔ nombre, además del trazo.</li><li><b>Plate Check</b>: símbolo → nombre. La prueba de verdad.</li><li><b>Park It</b>: nombre → símbolo, con los números en desorden.</li><li><b>Flash Lights</b>: cantidad → símbolo. Demasiado rápido para contar.</li><li><b>Citrus Truck</b>: símbolo → cantidad en un marco de diez.</li><li><b>Pothole Road</b>: número que falta; el camino no siempre empieza en 1.</li>')+'</ul></div>'+
+   '<div class="psec"><h3>'+tr('Games from his school pages','Juegos de sus hojas de la escuela')+'</h3><p>'+tr('These follow the school\'s "All About Number" pages, but for every number in the gear, mixed. Grand Prix mixes them with the games above.',
+     'Siguen las hojas "All About Number" de la escuela, pero con todos los números de la marcha, mezclados. Grand Prix los mezcla con los juegos de arriba.')+'</p><ul class="list">'+
+     tr('<li><b>Number Hunt</b> ("circle the number", "I can find the number"): find every 7 among 12 plates. Look-alikes (1 and 7, 6 and 9, 2 and 5) are planted on purpose.</li>'+
      '<li><b>Count It</b> ("count the snakes", "number of germs", "count and write"): he touches each car, cone, mango, snake or star while counting, then picks the numeral. Counting one by one is the right skill here; a wrong pick clears the marks so he recounts.</li>'+
      '<li><b>Make It</b>: <i>Paint Shop</i> ("color 7 stars", "shade 8 balls") paints some of 10 cars; <i>Cone Drop</i> ("draw 7 objects") places cones anywhere, tap a cone to take it away. He presses GO when he thinks he has it.</li>'+
      '<li><b>Mile Markers</b>: <i>Drive</i> to a number on the 0–10 number line ("color the circle with 8"); <i>Bumper to Bumper</i> asks the number before, then after ("write the number before and after 8").</li>'+
-     '<li>Tracing the numeral (top of both pages) is the pencil button in the Garage. Missing numbers is Pothole Road. The ten frame is the Citrus Truck.</li></ul></div>'+
-   '<div class="psec"><h3>Off-screen car games</h3><ul class="list">'+
-     '<li><b>Paper parking garage</b>: 10 spots numbered out of order. "Park in seven."</li>'+
+     '<li>Tracing the numeral (top of both pages) is the pencil button in the Garage. Missing numbers is Pothole Road. The ten frame is the Citrus Truck.</li>',
+     '<li><b>Number Hunt</b> ("circle the number", "I can find the number"): encontrar todos los 7 entre 12 placas. Los números parecidos (1 y 7, 6 y 9, 2 y 5) están puestos a propósito.</li>'+
+     '<li><b>Count It</b> ("count the snakes", "number of germs", "count and write"): toca cada carro, cono, mango, culebra o estrella mientras cuenta, y luego escoge el número. Aquí sí es correcto contar uno por uno; si escoge mal, se borran las marcas para que vuelva a contar.</li>'+
+     '<li><b>Make It</b>: <i>Paint Shop</i> ("color 7 stars", "shade 8 balls") pinta algunos de 10 carros; <i>Cone Drop</i> ("draw 7 objects") coloca conos donde quiera, y al tocar un cono se quita. Presiona GO cuando cree que ya está.</li>'+
+     '<li><b>Mile Markers</b>: <i>Drive</i> maneja hasta un número en la recta numérica del 0 al 10 ("color the circle with 8"); <i>Bumper to Bumper</i> pregunta el número de antes y luego el de después ("write the number before and after 8").</li>'+
+     '<li>El trazo del número (arriba en las dos hojas) es el botón del lápiz en el Garage. Los números que faltan son Pothole Road. El marco de diez es el Citrus Truck.</li>')+'</ul></div>'+
+   '<div class="psec"><h3>'+tr('Off-screen car games','Juegos con carros sin pantalla')+'</h3><ul class="list">'+
+     tr('<li><b>Paper parking garage</b>: 10 spots numbered out of order. "Park in seven."</li>'+
      '<li><b>Plate hunt</b>: name digits on licence plates and buses on the Western Highway. You point, he names.</li>'+
      '<li><b>Floor road</b>: tape 1–10 on the floor. Cover one with a shoe: "Which number is hiding?"</li>'+
      '<li><b>Flash fingers</b>: show 5 and 2 fingers for 2 seconds. He names it, then flashes for you.</li>'+
      '<li><b>Real citrus truck</b>: egg carton cut to two rows of 5, load oranges or limes.</li>'+
-     '<li><b>Sand tray</b>: trace numbers in sand or rice while saying the rhyme.</li></ul></div>'+
-   '<div class="psec"><h3>Mastery check for each number</h3><ol class="list">'+
-     '<li>Names it in about 2 seconds without counting up, 4 of 5 times.</li><li>Finds it when you say its name, 4 of 5 times.</li><li>Shows the amount without counting one by one (for 6–10, says "5 and …").</li><li>Fills a missing number in a 4-number road that does not start at 1.</li></ol>'+
-     '<p style="margin-top:8px"><span class="tag gold">Advance</span> all 4 · <span class="tag amb">Spiral back</span> 2–3, keep it in warm-ups 2 weeks · <span class="tag red">Revisit</span> 0–1, repeat the Garage · <span class="tag gold">Mastered</span> names numbers in the world without being asked.</p></div>'+
-   '<div class="psec"><h3>Normal at age 6</h3><ul class="list"><li>Writing 2, 3, 5, 7, 9 backwards. Recognition comes first.</li><li>Mixing 6 and 9: the snail sits on the ground, the balloon floats up.</li><li>Counting up when tired. Give the picture ("It\'s the racing flag…") instead of saying "count".</li></ul></div>'+
-   '<div class="psec"><h3>Quick reference card</h3><p>Spanish is spoken only, English first. 8 keeps your snowman cue; the figure-8 race track is a second cue.</p><div class="refs">'+refs+'</div></div>'+
-   '<div class="psec"><h3>Settings</h3><div class="settings">'+
-     '<label><input type="checkbox" id="setMute"'+(state.settings.mute?'':' checked')+'> Sound on (voice and game sounds)</label>'+
-     '<label><input type="checkbox" id="setVoice"'+(state.settings.voice?' checked':'')+'> Voice on</label>'+
-     '<label><input type="checkbox" id="setSpanish"'+(state.settings.spanish?' checked':'')+'> Spanish echo in the Garage</label>'+
-     '<div class="voicepick"><span>English voice</span><div class="vrow"><select id="enVoice"></select><button class="ghost" id="enTest">Test</button></div></div>'+
-     '<div class="voicepick"><span>Spanish voice (bridge only)</span><div class="vrow"><select id="esVoice"></select><button class="ghost" id="esTest">Test</button></div><span class="note" id="vnote"></span></div>'+
-     '<label>Flash Lights shows for <select id="setFlash"><option value="1000">1 second</option><option value="2000">2 seconds</option><option value="3000">3 seconds</option></select></label>'+
+     '<li><b>Sand tray</b>: trace numbers in sand or rice while saying the rhyme.</li>',
+     '<li><b>Parqueo de papel</b>: 10 espacios numerados en desorden. Dígale en inglés: "Park in seven."</li>'+
+     '<li><b>Cacería de placas</b>: nombrar los dígitos de placas y buses en la Western Highway. Usted señala, él dice el número.</li>'+
+     '<li><b>Camino en el piso</b>: pegue del 1 al 10 en el piso. Tape uno con un zapato: "Which number is hiding?"</li>'+
+     '<li><b>Dedos relámpago</b>: muestre 5 y 2 dedos por 2 segundos. Él dice el número y luego le muestra a usted.</li>'+
+     '<li><b>Camión de cítricos de verdad</b>: un cartón de huevos cortado en dos filas de 5; cárguelo de naranjas o limones.</li>'+
+     '<li><b>Bandeja de arena</b>: trazar números en arena o arroz mientras dice la rima.</li>')+'</ul></div>'+
+   '<div class="psec"><h3>'+tr('Mastery check for each number','Revisión de dominio para cada número')+'</h3><ol class="list">'+
+     tr('<li>Names it in about 2 seconds without counting up, 4 of 5 times.</li><li>Finds it when you say its name, 4 of 5 times.</li><li>Shows the amount without counting one by one (for 6–10, says "5 and …").</li><li>Fills a missing number in a 4-number road that does not start at 1.</li>',
+     '<li>Lo nombra en unos 2 segundos sin contar desde 1, 4 de 5 veces.</li><li>Lo encuentra cuando usted dice su nombre, 4 de 5 veces.</li><li>Muestra la cantidad sin contar uno por uno (del 6 al 10 dice "5 and …").</li><li>Completa el número que falta en un camino de 4 números que no empieza en 1.</li>')+'</ol>'+
+     '<p style="margin-top:8px">'+tr('<span class="tag gold">Advance</span> all 4 · <span class="tag amb">Spiral back</span> 2–3, keep it in warm-ups 2 weeks · <span class="tag red">Revisit</span> 0–1, repeat the Garage · <span class="tag gold">Mastered</span> names numbers in the world without being asked.',
+     '<span class="tag gold">Avanzar</span> los 4 · <span class="tag amb">Repasar</span> 2–3, manténgalo en el calentamiento 2 semanas · <span class="tag red">Volver a ver</span> 0–1, repita el Garage · <span class="tag gold">Dominado</span> nombra números a su alrededor sin que se lo pidan.')+'</p></div>'+
+   '<div class="psec"><h3>'+tr('Normal at age 6','Normal a los 6 años')+'</h3><ul class="list">'+tr('<li>Writing 2, 3, 5, 7, 9 backwards. Recognition comes first.</li><li>Mixing 6 and 9: the snail sits on the ground, the balloon floats up.</li><li>Counting up when tired. Give the picture ("It\'s the racing flag…") instead of saying "count".</li>',
+     '<li>Escribir el 2, 3, 5, 7 y 9 al revés. Primero viene reconocerlos.</li><li>Confundir el 6 y el 9: el caracol está en el suelo, el globo flota hacia arriba.</li><li>Contar desde 1 cuando está cansado. Dele la pista del dibujo ("It\'s the racing flag…") en vez de decirle "cuenta".</li>')+'</ul></div>'+
+   '<div class="psec"><h3>'+tr('Quick reference card','Tarjeta de referencia rápida')+'</h3><p>'+tr('Spanish is spoken only, English first. 8 keeps your snowman cue; the figure-8 race track is a second cue.',
+     'El español es solo hablado, siempre después del inglés. Las pistas y rimas de abajo se le dicen al niño en inglés. El 8 conserva la pista del muñeco de nieve; la pista de carreras en forma de 8 es una segunda pista.')+'</p><div class="refs">'+refs+'</div></div>'+
+   '<div class="psec"><h3>'+tr('Settings','Ajustes')+'</h3><div class="settings">'+
+     '<label><input type="checkbox" id="setMute"'+(state.settings.mute?'':' checked')+'> '+tr('Sound on (voice and game sounds)','Sonido activado (voz y sonidos del juego)')+'</label>'+
+     '<label><input type="checkbox" id="setVoice"'+(state.settings.voice?' checked':'')+'> '+tr('Voice on','Voz activada')+'</label>'+
+     '<label><input type="checkbox" id="setSpanish"'+(state.settings.spanish?' checked':'')+'> '+tr('Spanish echo in the Garage','Eco en español en el Garage')+'</label>'+
+     '<div class="voicepick"><span>'+tr('English voice','Voz en inglés')+'</span><div class="vrow"><select id="enVoice"></select><button class="ghost" id="enTest">'+tr('Test','Probar')+'</button></div></div>'+
+     '<div class="voicepick"><span>'+tr('Spanish voice (bridge only)','Voz en español (solo para el puente)')+'</span><div class="vrow"><select id="esVoice"></select><button class="ghost" id="esTest">'+tr('Test','Probar')+'</button></div><span class="note" id="vnote"></span></div>'+
+     '<label>'+tr('Flash Lights shows for','Flash Lights se muestra por')+' <select id="setFlash"><option value="1000">'+tr('1 second','1 segundo')+'</option><option value="2000">'+tr('2 seconds','2 segundos')+'</option><option value="3000">'+tr('3 seconds','3 segundos')+'</option></select></label>'+
      '<div id="resetBox"></div></div></div></div>';
+  bindLangSw(parents);
   $('#homeBtn').onclick=function(){go('home');};
   $$('.gear').forEach(function(b){b.onclick=function(){state.settings.gear=+b.dataset.gear;save();$$('.gear').forEach(function(x){x.setAttribute('aria-pressed',x===b?'true':'false');});};});
   var sf=$('#setFlash');sf.value=String(state.settings.flash);
@@ -795,10 +830,11 @@ function parents(){
   $('#setMute').onchange=function(e){state.settings.mute=!e.target.checked;if(state.settings.mute)hush();save();};
   function fill(){
     [['en','enVoice'],['es','esVoice']].forEach(function(pair){var sel=$('#'+pair[1]);if(!sel)return;var list=voicesFor(pair[0]);
-      sel.innerHTML='<option value="">Best available'+(list[0]?' ('+list[0].name+')':'')+'</option>'+list.map(function(v){return '<option value="'+v.name.replace(/"/g,'&quot;')+'">'+v.name+' · '+v.lang+'</option>';}).join('');
+      sel.innerHTML='<option value="">'+tr('Best available','La mejor disponible')+(list[0]?' ('+list[0].name+')':'')+'</option>'+list.map(function(v){return '<option value="'+v.name.replace(/"/g,'&quot;')+'">'+v.name+' · '+v.lang+'</option>';}).join('');
       sel.value=state.settings[pair[1]]||'';if(sel.value!==(state.settings[pair[1]]||''))sel.value='';});
     var en=voicesFor('en'),es=voicesFor('es'),nt=$('#vnote');
-    if(nt)nt.textContent=(en.length?en.length+' English':'No English')+' and '+(es.length?es.length+' Spanish':'no Spanish')+' voices on this device. Voices with Natural, Neural, Enhanced, Premium or Google in the name sound best.';}
+    if(nt)nt.textContent=tr((en.length?en.length+' English':'No English')+' and '+(es.length?es.length+' Spanish':'no Spanish')+' voices on this device. Voices with Natural, Neural, Enhanced, Premium or Google in the name sound best.',
+      (en.length?en.length+' voces en inglés':'Ninguna voz en inglés')+' y '+(es.length?es.length+' en español':'ninguna en español')+' en este teléfono. Las voces con Natural, Neural, Enhanced, Premium o Google en el nombre suenan mejor.');}
   fill();try{speechSynthesis.onvoiceschanged=fill;}catch(e){}
   $('#enVoice').onchange=function(e){state.settings.enVoice=e.target.value;save();};
   $('#esVoice').onchange=function(e){state.settings.esVoice=e.target.value;save();};
@@ -806,11 +842,11 @@ function parents(){
   $('#esTest').onclick=function(){sayAlways('siete','es-MX');};
   renderProgress();resetIdle();
 }
-function renderProgress(){var h='';for(var n=1;n<=10;n++){var s=state.stats[n],st=status(n),lab={strong:'Strong',learning:'Learning',new:'Not started'}[st];
-  h+='<div class="pg-item"><span class="pg-n">'+n+'</span><span class="pg-s"><i class="light '+st+'"></i>'+lab+'</span><span class="pg-d">'+s.c+'/'+s.t+' right · fast '+s.pf+'/'+s.pt+'</span></div>';}
+function renderProgress(){var h='';for(var n=1;n<=10;n++){var s=state.stats[n],st=status(n),lab={strong:tr('Strong','Firme'),learning:tr('Learning','Aprendiendo'),new:tr('Not started','Sin empezar')}[st];
+  h+='<div class="pg-item"><span class="pg-n">'+n+'</span><span class="pg-s"><i class="light '+st+'"></i>'+lab+'</span><span class="pg-d">'+s.c+'/'+s.t+tr(' right · fast ',' correctas · rápidas ')+s.pf+'/'+s.pt+'</span></div>';}
   var el=$('#prog');if(el)el.innerHTML=h;}
-function resetIdle(){$('#resetBox').innerHTML='<button class="danger" id="resetBtn">Reset progress</button>';$('#resetBtn').onclick=resetAsk;}
-function resetAsk(){$('#resetBox').innerHTML='<p style="font-weight:700;margin:0 0 6px">Erase all progress and laps?</p><button class="danger solid" id="rYes">Yes, erase</button> <button class="ghost" id="rNo">Keep it</button>';
+function resetIdle(){$('#resetBox').innerHTML='<button class="danger" id="resetBtn">'+tr('Reset progress','Borrar progreso')+'</button>';$('#resetBtn').onclick=resetAsk;}
+function resetAsk(){$('#resetBox').innerHTML='<p style="font-weight:700;margin:0 0 6px">'+tr('Erase all progress and laps?','¿Borrar todo el progreso y las vueltas?')+'</p><button class="danger solid" id="rYes">'+tr('Yes, erase','Sí, borrar')+'</button> <button class="ghost" id="rNo">'+tr('Keep it','No, dejarlo')+'</button>';
   $('#rYes').onclick=function(){var keep=state.settings;state=blank();state.settings=keep;save();renderProgress();resetIdle();};
   $('#rNo').onclick=resetIdle;}
 

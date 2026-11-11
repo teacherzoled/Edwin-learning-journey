@@ -203,6 +203,9 @@ a.plink{color:var(--blue);font-weight:700}
 .note{font-size:14px;color:var(--muted);font-weight:400}
 .tbl td .light{vertical-align:-1px}
 .j{font-size:16px}
+.langsw{display:flex;flex:0 0 auto;border:2px solid var(--asph);border-radius:999px;overflow:hidden}
+.langsw button{font:inherit;font-size:13px;font-weight:700;border:none;background:#fff;color:var(--asph);padding:5px 10px;cursor:pointer;min-height:0;min-width:0;box-shadow:none;border-radius:0}
+.langsw button[aria-pressed="true"]{background:var(--asph);color:var(--lane)}
 </style>
 </head>
 <body>
@@ -350,9 +353,9 @@ function playSound(l,force){
   });});}
 var MIMES=['audio/webm;codecs=opus','audio/webm','audio/mp4','audio/ogg;codecs=opus','audio/ogg'];
 function recSupport(){
-  if(!window.indexedDB)return 'This browser cannot save recordings (private browsing can cause this). The games will use the keyword pictures instead.';
+  if(!window.indexedDB)return tr('This browser cannot save recordings (private browsing can cause this). The games will use the keyword pictures instead.','Este navegador no puede guardar grabaciones (la navegación privada puede causarlo). Los juegos usarán los dibujos de las palabras clave.');
   if(!window.MediaRecorder||!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia)
-    return 'This browser cannot record. Use Chrome on Android or Safari on iPhone (iOS 14.5 or newer), opened from the website address, not a saved file. The games use the keyword pictures until sounds are recorded.';
+    return tr('This browser cannot record. Use Chrome on Android or Safari on iPhone (iOS 14.5 or newer), opened from the website address, not a saved file. The games use the keyword pictures until sounds are recorded.','Este navegador no puede grabar. Use Chrome en Android o Safari en iPhone (iOS 14.5 o más nuevo), abierto desde la dirección del sitio web, no desde un archivo guardado. Los juegos usan los dibujos de las palabras clave hasta que se graben los sonidos.');
   return '';}
 
 /* ---------- Timers ---------- */
@@ -378,7 +381,7 @@ function gameScreen(title,play,bottom){
 }
 function bump(el){if(!el)return;el.classList.remove('nope');void el.offsetWidth;el.classList.add('nope');}
 function today(){var d=new Date();return d.getFullYear()+'-'+(d.getMonth()+1)+'-'+d.getDate();}
-function niceDate(iso){try{var p=iso.split('-');return new Date(+p[0],+p[1]-1,+p[2]).toLocaleDateString(undefined,{day:'numeric',month:'short',year:'numeric'});}catch(e){return iso;}}
+function niceDate(iso){try{var p=iso.split('-');return new Date(+p[0],+p[1]-1,+p[2]).toLocaleDateString(pl()==='es'?'es':undefined,{day:'numeric',month:'short',year:'numeric'});}catch(e){return iso;}}
 function lapsToday(){return state.laps.date===today()?state.laps.count:0;}
 function lapStep(){state.lapProg++;
   if(state.lapProg>=5){state.lapProg=0;if(state.laps.date!==today())state.laps={date:today(),count:0};state.laps.count++;save();celebrate();}
@@ -562,8 +565,8 @@ function home(){
   app.className='';var un=unlocked(),pw=picWords();
   var strongN=un.filter(strong).length;
   var lock={which:un.length<2,picture:pw.length<2,tower:pw.length<2,readit:un.length<1,drive:un.length<1};
-  app.innerHTML='<div class="screen"><div class="home-head">'+hubLink()+'<h1>Blend Road</h1>'+muteBtn()+'<button class="pbtn" id="pbtn">Parents</button></div>'+
-   (un.length<2?'<div class="nudge">Grown-ups: switch on more letters in Letter Road · Parents to open more words.</div>':'')+
+  app.innerHTML='<div class="screen"><div class="home-head">'+hubLink()+'<h1>Blend Road</h1>'+muteBtn()+'<button class="pbtn" id="pbtn">'+tr('Parents','Padres')+'</button></div>'+
+   (un.length<2?'<div class="nudge">'+tr('Grown-ups: switch on more letters in Letter Road · Parents to open more words.','Adultos: activen más letras en Letter Road · Padres para abrir más palabras.')+'</div>':'')+
    '<div class="tiles">'+
    '<button class="tile wide t-sky" data-go="drive" aria-label="Drive the Road"><span class="art">'+ART.drive()+'</span><b>Drive the Road</b></button>'+
    '<button class="tile t-plate" data-go="which" aria-label="Which Road?"><span class="art">'+ART.which()+'</span><b>Which Road?</b></button>'+
@@ -637,8 +640,8 @@ function pictureRound(){
 function readitRound(){
   var un=unlocked(),w=pickFrom(un),W=WBY[w],done=false;
   prompt=function(){say('Read this word to me.');};
-  gameScreen('Read It','<span class="ptag">Parent check</span><div class="bigplate wordplate" id="rp">'+w.split('').map(function(ch){return '<span>'+ch+'</span>';}).join('')+'</div><div class="dpic small" id="rpic"></div>',
-    '<button class="j fast" id="jr">Read it<small>whole word</small></button><button class="j count" id="js">Sounded it out<small>then blended</small></button><button class="j no" id="jn">Not yet<small>show him</small></button>');
+  gameScreen('Read It','<span class="ptag">'+tr('Parent check','Revisión del adulto')+'</span><div class="bigplate wordplate" id="rp">'+w.split('').map(function(ch){return '<span>'+ch+'</span>';}).join('')+'</div><div class="dpic small" id="rpic"></div>',
+    '<button class="j fast" id="jr">'+tr('Read it<small>whole word</small>','La leyó<small>palabra entera</small>')+'</button><button class="j count" id="js">'+tr('Sounded it out<small>then blended</small>','Por sonidos<small>y luego la unió</small>')+'</button><button class="j no" id="jn">'+tr('Not yet<small>show him</small>','Todavía no<small>muéstrele</small>')+'</button>');
   intro(prompt,350);
   function lock(){done=true;$$('.j').forEach(function(b){b.disabled=true;});}
   $('#jr').onclick=function(){if(done)return;lock();recordRead(w,'r');honk();lapStep();run([function(){return wait(500);},function(){return sayP('You read it! '+cap1(w)+'!');}]).then(function(){later(nextRound,600);});};
@@ -680,28 +683,41 @@ function towerRound(){
 var ROUNDS={which:whichRound,picture:pictureRound,readit:readitRound,tower:towerRound};
 function nextRound(){clearTimers();if(unlocked().length<2&&view==='which'){go('home');return;}if(ROUNDS[view])ROUNDS[view]();}
 
+/* ---------- Parents' language: English or Español. Shared by every stop and the hub (lang in nanoHub.v1).
+   Only text for parents switches. The child's screens and everything spoken stay in English. ---------- */
+function pl(){try{var o=JSON.parse(localStorage.getItem('nanoHub.v1')||'null');return o&&o.lang==='es'?'es':'en';}catch(e){return 'en';}}
+function tr(en,es){return pl()==='es'?es:en;}
+function setPl(l){try{var o=JSON.parse(localStorage.getItem('nanoHub.v1')||'null')||{};o.lang=l;localStorage.setItem('nanoHub.v1',JSON.stringify(o));}catch(e){}}
+function langSw(){var l=pl();return '<div class="langsw" role="group" aria-label="Language / Idioma"><button type="button" data-lang="en" lang="en" aria-pressed="'+(l==='en')+'">English</button><button type="button" data-lang="es" lang="es" aria-pressed="'+(l==='es')+'">Español</button></div>';}
+function bindLangSw(redraw){[].forEach.call(document.querySelectorAll('.langsw button'),function(b){b.onclick=function(){setPl(b.getAttribute('data-lang'));redraw();};});}
 /* ---------- Parents ---------- */
 function parents(){
   app.className='wide';hush();
-  var refs='';WORDS.forEach(function(W){if(!W.es)return;refs+='<div class="ref">'+picSVG(W.pic)+'<b>'+W.w+'</b><span>Say "'+W.w+'", then <span class="es">'+esc(W.es)+'</span></span></div>';});
+  var refs='';WORDS.forEach(function(W){if(!W.es)return;refs+='<div class="ref">'+picSVG(W.pic)+'<b>'+W.w+'</b><span>'+tr('Say "'+W.w+'", then ','Diga "'+W.w+'", luego ')+'<span class="es">'+esc(W.es)+'</span></span></div>';});
   app.innerHTML='<div class="screen parents">'+
-   '<div class="top"><button class="ib" id="homeBtn" aria-label="Back to games">'+ICON.home+'</button><h2 style="flex:1">Blend Road · Parents</h2></div>'+
-   '<div class="psec"><h3>Letter sounds</h3><p>Blend Road plays the built-in letter sounds, or your own recording of a letter if you made one in <a class="plink" href="../letters/#parents">Letter Road · Parents</a>. Both stops use the same sounds on this phone.</p>'+
-     '<p id="recLine"></p><p>Letter sounds recorded by Kathryn J. Davis, used with permission.</p><p class="note">A letter without a recording plays a soft engine blip and lights up; the whole word is always spoken. In <b>as</b> and <b>is</b> the s says /z/, so that tile plays the /z/ sound.</p></div>'+
-   '<div class="psec"><h3>Words</h3><p class="note">Strong = right on the first try in 4 of his last 5 rounds of Which Road?, Picture Stop and the picture pick in Build-Up Tower. Read It To Me is your check: R read it, S sounded it out then blended, N not yet (his last 5 shown).</p><div id="wordTbl"></div></div>'+
-   '<div class="psec"><h3>The 15-minute session</h3><ul class="list">'+
+   '<div class="top"><button class="ib" id="homeBtn" aria-label="'+tr('Back to games','Volver a los juegos')+'">'+ICON.home+'</button><h2 style="flex:1">Blend Road · '+tr('Parents','Padres')+'</h2>'+langSw()+'</div>'+
+   '<div class="psec"><h3>'+tr('Letter sounds','Sonidos de las letras')+'</h3><p>'+tr('Blend Road plays the built-in letter sounds, or your own recording of a letter if you made one in <a class="plink" href="../letters/#parents">Letter Road · Parents</a>. Both stops use the same sounds on this phone.','Blend Road usa los sonidos de letras incluidos, o su propia grabación de una letra si la hizo en <a class="plink" href="../letters/#parents">Letter Road · Padres</a>. Las dos paradas usan los mismos sonidos en este teléfono.')+'</p>'+
+     '<p id="recLine"></p><p>'+tr('Letter sounds recorded by Kathryn J. Davis, used with permission.','Sonidos de las letras grabados por Kathryn J. Davis, usados con permiso.')+'</p><p class="note">'+tr('A letter without a recording plays a soft engine blip and lights up; the whole word is always spoken. In <b>as</b> and <b>is</b> the s says /z/, so that tile plays the /z/ sound.','Una letra sin grabación suena como un motor suave y se ilumina; la palabra entera siempre se dice. En <b>as</b> y en <b>is</b> la s suena /z/, así que esa ficha suena /z/.')+'</p></div>'+
+   '<div class="psec"><h3>'+tr('Words','Palabras')+'</h3><p class="note">'+tr('Strong = right on the first try in 4 of his last 5 rounds of Which Road?, Picture Stop and the picture pick in Build-Up Tower. Read It To Me is your check: R read it, S sounded it out then blended, N not yet (his last 5 shown).','Firme = correcto al primer intento en 4 de sus últimas 5 rondas de Which Road?, Picture Stop y la selección del dibujo en Build-Up Tower. Read It To Me es su revisión: R la leyó, S la leyó por sonidos y luego la unió, N todavía no (se muestran sus últimas 5).')+'</p><div id="wordTbl"></div></div>'+
+   '<div class="psec"><h3>'+tr('The 15-minute session','La sesión de 15 minutos')+'</h3><ul class="list">'+tr(
      '<li><span class="tag en">3 min</span><b>Letter warm-up</b>: Say It in Letter Road for the letters in today\'s words.</li>'+
      '<li><span class="tag en">4 min</span><b>Drive the Road</b>: 2 or 3 words. He taps each letter, says the sound with the car, then says the word when the tiles slide together.</li>'+
      '<li><span class="tag es">30 s</span><b>Spanish bridge</b>: spoken only, English first ("sip… sorbo"). Never drilled or written.</li>'+
      '<li><span class="tag amb">5 min</span><b>Which Road?</b>, <b>Picture Stop</b> or <b>Build-Up Tower</b> (the school\'s word pyramid: r, ri, rip, then pick the picture). A lap is 5 right answers.</li>'+
-     '<li><span class="tag amb">3 min</span><b>Read It To Me</b>: 5 words. End on a word he can read.</li></ul>'+
-     '<p class="note" style="margin-top:8px">Two-letter words (at, as, it, is, an, in, am) come first in Drive the Road. They have no picture, so they are used in Which Road?, Drive the Road and Read It To Me only. Words he misses come up 3 times as often. Picture Stop never shows sit and sat together; both pictures are about sitting.</p></div>'+
-   '<div class="psec"><h3>Spanish bridge words</h3><p>English first, then the Spanish word, spoken only. No bridge for at, as, it, is, an, in, am, sat, sap or ran. For <b>pan</b> the Spanish voice adds the joke: English pan is a frying pan, Spanish pan is bread.</p><div class="refs">'+refs+'</div></div>'+
-   '<div class="psec"><h3>Settings</h3><div class="settings">'+
-     '<label><input type="checkbox" id="setMute"'+(S.mute?'':' checked')+'> Sound on (voice and game sounds)</label>'+
-     '<label><input type="checkbox" id="setSpanish"'+(S.spanish?' checked':'')+'> Spanish bridge (spoken)</label>'+
-     '<p class="note">Shared with every stop. Voices are chosen in <a class="plink" href="../numbers/#parents">Number Garage · Parents</a>.</p>'+
+     '<li><span class="tag amb">3 min</span><b>Read It To Me</b>: 5 words. End on a word he can read.</li>',
+     '<li><span class="tag en">3 min</span><b>Calentamiento de letras</b>: Say It en Letter Road con las letras de las palabras de hoy.</li>'+
+     '<li><span class="tag en">4 min</span><b>Drive the Road</b>: 2 o 3 palabras. Toca cada letra, dice el sonido con el carro y luego dice la palabra cuando las fichas se juntan.</li>'+
+     '<li><span class="tag es">30 s</span><b>Puente al español</b>: solo hablado, primero en inglés ("sip… sorbo"). Nunca se practica ni se escribe.</li>'+
+     '<li><span class="tag amb">5 min</span><b>Which Road?</b>, <b>Picture Stop</b> o <b>Build-Up Tower</b> (la pirámide de palabras de la escuela: r, ri, rip, y luego escoger el dibujo). Una vuelta son 5 respuestas correctas.</li>'+
+     '<li><span class="tag amb">3 min</span><b>Read It To Me</b>: 5 palabras. Termine con una palabra que sí puede leer.</li>')+'</ul>'+
+     '<p class="note" style="margin-top:8px">'+tr('Two-letter words (at, as, it, is, an, in, am) come first in Drive the Road. They have no picture, so they are used in Which Road?, Drive the Road and Read It To Me only. Words he misses come up 3 times as often. Picture Stop never shows sit and sat together; both pictures are about sitting.','Las palabras de dos letras (at, as, it, is, an, in, am) salen primero en Drive the Road. No tienen dibujo, así que solo se usan en Which Road?, Drive the Road y Read It To Me. Las palabras que falla salen 3 veces más seguido. Picture Stop nunca muestra sit y sat juntas; los dos dibujos son de estar sentado.')+'</p></div>'+
+   '<div class="psec"><h3>'+tr('Spanish bridge words','Palabras del puente al español')+'</h3><p>'+tr('English first, then the Spanish word, spoken only. No bridge for at, as, it, is, an, in, am, sat, sap or ran. For <b>pan</b> the Spanish voice adds the joke: English pan is a frying pan, Spanish pan is bread.','Primero en inglés, luego la palabra en español, solo hablada. No hay puente para at, as, it, is, an, in, am, sat, sap ni ran. Para <b>pan</b> la voz en español agrega el chiste: pan en inglés es un sartén, pan en español es para comer.')+'</p><div class="refs">'+refs+'</div></div>'+
+   '<div class="psec"><h3>'+tr('Settings','Ajustes')+'</h3><div class="settings">'+
+     '<label><input type="checkbox" id="setMute"'+(S.mute?'':' checked')+'> '+tr('Sound on (voice and game sounds)','Sonido activado (voz y sonidos del juego)')+'</label>'+
+     '<label><input type="checkbox" id="setSpanish"'+(S.spanish?' checked':'')+'> '+tr('Spanish bridge (spoken)','Puente al español (hablado)')+'</label>'+
+     '<p class="note">'+tr('Shared with every stop. Voices are chosen in <a class="plink" href="../numbers/#parents">Number Garage · Parents</a>.','Igual en todas las paradas. Las voces se escogen en <a class="plink" href="../numbers/#parents">Number Garage · Padres</a>.')+'</p>'+
      '<div id="resetBox"></div></div></div></div>';
+  bindLangSw(parents);
   $('#homeBtn').onclick=function(){go('home');};
   $('#setMute').onchange=function(e){setShared('mute',!e.target.checked);if(S.mute)hush();};
   $('#setSpanish').onchange=function(e){setShared('spanish',e.target.checked);};
@@ -709,16 +725,16 @@ function parents(){
 }
 function renderRecLine(){var el=$('#recLine');if(!el)return;var letters=Object.keys(ON).sort();
   var own=letters.filter(function(l){return hasRec(l)&&!REC[l].bundled;}),built=letters.filter(function(l){return hasRec(l)&&REC[l].bundled;}),no=letters.filter(function(l){return !hasRec(l);});
-  el.innerHTML='Letters on: <b>'+(letters.join(', ')||'none')+'</b>.'+(built.length?' Built-in sound: <b>'+built.join(', ')+'</b>.':'')+' Recorded on this phone: <b>'+(own.join(', ')||'none')+'</b>.'+(no.length?' No sound yet: <b>'+no.join(', ')+'</b>.':'');}
+  el.innerHTML=tr('Letters on: ','Letras activadas: ')+'<b>'+(letters.join(', ')||tr('none','ninguna'))+'</b>.'+(built.length?tr(' Built-in sound: ',' Sonido incluido: ')+'<b>'+built.join(', ')+'</b>.':'')+tr(' Recorded on this phone: ',' Grabadas en este teléfono: ')+'<b>'+(own.join(', ')||tr('none','ninguna'))+'</b>.'+(no.length?tr(' No sound yet: ',' Todavía sin sonido: ')+'<b>'+no.join(', ')+'</b>.':'');}
 function renderWords(){var el=$('#wordTbl');if(!el)return;
-  var h='<table class="tbl"><tr><th>Word</th><th>Status</th><th>Read It</th></tr>';
+  var h='<table class="tbl"><tr><th>'+tr('Word','Palabra')+'</th><th>'+tr('Status','Estado')+'</th><th>Read It</th></tr>';
   WORDS.forEach(function(W){var w=W.w,s=state.stats[w];
-    if(!wordOpen(w)){h+='<tr><td class="k" style="color:#9AA3AB">'+w+'</td><td colspan="2" class="note">Locked · waiting for <b>'+waitingFor(w).join(', ')+'</b></td></tr>';return;}
-    var st=status(w),lab={strong:'Strong',learning:'Learning',new:'New'}[st];
-    h+='<tr><td class="k">'+w+'</td><td><i class="light '+st+'"></i> '+lab+' <span class="note">'+s.c+'/'+s.t+'</span></td><td>'+(s.rlast.length?s.rlast.slice(-5).map(function(x){return x.toUpperCase();}).join(' ')+(readsIt(w)?' <span class="yes">reads it</span>':''):'<span class="note">–</span>')+'</td></tr>';});
+    if(!wordOpen(w)){h+='<tr><td class="k" style="color:#9AA3AB">'+w+'</td><td colspan="2" class="note">'+tr('Locked · waiting for ','Bloqueada · esperando ')+'<b>'+waitingFor(w).join(', ')+'</b></td></tr>';return;}
+    var st=status(w),lab={strong:tr('Strong','Firme'),learning:tr('Learning','Aprendiendo'),new:tr('New','Nueva')}[st];
+    h+='<tr><td class="k">'+w+'</td><td><i class="light '+st+'"></i> '+lab+' <span class="note">'+s.c+'/'+s.t+'</span></td><td>'+(s.rlast.length?s.rlast.slice(-5).map(function(x){return x.toUpperCase();}).join(' ')+(readsIt(w)?' <span class="yes">'+tr('reads it','la lee')+'</span>':''):'<span class="note">–</span>')+'</td></tr>';});
   el.innerHTML=h+'</table>';}
-function resetIdle(){var b=$('#resetBox');if(!b)return;b.innerHTML='<button class="danger" id="resetBtn">Reset progress</button>';$('#resetBtn').onclick=resetAsk;}
-function resetAsk(){$('#resetBox').innerHTML='<p style="font-weight:700;margin:0 0 6px">Erase Blend Road progress and laps? Recordings stay.</p><button class="danger solid" id="rYes">Yes, erase</button> <button class="ghost" id="rNo">Keep it</button>';
+function resetIdle(){var b=$('#resetBox');if(!b)return;b.innerHTML='<button class="danger" id="resetBtn">'+tr('Reset progress','Borrar progreso')+'</button>';$('#resetBtn').onclick=resetAsk;}
+function resetAsk(){$('#resetBox').innerHTML='<p style="font-weight:700;margin:0 0 6px">'+tr('Erase Blend Road progress and laps? Recordings stay.','¿Borrar el progreso y las vueltas de Blend Road? Las grabaciones se quedan.')+'</p><button class="danger solid" id="rYes">'+tr('Yes, erase','Sí, borrar')+'</button> <button class="ghost" id="rNo">'+tr('Keep it','No, dejarlo')+'</button>';
   $('#rYes').onclick=function(){state=blank();save();renderWords();resetIdle();};
   $('#rNo').onclick=resetIdle;}
 

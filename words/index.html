@@ -183,6 +183,9 @@ a.plink{color:var(--blue);font-weight:700}
 .chip{font-size:24px}
 .refw{font-family:var(--f-kid);font-weight:700;font-size:26px;grid-row:span 2;text-align:center}
 .note{font-size:14px;color:var(--muted);font-weight:400}
+.langsw{display:flex;flex:0 0 auto;border:2px solid var(--asph);border-radius:999px;overflow:hidden}
+.langsw button{font:inherit;font-size:13px;font-weight:700;border:none;background:#fff;color:var(--asph);padding:5px 10px;cursor:pointer;min-height:0;min-width:0;box-shadow:none;border-radius:0}
+.langsw button[aria-pressed="true"]{background:var(--asph);color:var(--lane)}
 </style>
 </head>
 <body>
@@ -421,7 +424,7 @@ var ART={
 function home(){
   app.className='';var on=onList(),ph=phrasesOn();
   var strongN=on.filter(strong).length,lock={park:on.length<2,spot:on.length<2,pick:ph.length<1,readit:on.length<1};
-  app.innerHTML='<div class="screen"><div class="home-head">'+hubLink()+'<h1>Word Parking</h1>'+muteBtn()+'<button class="pbtn" id="pbtn">Parents</button></div>'+
+  app.innerHTML='<div class="screen"><div class="home-head">'+hubLink()+'<h1>Word Parking</h1>'+muteBtn()+'<button class="pbtn" id="pbtn">'+tr('Parents','Padres')+'</button></div>'+
    '<div class="tiles">'+
    '<button class="tile wide t-dark" data-go="park" aria-label="Park It"><span class="art">'+ART.park()+'</span><b>Park It</b></button>'+
    '<button class="tile t-plate" data-go="spot" aria-label="Spot the Word"><span class="art">'+ART.spot()+'</span><b>Spot the Word</b></button>'+
@@ -490,8 +493,8 @@ function pickRound(){
 function readitRound(){
   var on=onList(),w=pickFrom(on),done=false;
   prompt=function(){say('Read this word to me.');};
-  gameScreen('Read It','<span class="ptag">Parent check</span><div class="bigplate wordplate" id="rp">'+w+'</div><div class="dpic small" id="rpic"></div>',
-    '<button class="j fast" id="jr">Read it<small>at once</small></button><button class="j count" id="js">With help<small>slow or a hint</small></button><button class="j no" id="jn">Not yet<small>show him</small></button>');
+  gameScreen('Read It','<span class="ptag">'+tr('Parent check','Revisión del adulto')+'</span><div class="bigplate wordplate" id="rp">'+w+'</div><div class="dpic small" id="rpic"></div>',
+    '<button class="j fast" id="jr">'+tr('Read it<small>at once</small>','La leyó<small>de una vez</small>')+'</button><button class="j count" id="js">'+tr('With help<small>slow or a hint</small>','Con ayuda<small>despacio o con pista</small>')+'</button><button class="j no" id="jn">'+tr('Not yet<small>show him</small>','Todavía no<small>muéstrele</small>')+'</button>');
   intro(prompt,350);
   function lock(){done=true;$$('.j').forEach(function(b){b.disabled=true;});}
   $('#jr').onclick=function(){if(done)return;lock();recordRead(w,'r');honk();lapStep();run([function(){return wait(500);},function(){return sayP('You read it!');},function(){return sayWord(w);}]).then(function(){later(nextRound,600);});};
@@ -503,45 +506,58 @@ function readitRound(){
 var ROUNDS={park:parkRound,spot:spotRound,pick:pickRound,readit:readitRound};
 function nextRound(){clearTimers();if(onList().length<2&&(view==='park'||view==='spot')){go('home');return;}if(ROUNDS[view])ROUNDS[view]();}
 
+/* ---------- Parents' language: English or Español. Shared by every stop and the hub (lang in nanoHub.v1).
+   Only text for parents switches. The child's screens and everything spoken stay in English. ---------- */
+function pl(){try{var o=JSON.parse(localStorage.getItem('nanoHub.v1')||'null');return o&&o.lang==='es'?'es':'en';}catch(e){return 'en';}}
+function tr(en,es){return pl()==='es'?es:en;}
+function setPl(l){try{var o=JSON.parse(localStorage.getItem('nanoHub.v1')||'null')||{};o.lang=l;localStorage.setItem('nanoHub.v1',JSON.stringify(o));}catch(e){}}
+function langSw(){var l=pl();return '<div class="langsw" role="group" aria-label="Language / Idioma"><button type="button" data-lang="en" lang="en" aria-pressed="'+(l==='en')+'">English</button><button type="button" data-lang="es" lang="es" aria-pressed="'+(l==='es')+'">Español</button></div>';}
+function bindLangSw(redraw){[].forEach.call(document.querySelectorAll('.langsw button'),function(b){b.onclick=function(){setPl(b.getAttribute('data-lang'));redraw();};});}
 /* ---------- Parents ---------- */
 function parents(){
   app.className='wide';hush();
-  var refs='';WORDS.forEach(function(W){if(!W.es)return;refs+='<div class="ref"><span class="refw">'+W.w+'</span><b>'+W.w+'</b><span>Say "'+W.w+'", then <span class="es">'+esc(W.es)+'</span></span></div>';});
+  var refs='';WORDS.forEach(function(W){if(!W.es)return;refs+='<div class="ref"><span class="refw">'+W.w+'</span><b>'+W.w+'</b><span>'+tr('Say "'+W.w+'", then ','Diga "'+W.w+'", luego ')+'<span class="es">'+esc(W.es)+'</span></span></div>';});
   app.innerHTML='<div class="screen parents">'+
-   '<div class="top"><button class="ib" id="homeBtn" aria-label="Back to games">'+ICON.home+'</button><h2 style="flex:1">Word Parking · Parents</h2></div>'+
-   '<div class="psec"><h3>Sight words switched on</h3><div class="chips" id="chips"></div><p class="note" style="margin-top:8px">All on at first. At least 2 stay on. Sight words are learned whole: point to the word and say it; do not sound them out. The games show them in lowercase (except I), the way he meets them in sentences.</p>'+
-     '<p><b>School list this week, as written:</b> He, I, She, a, boy, see, girl, The, has, My.<br><b>Taught earlier:</b> I, a, see, one, two.</p></div>'+
-   '<div class="psec"><h3>Words</h3><p class="note">Strong = right on the first try in 4 of his last 5 rounds of Park It, Spot the Word and Read and Pick (a phrase counts for each sight word in it). Read It To Me is your check: R read it at once, H with help, N not yet (his last 5 shown).</p><div id="wordTbl"></div></div>'+
-   '<div class="psec"><h3>The 15-minute session</h3><ul class="list">'+
+   '<div class="top"><button class="ib" id="homeBtn" aria-label="'+tr('Back to games','Volver a los juegos')+'">'+ICON.home+'</button><h2 style="flex:1">Word Parking · '+tr('Parents','Padres')+'</h2>'+langSw()+'</div>'+
+   '<div class="psec"><h3>'+tr('Sight words switched on','Palabras de vista activadas')+'</h3><div class="chips" id="chips"></div><p class="note" style="margin-top:8px">'+tr('All on at first. At least 2 stay on. Sight words are learned whole: point to the word and say it; do not sound them out. The games show them in lowercase (except I), the way he meets them in sentences.','Todas activadas al inicio. Siempre quedan al menos 2. Las palabras de vista se aprenden enteras: señale la palabra y dígala; no la lea por sonidos. Los juegos las muestran en minúscula (menos I), como las encuentra en las oraciones.')+'</p>'+
+     '<p>'+tr('<b>School list this week, as written:</b> He, I, She, a, boy, see, girl, The, has, My.<br><b>Taught earlier:</b> I, a, see, one, two.','<b>Lista de la escuela esta semana, tal como está escrita:</b> He, I, She, a, boy, see, girl, The, has, My.<br><b>Enseñadas antes:</b> I, a, see, one, two.')+'</p></div>'+
+   '<div class="psec"><h3>'+tr('Words','Palabras')+'</h3><p class="note">'+tr('Strong = right on the first try in 4 of his last 5 rounds of Park It, Spot the Word and Read and Pick (a phrase counts for each sight word in it). Read It To Me is your check: R read it at once, H with help, N not yet (his last 5 shown).','Firme = correcto al primer intento en 4 de sus últimas 5 rondas de Park It, Spot the Word y Read and Pick (una frase cuenta para cada palabra de vista que tiene). Read It To Me es su revisión: R la leyó de una vez, H con ayuda, N todavía no (se muestran sus últimas 5).')+'</p><div id="wordTbl"></div></div>'+
+   '<div class="psec"><h3>'+tr('The 15-minute session','La sesión de 15 minutos')+'</h3><ul class="list">'+tr(
      '<li><span class="tag en">3 min</span><b>Read It To Me</b>: 5 words, known ones first so he wins early.</li>'+
      '<li><span class="tag en">5 min</span><b>Park It</b>: he hears the word and parks Nano on it.</li>'+
      '<li><span class="tag es">30 s</span><b>Spanish bridge</b>: spoken only, English first ("she… ella"). Never drilled or written.</li>'+
      '<li><span class="tag amb">4 min</span><b>Spot the Word</b> (he reads the sign, taps cars to hear them, then GO) or <b>Read and Pick</b> (the school\'s "read and draw": he reads "the boy" and taps the picture).</li>'+
-     '<li><span class="tag amb">3 min</span><b>Off-screen</b>: write 3 words on paper parking spots; you say one, he parks a toy car on it. End on a win.</li></ul>'+
-     '<p class="note" style="margin-top:8px">A lap is 5 right answers. Words he misses come up 3 times as often. If Spot the Word\'s two steps (listen, then GO) are too much on a given day, sit with him and do the GO tap together, or use Park It.</p></div>'+
-   '<div class="psec"><h3>Spanish bridge words</h3><p>English first, then the Spanish word, spoken only. No bridge for a or the.</p><div class="refs">'+refs+'</div></div>'+
-   '<div class="psec"><h3>Settings</h3><div class="settings">'+
-     '<label><input type="checkbox" id="setMute"'+(S.mute?'':' checked')+'> Sound on (voice and game sounds)</label>'+
-     '<label><input type="checkbox" id="setSpanish"'+(S.spanish?' checked':'')+'> Spanish bridge (spoken)</label>'+
-     '<p class="note">Shared with every stop. Voices are chosen in <a class="plink" href="../numbers/#parents">Number Garage · Parents</a>.</p>'+
+     '<li><span class="tag amb">3 min</span><b>Off-screen</b>: write 3 words on paper parking spots; you say one, he parks a toy car on it. End on a win.</li>',
+     '<li><span class="tag en">3 min</span><b>Read It To Me</b>: 5 palabras, primero las que ya sabe para que gane desde el inicio.</li>'+
+     '<li><span class="tag en">5 min</span><b>Park It</b>: oye la palabra y estaciona a Nano encima.</li>'+
+     '<li><span class="tag es">30 s</span><b>Puente al español</b>: solo hablado, primero en inglés ("she… ella"). Nunca se practica ni se escribe.</li>'+
+     '<li><span class="tag amb">4 min</span><b>Spot the Word</b> (lee el letrero, toca los carros para oírlos y luego GO) o <b>Read and Pick</b> (el "read and draw" de la escuela: lee "the boy" y toca el dibujo).</li>'+
+     '<li><span class="tag amb">3 min</span><b>Sin pantalla</b>: escriba 3 palabras en espacios de parqueo de papel; usted dice una en inglés y él estaciona un carrito encima. Termine con un logro.</li>')+'</ul>'+
+     '<p class="note" style="margin-top:8px">'+tr('A lap is 5 right answers. Words he misses come up 3 times as often. If Spot the Word\'s two steps (listen, then GO) are too much on a given day, sit with him and do the GO tap together, or use Park It.','Una vuelta son 5 respuestas correctas. Las palabras que falla salen 3 veces más seguido. Si un día los dos pasos de Spot the Word (escuchar y luego GO) son demasiado, siéntese con él y toquen GO juntos, o use Park It.')+'</p></div>'+
+   '<div class="psec"><h3>'+tr('Spanish bridge words','Palabras del puente al español')+'</h3><p>'+tr('English first, then the Spanish word, spoken only. No bridge for a or the.','Primero en inglés, luego la palabra en español, solo hablada. No hay puente para a ni the.')+'</p><div class="refs">'+refs+'</div></div>'+
+   '<div class="psec"><h3>'+tr('Settings','Ajustes')+'</h3><div class="settings">'+
+     '<label><input type="checkbox" id="setMute"'+(S.mute?'':' checked')+'> '+tr('Sound on (voice and game sounds)','Sonido activado (voz y sonidos del juego)')+'</label>'+
+     '<label><input type="checkbox" id="setSpanish"'+(S.spanish?' checked':'')+'> '+tr('Spanish bridge (spoken)','Puente al español (hablado)')+'</label>'+
+     '<p class="note">'+tr('Shared with every stop. Voices are chosen in <a class="plink" href="../numbers/#parents">Number Garage · Parents</a>.','Igual en todas las paradas. Las voces se escogen en <a class="plink" href="../numbers/#parents">Number Garage · Padres</a>.')+'</p>'+
      '<div id="resetBox"></div></div></div></div>';
+  bindLangSw(parents);
   $('#homeBtn').onclick=function(){go('home');};
   $('#setMute').onchange=function(e){setShared('mute',!e.target.checked);if(S.mute)hush();};
   $('#setSpanish').onchange=function(e){setShared('spanish',e.target.checked);};
   renderChips();renderWords();resetIdle();
 }
 function renderChips(){var el=$('#chips');if(!el)return;
-  el.innerHTML=WORDS.map(function(W){var p=!!state.on[W.w];return '<button class="chip" data-w="'+W.w+'" aria-pressed="'+p+'">'+W.w+'<small>'+(p?'on':'off')+'</small></button>';}).join('');
+  el.innerHTML=WORDS.map(function(W){var p=!!state.on[W.w];return '<button class="chip" data-w="'+W.w+'" aria-pressed="'+p+'">'+W.w+'<small>'+(p?tr('on','sí'):tr('off','no'))+'</small></button>';}).join('');
   $$('.chip',el).forEach(function(b){b.onclick=function(){var w=b.dataset.w;if(state.on[w]&&onList().length<=2){bump(b);return;}state.on[w]=!state.on[w];save();renderChips();renderWords();};});}
 function renderWords(){var el=$('#wordTbl');if(!el)return;
-  var h='<table class="tbl"><tr><th>Word</th><th>Status</th><th>Read It</th></tr>';
+  var h='<table class="tbl"><tr><th>'+tr('Word','Palabra')+'</th><th>'+tr('Status','Estado')+'</th><th>Read It</th></tr>';
   WORDS.forEach(function(W){var w=W.w,s=state.stats[w];
-    if(!state.on[w]){h+='<tr><td class="k" style="color:#9AA3AB">'+w+'</td><td colspan="2" class="note">Switched off</td></tr>';return;}
-    var st=status(w),lab={strong:'Strong',learning:'Learning',new:'New'}[st];
-    h+='<tr><td class="k">'+w+'</td><td><i class="light '+st+'"></i> '+lab+' <span class="note">'+s.c+'/'+s.t+'</span></td><td>'+(s.rlast.length?s.rlast.slice(-5).map(function(x){return x==='s'?'H':x.toUpperCase();}).join(' ')+(readsIt(w)?' <span class="yes">reads it</span>':''):'<span class="note">–</span>')+'</td></tr>';});
+    if(!state.on[w]){h+='<tr><td class="k" style="color:#9AA3AB">'+w+'</td><td colspan="2" class="note">'+tr('Switched off','Desactivada')+'</td></tr>';return;}
+    var st=status(w),lab={strong:tr('Strong','Firme'),learning:tr('Learning','Aprendiendo'),new:tr('New','Nueva')}[st];
+    h+='<tr><td class="k">'+w+'</td><td><i class="light '+st+'"></i> '+lab+' <span class="note">'+s.c+'/'+s.t+'</span></td><td>'+(s.rlast.length?s.rlast.slice(-5).map(function(x){return x==='s'?'H':x.toUpperCase();}).join(' ')+(readsIt(w)?' <span class="yes">'+tr('reads it','la lee')+'</span>':''):'<span class="note">–</span>')+'</td></tr>';});
   el.innerHTML=h+'</table>';}
-function resetIdle(){var b=$('#resetBox');if(!b)return;b.innerHTML='<button class="danger" id="resetBtn">Reset progress</button>';$('#resetBtn').onclick=resetAsk;}
-function resetAsk(){$('#resetBox').innerHTML='<p style="font-weight:700;margin:0 0 6px">Erase Word Parking progress and laps? Words on/off stay.</p><button class="danger solid" id="rYes">Yes, erase</button> <button class="ghost" id="rNo">Keep it</button>';
+function resetIdle(){var b=$('#resetBox');if(!b)return;b.innerHTML='<button class="danger" id="resetBtn">'+tr('Reset progress','Borrar progreso')+'</button>';$('#resetBtn').onclick=resetAsk;}
+function resetAsk(){$('#resetBox').innerHTML='<p style="font-weight:700;margin:0 0 6px">'+tr('Erase Word Parking progress and laps? Words on/off stay.','¿Borrar el progreso y las vueltas de Word Parking? Las palabras activadas se quedan.')+'</p><button class="danger solid" id="rYes">'+tr('Yes, erase','Sí, borrar')+'</button> <button class="ghost" id="rNo">'+tr('Keep it','No, dejarlo')+'</button>';
   $('#rYes').onclick=function(){var on=state.on;state=blank();state.on=on;save();renderWords();resetIdle();};
   $('#rNo').onclick=resetIdle;}
 
