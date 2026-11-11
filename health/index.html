@@ -570,7 +570,17 @@ function showQuestion(){
 }
 
 const ABC='ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
+/* Long vowels say their letter name: Kathryn J. Davis's long-vowel clips (sounds/long-a.mp3 ...) are used for A, E, I, O, U in the ABC scrub.
+   If a clip is missing or fails to load, the phone voice says the letter instead. */
+const LONGV={};
+function loadLongVowels(){ ['a','e','i','o','u'].forEach(v=>{ if(LONGV[v]) return; try{ const au=new Audio('../sounds/long-'+v+'.mp3'); au.preload='auto'; au.addEventListener('error',()=>{ LONGV[v]=null; }); LONGV[v]=au; }catch(e){ LONGV[v]=null; } }); }
+function sayLetter(L){
+  const au=LONGV[L.toLowerCase()];
+  if(au && !au.error && au.readyState>=2){ stopSpeech(); try{ au.currentTime=0; const pr=au.play(); if(pr&&pr.catch) pr.catch(()=>speakSeq([{text:L}],'en',0)); return; }catch(e){} }
+  speakSeq([{text:L==='A'?'A.':L}],'en',0);
+}
 function buildScrub(q,box){
+  loadLongVowels();
   box.style.setProperty('--cols',1); box.classList.add('narrow'); box.classList.remove('yn');
   const b=document.createElement('button');
   b.className='tile scrub'; b.id='scrubBtn'; b.setAttribute('aria-label','Scrub the hands');
@@ -586,7 +596,7 @@ function buildScrub(q,box){
     const gone=Math.floor(n*SCRUB_SPOTS.length/ABC.length);
     b.querySelectorAll('.sg').forEach((g,i)=>g.classList.toggle('gone',i<gone));
     b.querySelectorAll('.bub').forEach((g,i)=>g.classList.toggle('on',(n+i)%3!==0));
-    speakSeq([{text:L.toLowerCase()==='a'?'A.':L}],'en',0);
+    sayLetter(L);
     if(n===ABC.length){ [...strip.children].forEach(el=>{ el.classList.add('on'); el.classList.remove('now'); }); b.classList.add('right'); setTimeout(()=>finishQuestion(q),700); }
   });
   box.appendChild(b); box.appendChild(strip);
