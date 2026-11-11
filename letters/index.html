@@ -190,6 +190,7 @@ a.plink{color:var(--blue);font-weight:700}
 .langsw{display:flex;flex:0 0 auto;border:2px solid var(--asph);border-radius:999px;overflow:hidden}
 .langsw button{font:inherit;font-size:13px;font-weight:700;border:none;background:#fff;color:var(--asph);padding:5px 10px;cursor:pointer;min-height:0;min-width:0;box-shadow:none;border-radius:0}
 .langsw button[aria-pressed="true"]{background:var(--asph);color:var(--lane)}
+.copy{flex:0 0 auto;text-align:center;font-size:12px;color:#55606A;margin:0;line-height:1.3}
 </style>
 </head>
 <body>
@@ -209,6 +210,8 @@ function esc(s){return String(s).replace(/[&<>"]/g,function(c){return {'&':'&amp
 
 /* ---------- Parents' language: English or Español. Shared by every stop and the hub (lang in nanoHub.v1).
    Only text for parents switches. The child's screens and everything spoken stay in English. ---------- */
+/* Copyright line: the year follows the phone's clock, so it updates by itself each new year */
+function copyLine(){return '<p class="copy">&copy; '+new Date().getFullYear()+' Edwin Lopez. All rights reserved.</p>';}
 function pl(){try{var o=JSON.parse(localStorage.getItem('nanoHub.v1')||'null');return o&&o.lang==='es'?'es':'en';}catch(e){return 'en';}}
 function tr(en,es){return pl()==='es'?es:en;}
 function setPl(l){try{var o=JSON.parse(localStorage.getItem('nanoHub.v1')||'null')||{};o.lang=l;localStorage.setItem('nanoHub.v1',JSON.stringify(o));}catch(e){}}
@@ -570,6 +573,7 @@ function home(){
    '</div><div class="home-foot"><span>★ <b>'+strongN+'</b> of '+on.length+' strong</span><span>Laps today <b>'+lapsToday()+'</b></span></div></div>';
   $$('.tile').forEach(function(t){var free=t.dataset.go==='garage'||t.dataset.go==='trace';if(few&&!free)t.classList.add('locked');t.onclick=function(){ac();if(few&&!free){boop();return;}go(t.dataset.go);};});
   $('#pbtn').onclick=function(){go('parents');};
+  document.querySelector('#app .screen').insertAdjacentHTML('beforeend',copyLine());
   var n=$('#nudge');if(n)n.onclick=function(){go('parents');later(function(){var b=$('#baseSec');if(b)b.scrollIntoView();},60);};
   bindMute();
 }
@@ -818,6 +822,7 @@ function parents(){
      '<p class="note">'+tr('These two settings and the voices are shared with every stop. Choose the English and Spanish voices in <a class="plink" href="../numbers/#parents">Number Garage · Parents</a>.','Estos dos ajustes y las voces son los mismos en todas las paradas. Escoja las voces en inglés y en español en <a class="plink" href="../numbers/#parents">Number Garage · Padres</a>.')+'</p>'+
      '<div id="resetBox"></div></div></div></div>';
   bindLangSw(parents);
+  document.querySelector('#app .screen.parents').insertAdjacentHTML('beforeend',copyLine());
   $('#homeBtn').onclick=function(){go('home');};
   $('#setMute').onchange=function(e){setShared('mute',!e.target.checked);if(S.mute)hush();};
   $('#setSpanish').onchange=function(e){setShared('spanish',e.target.checked);esNote();};
