@@ -12,7 +12,7 @@ Live site: https://teacherzoled.github.io/edwin-learning-journey/
 | `numbers/` | Nano's Number Garage | Recognising numbers 1 to 10 without counting up |
 | `bible-road/` | Nano's Bible Road | Review of his Bible notes: God's Word (Psalm 119:105), the Old and New Testament, and the Trinity |
 | `belize-symbols/` | Fly Over Belize | Review of his notes on Independence Day and the national symbols: flag, tapir, toucan, mahogany, black orchid |
-| `health/` | Ambulance Health Run | Review of his Health Education notes: safe drinking water and germs |
+| `health/` | Ambulance Health Run | Review of his Health Education notes in three short roads he picks from: Safe water (12 stops), Germs (7) and Clean hands (11: where germs live, soap and water, the ABC scrub song, hand sanitizer, clean towel, nail clipper) |
 | `letters/` | Letter Road | Letter sounds in the school's order (s, a, t, p, i): Garage (learn), Sound Horn (hear the sound, tap the letter), First Sound Pickup (picture, tap its first letter), Twin Cars (capital to small letter), Say It (parent-scored), plus a starting check |
 | `blend/` | Blend Road | Blending: Drive the Road (learn), Which Road? (hear a word, tap it), Picture Stop (read a word, tap its picture), Read It To Me (parent-scored) |
 
@@ -27,6 +27,7 @@ Stops marked "Coming soon" on the homepage: Word Parking (sight words), Sentence
 ## Notes
 
 - The review quizzes save each question's last 5 tries on the phone (`nanoQuiz.bible.v1`, `nanoQuiz.belize.v1`, `nanoQuiz.health.v1`). A question is strong when he gets it right on the first try in 4 of his last 5 drives, the same rule as the Number Garage. The hub shows strong questions and drives today; each quiz's end screen has a parent check with every question's recent tries.
+- **Ambulance Health Run roads:** each road is its own drive, so a session stays short. Questions live in `WATER`, `GERMS` and `HANDS`, and `ROUTES` sets each road's name, end-screen pictures and spoken recap. The Clean hands road has one stop with no right or wrong answer: he taps the hands once per letter while the ABC song is spoken, and the germs disappear by Z. It is not counted toward strong. The hub's total (29) counts the scored questions across all three roads.
 - The three review quizzes read every question and picture aloud, so he does not need to read. They use the English and Spanish voices chosen in the Number Garage's Parents screen when set.
 
 - Each app saves progress in the phone's browser storage. All apps share the website `teacherzoled.github.io`, so the hub can show progress from each app.

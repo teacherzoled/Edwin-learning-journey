@@ -118,6 +118,23 @@ h1,h2{font-family:var(--display);line-height:1.1;text-wrap:balance;margin:0}
 .results li.new{background:transparent;border:2px solid var(--tile-edge)}
 .results li small{font-weight:400;margin-left:6px;letter-spacing:1px;font-variant-numeric:tabular-nums}
 .strongline{font-family:var(--display);font-weight:800;font-size:1.15rem;color:var(--go)}
+.routes{display:flex;flex-direction:column;gap:12px;width:100%;max-width:340px}
+.route{width:100%;display:flex;align-items:center;gap:12px;text-align:left;padding:8px 16px}
+.route svg{flex:none;width:52px;height:52px;background:#fff;border-radius:12px}
+.route span{display:flex;flex-direction:column;line-height:1.1}
+.route small{font-family:var(--body);font-weight:700;font-size:.85rem;opacity:.9}
+.route.water{background:#3A7BD5}.route.germs{background:#7B4FC4}
+.newtag{display:inline-block;font-style:normal;font-weight:800;background:#F4C430;color:#1E2A30;border-radius:999px;padding:0 8px;font-size:.8rem;margin-left:6px;vertical-align:middle}
+.scrub{border-color:#7FB2D6}
+.scrub svg{max-width:220px}
+.scrub .sg{transition:opacity .35s}
+.scrub .sg.gone{opacity:0}
+.scrub .bub{opacity:0;transition:opacity .3s}
+.scrub .bub.on{opacity:1}
+.abc{grid-column:1/-1;display:flex;flex-wrap:wrap;justify-content:center;gap:2px 6px;font-family:var(--display);font-weight:800;font-size:1.25rem}
+.abc b{color:var(--muted);opacity:.35}
+.abc b.on{color:var(--go);opacity:1}
+.abc b.now{color:var(--siren);opacity:1;transform:scale(1.35)}
 
 @media (max-width:480px){
   .wrap{gap:12px;padding-block:10px 24px}
@@ -166,9 +183,9 @@ body{margin:0}
   <section class="card hero" id="start">
     <h1>Ambulance Health Run!</h1>
     <div class="scene" id="startScene"></div>
-    <p class="parent"><b>For Mom or Dad:</b> Each question is read aloud, then each picture is named. Some questions ask him to tap one picture, some to <b>find all</b> the right pictures, some are <b>yes or no</b>, and some are counting. Tap the red speaker to hear it again, or <b>Español</b> for Spanish. Every right answer drives the ambulance closer to the clinic.</p>
-    <p class="safety"><b>Safety:</b> the notes teach that river water is made safe with a drop of bleach (Clorox). The quiz says only grown-ups use bleach. Please say that too.</p>
-    <button class="go" id="startBtn">Start the ambulance</button>
+    <p class="parent"><b>For Mom or Dad:</b> Pick one road for today. Each question is read aloud, then each picture is named. Some questions ask him to tap one picture, some to <b>find all</b> the right pictures, some are <b>yes or no</b>, and some are counting. Tap the red speaker to hear it again, or <b>Español</b> for Spanish. Every right answer drives the ambulance closer to the clinic.</p>
+    <div class="routes" id="routes"></div>
+    <p class="safety"><b>Safety:</b> the Safe water road teaches that river water is made safe with a drop of bleach (Clorox), and the Clean hands road shows a nail clipper. The quiz says only grown-ups use bleach and a grown-up helps cut nails. Please say that too.</p>
     <p class="strongline" id="startProg" hidden></p>
     <p class="note" id="noVoice" hidden>This device cannot read aloud. Please read each question to your child.</p>
   </section>
@@ -195,17 +212,19 @@ body{margin:0}
     <h2 style="font-size:clamp(1.8rem,6vw,2.6rem)">The ambulance made it to the clinic!</h2>
     <div class="recap">
       <button class="speak" id="hearRecap" aria-label="Hear what we learned"></button>
-      <p class="parent" style="margin:0;text-align:left"><b>Five safe drinking waters</b></p>
+      <p class="parent" style="margin:0;text-align:left" id="factsTitle"></p>
     </div>
     <div class="facts" id="facts"></div>
-    <p class="parent" style="margin:0"><b>Germs</b> are too small to see, they are everywhere, and they can make us sick.</p>
+    <p class="parent" style="margin:0" id="endLine"></p>
+    <p class="safety" id="doIt" hidden><b>Do it for real:</b> go to the sink together. Wet, soap, scrub and sing the ABC song all the way to Z, rinse, then dry on a clean towel.</p>
     <div class="stars" id="stars"></div>
     <div class="strongline" id="strongline"></div>
     <div>
       <p class="parent" style="margin:0 0 8px"><b>Parent check:</b> green = strong (right on the first try in 4 of his last 5 drives), red outline = still practising, plain = needs more drives. The marks show his last 5 tries, newest last.</p>
       <ul class="results" id="results"></ul>
     </div>
-    <button class="go" id="again">Drive again</button>
+    <button class="go" id="again">Drive this road again</button>
+    <button class="chip" id="otherRoad">Pick another road</button>
   </section>
 </div>
 
@@ -297,6 +316,27 @@ const ICONS={
   toy:'<circle cx="50" cy="54" r="34" fill="#3AA0E8" '+S+'/><path d="M18 46 Q50 64 82 46" fill="none" stroke="#fff" stroke-width="7"/><path d="M22 68 Q50 82 78 68" fill="none" stroke="#F2C230" stroke-width="7"/><circle cx="50" cy="54" r="34" fill="none" '+S+'/>'+germ(38,34,7,'#6CC04A')+germ(64,60,7,'#9B5DE5'),
   air:'<circle cx="50" cy="50" r="44" fill="#DFF1FA"/><path d="M12 36 Q40 26 60 36 Q74 42 80 32 M14 58 Q44 48 66 58 Q80 64 88 54 M20 78 Q44 70 62 78" fill="none" stroke="#7FB2D6" stroke-width="4" stroke-linecap="round"/>'+
     germ(34,24,6,'#6CC04A')+germ(70,46,6,'#9B5DE5')+germ(42,66,6,'#F28A1E')+germ(76,74,5,'#6CC04A'),
+  phone:'<rect x="30" y="8" width="40" height="84" rx="8" fill="#2E4057" '+S+'/><rect x="35" y="18" width="30" height="58" rx="2" fill="#BFE6F5"/><path d="M38 28 H62 M38 36 H56 M38 44 H60" stroke="#3A7BD5" stroke-width="3"/><circle cx="50" cy="84" r="4" fill="#9AA3AB"/>',
+  cat:'<path d="M72 86 Q94 82 86 60" fill="none" stroke="'+K+'" stroke-width="10" stroke-linecap="round"/><path d="M72 86 Q94 82 86 60" fill="none" stroke="#F28A1E" stroke-width="6" stroke-linecap="round"/>'+
+      '<path d="M28 92 Q24 62 40 56 H60 Q76 62 72 92Z" fill="#F28A1E" '+S+'/><path d="M40 70 Q50 66 60 70 M38 80 Q50 76 62 80" fill="none" stroke="#B85F12" stroke-width="3"/>'+
+      '<path d="M32 32 L30 10 L48 22Z" fill="#F28A1E" '+S2+'/><path d="M68 32 L70 10 L52 22Z" fill="#F28A1E" '+S2+'/><circle cx="50" cy="40" r="20" fill="#F28A1E" '+S+'/>'+
+      '<path d="M44 22 L46 28 M50 21 V28 M56 22 L54 28" stroke="#B85F12" stroke-width="2.5"/><ellipse cx="43" cy="38" rx="3" ry="4.5" fill="'+K+'"/><ellipse cx="57" cy="38" rx="3" ry="4.5" fill="'+K+'"/>'+
+      '<path d="M47 45 L53 45 L50 49Z" fill="#E86A7A"/><path d="M28 45 H41 M28 51 L41 48 M59 45 H72 M59 48 L72 51" stroke="'+K+'" stroke-width="1.5"/>',
+  keyboard:'', sun:'',
+  soap:'<path d="M16 64 Q16 50 30 50 H70 Q84 50 84 64 V72 Q84 86 70 86 H30 Q16 86 16 72Z" fill="#F7B6D2" '+S+'/><path d="M26 62 Q50 56 74 62" fill="none" stroke="#fff" stroke-width="3" opacity=".8"/>'+
+      '<g fill="#fff" stroke="#7FB2D6" stroke-width="2.2"><circle cx="34" cy="40" r="8"/><circle cx="51" cy="31" r="11"/><circle cx="68" cy="40" r="7"/><circle cx="62" cy="14" r="5"/><circle cx="40" cy="18" r="4"/></g>',
+  tapwater:'<rect x="6" y="12" width="12" height="20" rx="2" fill="#9AA3AB" '+S2+'/><path d="M16 22 H42 Q52 22 52 32 V36" fill="none" stroke="'+K+'" stroke-width="11" stroke-linecap="round"/><path d="M16 22 H42 Q52 22 52 32 V36" fill="none" stroke="#C9D1D6" stroke-width="7" stroke-linecap="round"/>'+
+      '<rect x="24" y="8" width="16" height="7" rx="2" fill="#3A7BD5" '+S2+'/><path d="M52 42 V62" stroke="#3AA0E8" stroke-width="5" stroke-linecap="round"/>'+
+      '<path d="M37 62 H67 L64 94 H40Z" fill="#9ED8F5"/><path d="M34 52 H70 L64 94 H40Z" fill="none" '+S+'/>',
+  sanitizer:'<path d="M50 26 V12 H72 V20" fill="none" stroke="'+K+'" stroke-width="6" stroke-linejoin="round"/><rect x="42" y="7" width="16" height="7" rx="2" fill="#3A7BD5" '+S2+'/>'+
+      '<path d="M72 22 Q68 28 72 32 Q76 28 72 22Z" fill="#9ED8F5" stroke="'+K+'" stroke-width="1.2"/><rect x="42" y="24" width="16" height="10" fill="#fff" '+S2+'/>'+
+      '<rect x="32" y="34" width="36" height="58" rx="7" fill="#E8F6FB" '+S+'/><rect x="37" y="48" width="26" height="32" rx="3" fill="#fff" stroke="'+K+'" stroke-width="1.5"/>'+
+      '<path d="M50 53 Q43 62 50 68 Q57 62 50 53Z" fill="#3AA0E8"/><path d="M43 74 H57" stroke="'+K+'" stroke-width="2.2"/>',
+  towel:'', dirtytowel:'',
+  clipper:'<path d="M12 66 L82 56 Q90 56 90 61 Q90 66 82 66 L14 72Z" fill="#B9C0C6" '+S+'/>'+
+      '<path d="M12 62 L80 44 Q88 42 88 48 Q88 52 82 54 L14 68Z" fill="#E1E6EA" '+S+'/>'+
+      '<path d="M30 60 Q52 26 88 22" fill="none" stroke="'+K+'" stroke-width="11" stroke-linecap="round"/><path d="M30 60 Q52 26 88 22" fill="none" stroke="#C9D1D6" stroke-width="7" stroke-linecap="round"/>'+
+      '<circle cx="30" cy="62" r="5" fill="#9AA3AB" '+S2+'/><circle cx="82" cy="24" r="3" fill="#fff" stroke="'+K+'" stroke-width="1.5"/>',
   n2:'', n3:'', n4:'', n5:'',
   ambulance:'<path d="M6 30 H58 V24 Q58 20 62 20 H64" fill="none"/><rect x="6" y="26" width="56" height="40" rx="4" fill="#fff" '+S+'/>'+
     '<path d="M62 34 H78 Q84 34 88 42 L94 54 V66 H62Z" fill="#fff" '+S+'/><path d="M66 38 H77 Q80 38 82 42 L86 50 H66Z" fill="#BFE6F5" '+S2+'/>'+
@@ -307,7 +347,28 @@ const ICONS={
     '<rect x="36" y="6" width="28" height="24" rx="3" fill="#fff" '+S2+'/><rect x="45" y="10" width="10" height="16" fill="#D7263D"/><rect x="42" y="13" width="16" height="10" fill="#D7263D"/>'+
     '<rect x="40" y="62" width="20" height="30" fill="#3A7BD5" '+S2+'/><rect x="20" y="42" width="14" height="12" fill="#BFE6F5" '+S2+'/><rect x="66" y="42" width="14" height="12" fill="#BFE6F5" '+S2+'/>'
 };
+ICONS.keyboard=(function(){ let g='<rect x="4" y="30" width="92" height="44" rx="5" fill="#3A3F44" '+S+'/>';
+  for(let r=0;r<3;r++) for(let c=0;c<9;c++) g+='<rect x="'+(9+c*9.5)+'" y="'+(35+r*10)+'" width="7.5" height="7.5" rx="1.5" fill="#E8EEF2"/>';
+  return g+'<rect x="28" y="65" width="44" height="6" rx="2" fill="#E8EEF2"/>'; })();
+ICONS.sun=(function(){ let g='';
+  for(let i=0;i<8;i++){ const a=i*Math.PI/4, x1=50+Math.cos(a)*27, y1=50+Math.sin(a)*27, x2=50+Math.cos(a)*42, y2=50+Math.sin(a)*42;
+    g+='<path d="M'+x1.toFixed(1)+' '+y1.toFixed(1)+' L'+x2.toFixed(1)+' '+y2.toFixed(1)+'" stroke="#F28A1E" stroke-width="6" stroke-linecap="round"/>'; }
+  return g+'<circle cx="50" cy="50" r="21" fill="#F4C430" '+S+'/><circle cx="43" cy="47" r="2.4" fill="'+K+'"/><circle cx="57" cy="47" r="2.4" fill="'+K+'"/><path d="M42 56 Q50 63 58 56" fill="none" stroke="'+K+'" stroke-width="2.2" stroke-linecap="round"/>'; })();
+function towel(fill,stripe,extra){
+  return '<rect x="14" y="26" width="72" height="54" rx="4" fill="'+fill+'" '+S+'/><path d="M14 38 H86 M14 68 H86" stroke="'+stripe+'" stroke-width="4"/>'+
+    '<path d="M19 80 V88 M27 80 V88 M35 80 V88 M43 80 V88 M51 80 V88 M59 80 V88 M67 80 V88 M75 80 V88 M82 80 V88" stroke="'+K+'" stroke-width="2"/>'+(extra||'');
+}
+ICONS.towel=towel('#BFE6F5','#3A7BD5','<path d="M76 6 L78 14 L86 16 L78 18 L76 26 L74 18 L66 16 L74 14Z" fill="#F4C430" stroke="'+K+'" stroke-width="1.2"/>');
+ICONS.dirtytowel=towel('#C9B48A','#7A6440','<path d="M24 46 Q32 40 40 48 Q34 58 24 54Z M58 50 Q70 44 74 56 Q64 62 58 58Z" fill="#6B5232"/>'+germ(36,60,6,'#6CC04A')+germ(66,42,6,'#9B5DE5'));
 ['n2','n3','n4','n5'].forEach(k=>{ ICONS[k]='<text x="50" y="75" text-anchor="middle" font-family="Baloo 2, Trebuchet MS, Arial, sans-serif" font-weight="800" font-size="76" fill="#1E2A30">'+k.slice(1)+'</text>'; });
+const SCRUB_SPOTS=[[52,64],[40,74],[64,74],[46,56],[62,58],[41,30]], SCRUB_COLS=['#6CC04A','#9B5DE5','#F28A1E','#6CC04A','#9B5DE5','#F28A1E'];
+function scrubSvg(){
+  let g=hand(0);
+  SCRUB_SPOTS.forEach((p,i)=>{ g+='<g class="sg">'+germ(p[0],p[1],6.5,SCRUB_COLS[i])+'</g>'; });
+  const B=[[30,40],[70,36],[58,84],[24,70],[80,62],[50,22],[36,88]];
+  B.forEach((b,i)=>{ g+='<g class="bub"><circle cx="'+b[0]+'" cy="'+b[1]+'" r="'+(5+i%3*2)+'" fill="#fff" stroke="#7FB2D6" stroke-width="2"/></g>'; });
+  return '<svg viewBox="0 0 100 100" aria-hidden="true">'+g+'</svg>';
+}
 function svg(name){ return '<svg viewBox="0 0 100 100" aria-hidden="true">'+ICONS[name]+'</svg>'; }
 function row(names){
   const n=names.length, step=300/n, w=Math.min(100,step-4); let g='';
@@ -329,6 +390,9 @@ const LBL={
   sick:['sick child','the sick child','el niño enfermo'], happy:['healthy child','the healthy child','el niño sano'],
   yes:['Yes','yes','sí'], no:['No','no','no'],
   hand:['hands','our hands','las manos'], door:['door','the door','la puerta'], toy:['toy','the toy','el juguete'], air:['air','the air','el aire'],
+  phone:['phone','the phone','el teléfono'], cat:['cat','the cat','el gato'], keyboard:['keyboard','the keyboard','el teclado'], sun:['sun','the sun','el sol'],
+  soap:['soap','the soap','el jabón'], tapwater:['water','the water','el agua'], sanitizer:['hand sanitizer','the hand sanitizer','el gel desinfectante'],
+  towel:['clean towel','the clean towel','la toalla limpia'], dirtytowel:['dirty towel','the dirty towel','la toalla sucia'], clipper:['nail clipper','the nail clipper','el cortaúñas'],
   n2:['2','two','dos'], n3:['3','three','tres'], n4:['4','four','cuatro'], n5:['5','five','cinco']
 };
 const SAFE5=['bottle','gallon','boiled','filter','purified'];
@@ -357,7 +421,34 @@ const GERMS=[
   {key:'Germs in the air', text:"Germs can be in the air too. Tap the air.", es:"Los microbios también pueden estar en el aire. Toca el aire.", answer:'air', opts:['air','mango','rock'], ok:"Yes! Germs can be in the air too."},
   {key:'Count germs on the hand', type:'count', show:'hand3', text:"Germs are on things we touch. Count the germs on the hand. Tap the number.", es:"Los microbios están en lo que tocamos. Cuenta los microbios en la mano. Toca el número.", answer:'n3', opts:['n2','n3','n4'], ok:"One, two, three. Three germs on the hand!"}
 ];
-const N=WATER.length+GERMS.length;
+const BUSTERS=['sanitizer','tapwater','soap','towel','clipper'];
+const HANDS=[
+  {key:'Germs live where hands touch', type:'find', text:"Where do germs live? They live on anything our hands touch. Tap every thing our hands touch.", es:"¿Dónde viven los microbios? Viven en todo lo que tocan nuestras manos. Toca cada cosa que tocan nuestras manos.", answers:['phone','cat','keyboard','door'], opts:['phone','cat','keyboard','door','sun'], no:"We cannot touch the sun! Keep looking.", ok:"Phones, cats, keyboards and doors. Germs live on anything our hands touch!"},
+  {key:'Wash with soap', text:"How do we get rid of germs? Wash your hands! Use soap. Tap the soap.", es:"¿Cómo quitamos los microbios? ¡Lávate las manos! Usa jabón. Toca el jabón.", answer:'soap', opts:['soap','mango','rock'], ok:"Wash your hands with soap!"},
+  {key:'Wash with water', text:"We wash the germs away with water. Tap the water.", es:"Lavamos los microbios con agua. Toca el agua.", answer:'tapwater', opts:['tapwater','puddle','sun'], ok:"Soap and water wash the germs away."},
+  {key:'Sing the ABC song', type:'scrub', noScore:true, text:"How long should we wash our hands? Sing the ABC song while you wash! Tap the hands to scrub, and sing along.", es:"¿Cuánto tiempo nos lavamos las manos? ¡Canta el ABC mientras te lavas! Toca las manos para tallarlas y canta.", ok:"A to Z! The ABC song is long enough to get rid of the germs."},
+  {key:'Germs can be killed', type:'yesno', show:'soap', text:"Soap and water get rid of germs. Can germs be killed?", es:"El jabón y el agua quitan los microbios. ¿Se pueden matar los microbios?", answer:'yes', ok:"Yes! Germs can be killed."},
+  {key:'Hand sanitizer', text:"Hand sanitizer kills germs. Use it when you can't wash your hands. Tap the hand sanitizer.", es:"El gel desinfectante mata los microbios. Úsalo cuando no te puedes lavar las manos. Toca el gel desinfectante.", answer:'sanitizer', opts:['sanitizer','bottle','flower'], ok:"Hand sanitizer kills germs when you can't wash your hands."},
+  {key:'Sanitizer kills germs', type:'yesno', show:'sanitizer', text:"Does hand sanitizer kill germs?", es:"¿El gel desinfectante mata los microbios?", answer:'yes', ok:"Yes! Use it when you can't wash your hands."},
+  {key:'Clean towel', text:"Dry your hands with a clean towel. Tap the clean towel.", es:"Sécate las manos con una toalla limpia. Toca la toalla limpia.", answer:'towel', opts:['towel','dirtytowel','rock'], ok:"A clean towel keeps your hands clean."},
+  {key:'Nail clipper', text:"Germs hide under our fingernails. A nail clipper keeps our nails short and clean. Tap the nail clipper.", es:"Los microbios se esconden debajo de las uñas. El cortaúñas mantiene las uñas cortas y limpias. Toca el cortaúñas.", answer:'clipper', opts:['clipper','car','mango'], ok:"The nail clipper gets rid of germs under our nails. A grown-up helps you cut your nails."},
+  {key:'Find all 5 germ busters', type:'find', text:"We use hand sanitizer, water, soap, a clean towel and a nail clipper to get rid of germs. Find them all!", es:"Usamos gel desinfectante, agua, jabón, una toalla limpia y un cortaúñas para quitar los microbios. ¡Búscalos todos!", answers:BUSTERS, opts:BUSTERS.concat(['dirtytowel']), no:"Not that one. A dirty towel has germs! Keep looking.", ok:"You found all five germ busters!"},
+  {key:'Count germ busters', type:'count', show:{row:BUSTERS}, text:"How many things get rid of germs on our hands? Count them. Tap the number.", es:"¿Cuántas cosas quitan los microbios de las manos? Cuéntalas. Toca el número.", answer:'n5', opts:['n3','n4','n5'], ok:"One, two, three, four, five. Five germ busters!"}
+];
+const ROUTES={
+  h:{name:'Clean hands', list:HANDS, isNew:true, art:'soap', cls:'',
+     title:'<b>Five germ busters</b>', facts:BUSTERS,
+     line:'Wash with <b>soap and water</b> while you sing the ABC song. Use <b>hand sanitizer</b> when you can\'t wash.',
+     recap:"Germs live on anything our hands touch. Wash your hands with soap and water, and sing the ABC song while you wash. Use hand sanitizer when you can't wash your hands. Dry them on a clean towel, and keep your nails short with a nail clipper."},
+  g:{name:'Germs', list:GERMS, art:'germ2', cls:'germs',
+     title:'', facts:[], line:'<b>Germs</b> are too small to see, they are everywhere, and they can make us sick.',
+     recap:"Germs are little creatures. Germs are too small to be seen. Germs are everywhere, and germs can make us sick."},
+  w:{name:'Safe water', list:WATER, art:'bottle', cls:'water',
+     title:'<b>Five safe drinking waters</b>', facts:SAFE5, line:'',
+     recap:"Safe drinking water is clean, has no smell, and has no germs. Five safe drinking waters are bottled water, water in a five gallon, boiled water, filtered tap water, and purified river water."}
+};
+const SECNAME={w:'Safe drinking water', g:'Germs', h:'Clean hands'};
+let route='h', N=HANDS.length;
 const PRAISE=["Yes! Great job!","That's right!","Super! Drive on!","You got it!","Well done!"];
 
 const $=id=>document.getElementById(id);
@@ -422,7 +513,8 @@ function siren(){
 
 // ---------- road ----------
 const stops=$('stops');
-for(let i=0;i<N;i++) stops.appendChild(document.createElement('i'));
+function buildStops(){ stops.innerHTML=''; for(let i=0;i<N;i++) stops.appendChild(document.createElement('i')); }
+buildStops();
 $('amb').innerHTML=svg('ambulance');
 $('finish').innerHTML=svg('clinic');
 function setRoad(done){
@@ -434,7 +526,6 @@ function flashAmb(){ const a=$('amb'); a.classList.remove('flash'); void a.offse
 $('hear').innerHTML=SPK; $('hearRecap').innerHTML=SPK;
 $('startScene').innerHTML='<svg viewBox="0 0 240 110" aria-hidden="true"><rect x="0" y="0" width="240" height="110" rx="14" fill="#DDEFF8"/><rect x="0" y="74" width="240" height="26" fill="#3A3F44"/><path d="M8 87 H232" stroke="#F4C430" stroke-width="3" stroke-dasharray="14 10"/>'+
   '<g transform="translate(14 20) scale(.62)">'+ICONS.ambulance+'</g><g transform="translate(160 6) scale(.7)">'+ICONS.clinic+'</g><g transform="translate(100 30) scale(.34)">'+ICONS.bottle+'</g><g transform="translate(126 40) scale(.28)">'+ICONS.germ+'</g></svg>';
-$('facts').innerHTML=SAFE5.map(k=>'<div>'+svg(k)+LBL[k][0]+'</div>').join('');
 if(!synthOK) $('noVoice').hidden=false;
 
 // ---------- game ----------
@@ -445,13 +536,13 @@ function optsOf(q){ return q.type==='yesno' ? ['yes','no'] : q.opts; }
 function readQuestion(lang){
   const q=QS[idx];
   const items=[{text: lang==='es'?q.es:q.text}];
-  [...$('opts').children].forEach(t=>{ if(!t.classList.contains('wrong') && !t.classList.contains('right')) items.push({text:LBL[t.dataset.k][lang==='es'?2:1], el:t}); });
+  [...$('opts').children].forEach(t=>{ if(t.dataset.k && LBL[t.dataset.k] && !t.classList.contains('wrong') && !t.classList.contains('right')) items.push({text:LBL[t.dataset.k][lang==='es'?2:1], el:t}); });
   speakSeq(items,lang);
 }
 
 function showQuestion(){
   const q=QS[idx]; locked=false; found=0;
-  $('section').textContent = q.sec==='w' ? 'Safe drinking water' : 'Germs';
+  $('section').textContent = SECNAME[q.sec];
   $('qtext').textContent=q.text;
   $('feedback').textContent=''; $('feedback').className='feedback';
   $('next').hidden=true; $('esNote').hidden=true;
@@ -460,9 +551,10 @@ function showQuestion(){
   if(q.show){ sh.hidden=false; sh.innerHTML = q.show.row ? row(q.show.row) : svg(q.show); } else { sh.hidden=true; sh.innerHTML=''; }
   const fb=$('findbar');
   if(q.type==='find'){ fb.hidden=false; fb.innerHTML=q.answers.map(()=>'<i></i>').join(''); } else { fb.hidden=true; fb.innerHTML=''; }
-  const opts=optsOf(q);
   const box=$('opts'); box.innerHTML='';
-  const cols = opts.length===6 ? 3 : opts.length===4 ? 2 : opts.length;
+  if(q.type==='scrub'){ buildScrub(q,box); readQuestion('en'); return; }
+  const opts=optsOf(q);
+  const cols = opts.length>=5 ? 3 : opts.length===4 ? 2 : opts.length;
   box.style.setProperty('--cols',cols);
   box.classList.toggle('narrow', opts.length<=2 || opts.length===4);
   box.classList.toggle('yn', q.type==='yesno');
@@ -477,9 +569,32 @@ function showQuestion(){
   readQuestion('en');
 }
 
+const ABC='ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
+function buildScrub(q,box){
+  box.style.setProperty('--cols',1); box.classList.add('narrow'); box.classList.remove('yn');
+  const b=document.createElement('button');
+  b.className='tile scrub'; b.id='scrubBtn'; b.setAttribute('aria-label','Scrub the hands');
+  b.innerHTML=scrubSvg()+'<span id="scrubSay">Tap to scrub!</span>';
+  const strip=document.createElement('div'); strip.className='abc'; strip.id='abc';
+  strip.innerHTML=ABC.map(l=>'<b>'+l+'</b>').join('');
+  let n=0;
+  b.addEventListener('click',()=>{
+    if(locked||n>=ABC.length) return;
+    const L=ABC[n]; n++;
+    [...strip.children].forEach((el,i)=>{ el.classList.toggle('on',i<n-1); el.classList.toggle('now',i===n-1); });
+    $('scrubSay').textContent = n<ABC.length ? L+'… keep scrubbing!' : 'Z! All clean!';
+    const gone=Math.floor(n*SCRUB_SPOTS.length/ABC.length);
+    b.querySelectorAll('.sg').forEach((g,i)=>g.classList.toggle('gone',i<gone));
+    b.querySelectorAll('.bub').forEach((g,i)=>g.classList.toggle('on',(n+i)%3!==0));
+    speakSeq([{text:L.toLowerCase()==='a'?'A.':L}],'en',0);
+    if(n===ABC.length){ [...strip.children].forEach(el=>{ el.classList.add('on'); el.classList.remove('now'); }); b.classList.add('right'); setTimeout(()=>finishQuestion(q),700); }
+  });
+  box.appendChild(b); box.appendChild(strip);
+}
+
 function finishQuestion(q){
   locked=true;
-  recordQ(QID(q), !wrongs[idx]);
+  if(!q.noScore) recordQ(QID(q), !wrongs[idx]);
   [...$('opts').children].forEach(t=>t.disabled=true);
   const p=PRAISE[Math.floor(Math.random()*PRAISE.length)];
   $('feedback').textContent=p+' '+q.ok; $('feedback').className='feedback good';
@@ -505,8 +620,8 @@ function choose(b){
       speakSeq([{text:'Yes! '+LBL[k][1]+'.'},{text: left===1?'One more to find.':left+' more to find.'}],'en');
     } else {
       wrongs[idx]=true; b.classList.add('wrong'); b.disabled=true;
-      $('feedback').textContent='Not that one. Keep looking!'; $('feedback').className='feedback try';
-      speakSeq([{text:'Not that one. '+LBL[k][1]+' is not safe to drink. Keep looking!'}],'en');
+      $('feedback').textContent=q.no||'Not that one. Keep looking!'; $('feedback').className='feedback try';
+      speakSeq([{text: q.no ? q.no : 'Not that one. '+LBL[k][1]+' is not safe to drink. Keep looking!'}],'en');
     }
     return;
   }
@@ -520,49 +635,68 @@ function choose(b){
   }
 }
 
-const RECAP="Safe drinking water is clean, has no smell, and has no germs. Five safe drinking waters are bottled water, water in a five gallon, boiled water, filtered tap water, and purified river water. Germs are too small to be seen. Germs are everywhere, and germs can make us sick.";
 /* ---------- saved progress (this phone only) ---------- */
 const PKEY='nanoQuiz.health.v1';
 function loadP(){ try{ const o=JSON.parse(localStorage.getItem(PKEY)||'null'); if(o&&o.hist) return o; }catch(e){} return {hist:{},drives:{date:'',count:0},total:0}; }
 function saveP(p){ try{ localStorage.setItem(PKEY,JSON.stringify(p)); }catch(e){} }
 function todayStr(){ const d=new Date(); return d.getFullYear()+'-'+(d.getMonth()+1)+'-'+d.getDate(); }
-function recordQ(id,first){ const p=loadP(); p.hist[id]=(p.hist[id]||[]).concat([first?1:0]).slice(-5); p.total=N; saveP(p); }
-function recordDrive(){ const p=loadP(), t=todayStr(); if(!p.drives||p.drives.date!==t) p.drives={date:t,count:0}; p.drives.count++; p.total=N; saveP(p); }
+function recordQ(id,first){ const p=loadP(); p.hist[id]=(p.hist[id]||[]).concat([first?1:0]).slice(-5); p.total=TOTAL; saveP(p); }
+function recordDrive(){ const p=loadP(), t=todayStr(); if(!p.drives||p.drives.date!==t) p.drives={date:t,count:0}; p.drives.count++; p.total=TOTAL; saveP(p); }
 function qState(h){ h=h||[]; if(h.length>=5&&h.filter(Boolean).length>=4) return 'strong'; return h.some(x=>!x)?'again':'new'; }
+function routeLine(r){ const p=loadP(), ids=ROUTES[r].list.filter(q=>!q.noScore).map(QID); if(!ids.some(i=>p.hist[i])) return '';
+  return '\u2605 '+ids.filter(i=>qState(p.hist[i])==='strong').length+' of '+ids.length+' strong'; }
 function progLine(){ const p=loadP(), ids=CANON.map(q=>QID(q)); if(!ids.some(i=>p.hist[i])) return '';
   const strong=ids.filter(i=>qState(p.hist[i])==='strong').length, d=(p.drives&&p.drives.date===todayStr())?p.drives.count:0;
-  return '\u2605 '+strong+' of '+N+' strong'+(d?' \u00b7 '+d+' drive'+(d>1?'s':'')+' today':''); }
+  return '\u2605 '+strong+' of '+TOTAL+' strong (all roads)'+(d?' \u00b7 '+d+' drive'+(d>1?'s':'')+' today':''); }
 function progChips(){ const p=loadP();
-  return CANON.map(q=>{ const id=QID(q), h=p.hist[id]||[];
+  return ROUTES[route].list.filter(q=>!q.noScore).map(q=>{ const id=QID(q), h=p.hist[id]||[];
     return '<li class="'+qState(h)+'">'+QLABEL(q)+(h.length?'<small>'+h.map(x=>x?'\u2713':'\u2717').join('')+'</small>':'')+'</li>'; }).join(''); }
 function showStartProg(){ const el=$('startProg'), t=progLine(); el.textContent=t; el.hidden=!t; }
-const CANON=WATER.concat(GERMS), QID=q=>q.key, QLABEL=q=>q.key;
+const CANON=WATER.concat(GERMS,HANDS).filter(q=>!q.noScore), TOTAL=CANON.length, QID=q=>q.key, QLABEL=q=>q.key;
 
 function showEnd(){
   $('quiz').hidden=true; $('end').hidden=false;
-  const first=QS.filter((q,i)=>!wrongs[i]).length;
+  const scored=QS.map((q,i)=>[q,i]).filter(x=>!x[0].noScore), first=scored.filter(x=>!wrongs[x[1]]).length;
   recordDrive();
-  $('stars').textContent='This drive: '+first+' of '+N+' right on the first try';
+  const R=ROUTES[route];
+  $('factsTitle').innerHTML=R.title; $('factsTitle').hidden=!R.title;
+  $('facts').innerHTML=R.facts.map(k=>'<div>'+svg(k)+LBL[k][0]+'</div>').join(''); $('facts').hidden=!R.facts.length;
+  $('endLine').innerHTML=R.line; $('endLine').hidden=!R.line;
+  $('doIt').hidden = route!=='h';
+  $('stars').textContent='This drive: '+first+' of '+scored.length+' right on the first try';
   $('strongline').textContent=progLine();
   $('results').innerHTML=progChips();
   const played=siren();
-  speakSeq([{text:"Hooray! The ambulance made it to the clinic!"},{text:RECAP}],'en',played?760:80);
+  speakSeq([{text:"Hooray! The ambulance made it to the clinic!"},{text:ROUTES[route].recap}],'en',played?760:80);
 }
 
-function begin(){
-  QS = shuffle(WATER).map(q=>Object.assign({sec:'w'},q)).concat(shuffle(GERMS).map(q=>Object.assign({sec:'g'},q)));
+function begin(r){
+  if(r) route=r;
+  const list=ROUTES[route].list;
+  /* Clean hands keeps the scrub song in the middle, after soap and water */
+  if(route==='h'){ const pre=list.slice(0,3), mid=list[3], post=list.slice(4); QS=shuffle(pre).concat([mid],shuffle(post)); }
+  else QS=shuffle(list);
+  QS=QS.map(q=>Object.assign({sec:route},q));
+  N=QS.length; buildStops();
   idx=0; wrongs=[]; setRoad(0);
   $('start').hidden=true; $('end').hidden=true; $('quiz').hidden=false;
   showQuestion();
 }
+function drawRoutes(){
+  $('routes').innerHTML=['h','g','w'].map(r=>{ const R=ROUTES[r], pl=routeLine(r);
+    return '<button class="go route '+R.cls+'" data-r="'+r+'">'+svg(R.art)+'<span><b>'+R.name+(R.isNew?'<i class="newtag">new</i>':'')+'</b>'+
+      '<small>'+R.list.length+' stops'+(pl?' · '+pl:'')+'</small></span></button>'; }).join('');
+  $('routes').querySelectorAll('.route').forEach(b=>b.addEventListener('click',()=>begin(b.dataset.r)));
+}
+drawRoutes();
 showStartProg();
-$('startBtn').addEventListener('click',begin);
-$('again').addEventListener('click',begin);
+$('again').addEventListener('click',()=>begin());
+$('otherRoad').addEventListener('click',()=>{ stopSpeech(); $('end').hidden=true; $('quiz').hidden=true; $('start').hidden=false; drawRoutes(); showStartProg(); N=ROUTES.h.list.length; setRoad(0); });
 $('hear').addEventListener('click',()=>readQuestion('en'));
 $('hearEs').addEventListener('click',()=>{ if(!synthOK||!hasSpanish()){ $('esNote').hidden=false; return; } readQuestion('es'); });
 $('sirenBtn').addEventListener('click',e=>{ sirenOn=!sirenOn; e.currentTarget.textContent='Siren: '+(sirenOn?'on':'off'); e.currentTarget.setAttribute('aria-pressed',sirenOn); });
 $('next').addEventListener('click',()=>{ stopSpeech(); if(idx<N-1){ idx++; showQuestion(); } else showEnd(); });
-$('hearRecap').addEventListener('click',()=>speakSeq([{text:RECAP}],'en'));
+$('hearRecap').addEventListener('click',()=>speakSeq([{text:ROUTES[route].recap}],'en'));
 document.addEventListener('visibilitychange',()=>{ if(document.hidden) stopSpeech(); });
 setRoad(0);
 })();
