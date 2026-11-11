@@ -187,6 +187,8 @@ a.plink{color:var(--blue);font-weight:700}
 .langsw button{font:inherit;font-size:13px;font-weight:700;border:none;background:#fff;color:var(--asph);padding:5px 10px;cursor:pointer;min-height:0;min-width:0;box-shadow:none;border-radius:0}
 .langsw button[aria-pressed="true"]{background:var(--asph);color:var(--lane)}
 .copy{flex:0 0 auto;text-align:center;font-size:12px;color:#55606A;margin:0;line-height:1.3}
+.copy-fix{position:fixed;left:0;right:0;bottom:env(safe-area-inset-bottom,0px);margin:0;text-align:center;font-size:10px;line-height:12px;color:#55606A;pointer-events:none;z-index:1}
+.copy-fix[hidden]{display:none}
 </style>
 </head>
 <body>
@@ -434,7 +436,6 @@ function home(){
    '</div><div class="home-foot"><span>★ <b>'+strongN+'</b> of '+on.length+' words strong</span><span>Laps today <b>'+lapsToday()+'</b></span></div></div>';
   $$('.tile').forEach(function(t){var g=t.dataset.go;if(lock[g])t.classList.add('locked');t.onclick=function(){ac();if(lock[g]){boop();bump(t);return;}go(g);};});
   $('#pbtn').onclick=function(){go('parents');};
-  document.querySelector('#app .screen').insertAdjacentHTML('beforeend',copyLine());
   bindMute();
 }
 
@@ -566,6 +567,11 @@ function resetAsk(){$('#resetBox').innerHTML='<p style="font-weight:700;margin:0
   $('#rYes').onclick=function(){var on=state.on;state=blank();state.on=on;save();renderWords();resetIdle();};
   $('#rNo').onclick=resetIdle;}
 
+/* Copyright on every screen without touching the layout: a small fixed line in the screen's bottom padding.
+   Hidden where the screen already shows the in-page copyright line (Parents). */
+(function(){var cf=document.createElement('p');cf.className='copy-fix';cf.innerHTML='&copy; '+new Date().getFullYear()+' Edwin Lopez. All rights reserved.';document.body.appendChild(cf);
+  var a=document.getElementById('app');function sync(){cf.hidden=!!a.querySelector('.copy');}
+  new MutationObserver(sync).observe(a,{childList:true,subtree:true});sync();})();
 /* ---------- Router ---------- */
 var VIEWS={home:home,parents:parents,park:nextRound,spot:nextRound,pick:nextRound,readit:nextRound};
 function render(){clearTimers();hush();S=readShared();var v=location.hash.slice(1)||'home';if(!VIEWS[v])v='home';view=v;VIEWS[v]();}

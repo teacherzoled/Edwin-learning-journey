@@ -22,7 +22,7 @@ Stops marked "Coming soon" on the homepage: Sentence Trip (sentences around Beli
 ## Adding a new app
 
 1. Put the app in its own folder with an `index.html`, for example `letters/index.html`.
-2. Every page carries the copyright line **© [current year] Edwin Lopez. All rights reserved.** The year must come from the phone's clock (`new Date().getFullYear()`), never typed in, so it changes by itself each year. Put it where it does not make a game screen scroll: under the home screen's tiles, at the end of the Parents screen, or on a quiz's start and end cards (copy `copyLine()` and the `.copy` style from any app). Parent text also needs both languages (see Notes).
+2. Every page and screen carries the copyright line **© [current year] Edwin Lopez. All rights reserved.** The year must come from the phone's clock (`new Date().getFullYear()`), never typed in, so it changes by itself each year. It must never change the layout or make a game screen scroll. Copy the two pieces from any app: the in-page `copyLine()` for scrolling screens (Parents, a quiz's start and end cards), and the small fixed `.copy-fix` line that sits in the empty bottom band of every other screen. The fixed line hides itself where the in-page line already shows, and on the quizzes also where a tall question reaches the bottom. Parent text also needs both languages (see Notes).
 3. In the root `index.html`, find the `STOPS` list and change that stop to `open:true` with its `href`, for example `href:"letters/"`.
 4. Commit and push. GitHub Pages updates in about a minute.
 
