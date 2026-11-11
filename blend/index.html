@@ -315,7 +315,10 @@ function setRec(l,blob,date){var old=REC[l];if(old&&old.url){try{URL.revokeObjec
   REC[l]={blob:blob,date:date||'',url:url,buf:null,start:0,dur:0,tried:false};}
 var BUNDLED='abcdefghijklmnopqrstuvwxyz'.split('');   /* built-in clips in ../sounds/<letter>.mp3 (Kathryn J. Davis); only letters switched on are fetched; a recording made on this phone replaces one */
 function loadBundled(){if(!window.fetch)return Promise.resolve();
-  var on=(ON)||{};return Promise.all(BUNDLED.filter(function(l){return on[l];}).map(function(l){if(REC[l])return null;
+  var on=(ON)||{},need={};BUNDLED.forEach(function(l){if(on[l])need[l]=true;});
+  /* clips a switched-on word plays in place of its own letter (the /z/ in "as", "is") */
+  WORDS.forEach(function(W){if(!W.say)return;if(W.w.split('').every(function(c){return on[c];}))Object.keys(W.say).forEach(function(i){need[W.say[i]]=true;});});
+  return Promise.all(BUNDLED.filter(function(l){return need[l];}).map(function(l){if(REC[l])return null;
     return fetch('../sounds/'+l+'.mp3').then(function(r){return r.ok?r.blob():null;}).then(function(b){if(b&&!REC[l]){setRec(l,b,'');REC[l].bundled=true;}}).catch(function(){});}));}
 function hasRec(l){return !!REC[l];}
 /* Decode once and trim the silence before and after the sound, so it plays the moment Nano reaches the tile */
@@ -383,12 +386,12 @@ function hubLink(){var onHub=/github\.io$/.test(location.hostname);
    WORDS. A word unlocks when all its letters are switched on in Letter Road
    (localStorage "nanoLetters.v1" -> on). To add words for the next letter,
    add entries here. pic: a picture in PIC below (needed for Picture Stop).
-   es: spoken Spanish bridge. soft: positions where the letter does not make
-   its usual sound (the s in "as" and "is" says z), so its tile plays only a
-   soft engine blip instead of the recording.
+   es: spoken Spanish bridge. say: positions where the letter does not make
+   its usual sound, and the clip to play there instead (the s in "as" and
+   "is" says /z/, so that tile plays sounds/z.mp3).
    ========================================================================== */
 var WORDS=[
- {w:'at'},{w:'as',soft:[1]},{w:'it'},{w:'is',soft:[1]},
+ {w:'at'},{w:'as',say:{1:'z'}},{w:'it'},{w:'is',say:{1:'z'}},
  {w:'sat',pic:'sat'},{w:'pat',pic:'pat',es:'palmadita'},{w:'tap',pic:'tap',es:'chorro'},{w:'sap'},
  {w:'sit',pic:'sit',es:'sentarse'},{w:'sip',pic:'sip',es:'sorbo'},{w:'tip',pic:'tip',es:'punta'},{w:'pit',pic:'pit',es:'hoyo'}
 ];
@@ -477,7 +480,7 @@ function wordChoices(t,list,k){var set=[t];k=Math.min(k||3,list.length);
   return shuffle(set);}
 
 /* ---------- Sounds for a tile ---------- */
-function tileSound(W,i){var ch=W.w[i];if(W.soft&&W.soft.indexOf(i)>=0){blip();return wait(350).then(function(){return false;});}
+function tileSound(W,i){var ch=(W.say&&W.say[i])||W.w[i];
   return playSound(ch).then(function(ok){if(!ok){blip();return wait(350).then(function(){return false;});}return true;});}
 
 /* ---------- Home art ---------- */
@@ -595,7 +598,7 @@ function parents(){
   app.innerHTML='<div class="screen parents">'+
    '<div class="top"><button class="ib" id="homeBtn" aria-label="Back to games">'+ICON.home+'</button><h2 style="flex:1">Blend Road · Parents</h2></div>'+
    '<div class="psec"><h3>Letter sounds</h3><p>Blend Road plays the sounds you recorded in <a class="plink" href="../letters/#parents">Letter Road · Parents</a>. Record them there; both stops use the same recordings on this phone.</p>'+
-     '<p id="recLine"></p><p>Letter sounds recorded by Kathryn J. Davis, used with permission.</p><p class="note">A letter without a recording plays a soft engine blip and lights up; the whole word is always spoken. In <b>as</b> and <b>is</b> the s says /z/, so that tile only blips.</p></div>'+
+     '<p id="recLine"></p><p>Letter sounds recorded by Kathryn J. Davis, used with permission.</p><p class="note">A letter without a recording plays a soft engine blip and lights up; the whole word is always spoken. In <b>as</b> and <b>is</b> the s says /z/, so that tile plays the /z/ sound.</p></div>'+
    '<div class="psec"><h3>Words</h3><p class="note">Strong = right on the first try in 4 of his last 5 rounds of Which Road? and Picture Stop. Read It To Me is your check: R read it, S sounded it out then blended, N not yet (his last 5 shown).</p><div id="wordTbl"></div></div>'+
    '<div class="psec"><h3>The 15-minute session</h3><ul class="list">'+
      '<li><span class="tag en">3 min</span><b>Letter warm-up</b>: Say It in Letter Road for the letters in today\'s words.</li>'+
