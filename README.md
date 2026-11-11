@@ -31,6 +31,7 @@ Stops marked "Coming soon" on the homepage: Sentence Trip (sentences around Beli
 - **Ambulance Health Run roads:** each road is its own drive, so a session stays short. Questions live in `WATER`, `GERMS` and `HANDS`, and `ROUTES` sets each road's name, end-screen pictures and spoken recap. The Clean hands road has one stop with no right or wrong answer: he taps the hands once per letter while the ABC song is spoken, and the germs disappear by Z. It is not counted toward strong. The hub's total (29) counts the scored questions across all three roads.
 - The three review quizzes read every question and picture aloud, so he does not need to read. They use the English and Spanish voices chosen in the Number Garage's Parents screen when set.
 
+- **Child's name:** the Parents box at the bottom of the hub sets the name in the welcome, the title and the spoken greeting. It is saved on that phone only (`nanoHub.v1`), so each family's phone can show its own child's name. The default is Edwin; an empty box shows "My Learning Journey". The apps inside each stop do not use the name.
 - Each app saves progress in the phone's browser storage. All apps share the website `teacherzoled.github.io`, so the hub can show progress from each app.
 - Spanish is used only as a spoken meaning bridge. English always comes first, and Spanish never appears written on the child's screens.
 

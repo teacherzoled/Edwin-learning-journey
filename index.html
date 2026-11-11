@@ -69,6 +69,13 @@ a.stop:hover{border-color:var(--asph)}
 
 .parents{background:rgba(255,255,255,.85);border-radius:16px;padding:12px 16px;font-size:15px;color:var(--muted)}
 .parents b{color:var(--ink)}
+.parents p{margin:0}
+.namebox{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-top:10px;padding-top:10px;border-top:1px solid var(--line)}
+.namebox label{font-weight:700;color:var(--ink)}
+.namebox input{flex:1 1 140px;min-width:0;font:inherit;font-size:17px;padding:8px 12px;border:2px solid var(--line);border-radius:12px;background:#fff;color:var(--ink)}
+.namebox input:focus{border-color:var(--blue);outline:none}
+.namebox button{font:inherit;font-weight:700;font-size:16px;border:none;border-radius:12px;padding:9px 16px;background:var(--asph);color:var(--lane);cursor:pointer}
+.namebox .saved{flex-basis:100%;font-size:14px;color:var(--green);min-height:1.2em}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style>
 </head>
@@ -79,7 +86,7 @@ a.stop:hover{border-color:var(--asph)}
       <div class="car" id="heroCar"></div>
       <div class="hero-text">
         <p class="hello" id="hello">Hello, Edwin!</p>
-        <h1>Edwin's Learning Journey</h1>
+        <h1 id="title">Edwin's Learning Journey</h1>
       </div>
       <button class="speak" id="speak" aria-label="Hear the greeting"><svg viewBox="0 0 24 24"><path d="M4 9h4l5-4v14l-5-4H4z" fill="currentColor"/><path d="M16 8.5a5 5 0 0 1 0 7M18.5 6a8.5 8.5 0 0 1 0 12" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/></svg></button>
     </div>
@@ -89,7 +96,15 @@ a.stop:hover{border-color:var(--asph)}
   <main class="route" id="route" aria-label="Learning stops"></main>
   <div class="finish"><i aria-hidden="true"></i>More stops are coming down the road!</div>
 
-  <p class="parents"><b>Parents:</b> open this page on the phone and use <b>Add to Home Screen</b>. Each stop saves its own progress on this phone.</p>
+  <div class="parents">
+    <p><b>Parents:</b> open this page on the phone and use <b>Add to Home Screen</b>. Each stop saves its own progress on this phone.</p>
+    <form class="namebox" id="nameForm" autocomplete="off">
+      <label for="childName">Child's name</label>
+      <input id="childName" maxlength="20" placeholder="Type the name" enterkeyhint="done">
+      <button type="submit">Save</button>
+      <span class="saved" id="nameSaved" role="status"></span>
+    </form>
+  </div>
 </div>
 
 <script>
@@ -185,8 +200,27 @@ STOPS.forEach(function(s,i){
 document.getElementById('route').innerHTML=html;
 document.getElementById('heroCar').innerHTML=car();
 
-var h=new Date().getHours(),greet=h<12?'Good morning, Edwin!':h<18?'Good afternoon, Edwin!':'Good evening, Edwin!';
-document.getElementById('hello').textContent=greet;
+/* Child's name: set in the Parents box, saved on this phone (nanoHub.v1). Default is Edwin. */
+var NAME_KEY='nanoHub.v1',DEFAULT_NAME='Edwin',greet='';
+function loadName(){try{var o=JSON.parse(localStorage.getItem(NAME_KEY)||'null');if(o&&typeof o.name==='string')return o.name;}catch(e){}return DEFAULT_NAME;}
+function saveName(n){try{var o=JSON.parse(localStorage.getItem(NAME_KEY)||'null')||{};o.name=n;localStorage.setItem(NAME_KEY,JSON.stringify(o));return true;}catch(e){return false;}}
+function cleanName(n){n=String(n||'').replace(/\s+/g,' ').trim().slice(0,20);return n?n.charAt(0).toUpperCase()+n.slice(1):'';}
+function applyName(n){
+  var h=new Date().getHours(),part=h<12?'Good morning':h<18?'Good afternoon':'Good evening';
+  greet=n?part+', '+n+'!':part+'!';
+  var title=n?n+"'s Learning Journey":'My Learning Journey';
+  document.getElementById('hello').textContent=greet;
+  document.getElementById('title').textContent=title;
+  document.title=title;
+}
+var childName=cleanName(loadName());
+applyName(childName);
+var nameInput=document.getElementById('childName');nameInput.value=childName;
+document.getElementById('nameForm').onsubmit=function(e){
+  e.preventDefault();var n=cleanName(nameInput.value);nameInput.value=n;
+  var ok=saveName(n);applyName(n);nameInput.blur();
+  document.getElementById('nameSaved').textContent=!ok?'Could not save on this phone. The name shows until the page is closed.':n?'Saved. The welcome now says '+n+'.':'Saved. The welcome now says My Learning Journey.';
+};
 /* Uses the sound setting and voice chosen in the Number Garage's Parents screen */
 function settings(){try{var o=JSON.parse(localStorage.getItem('nanoNumbers.v1')||'null');return (o&&o.settings)||{};}catch(e){return {};}}
 function vscore(v){var n=(v.name||'').toLowerCase(),sc=0;
