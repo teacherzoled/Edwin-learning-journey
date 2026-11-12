@@ -119,6 +119,7 @@ footer.copy{text-align:center;font-size:14px;color:var(--muted);padding:4px 0 8p
   <footer class="copy">&copy; <span id="year">2026</span> Edwin Lopez. All rights reserved.</footer>
 </div>
 
+<script src="voice/voice.js"></script>
 <script>
 (function(){
 "use strict";
@@ -274,8 +275,12 @@ function bestVoice(want){var vs=[];try{vs=speechSynthesis.getVoices()||[];}catch
 try{if(window.speechSynthesis)speechSynthesis.getVoices();}catch(e){}
 document.getElementById('speak').onclick=function(){
   var st=settings();if(st.mute||st.voice===false)return;
-  try{if(!window.speechSynthesis)return;speechSynthesis.cancel();var u=new SpeechSynthesisUtterance(greet+' Where shall Nano drive today?');u.lang='en-US';u.rate=0.9;u.pitch=1.05;
-    var v=bestVoice(st.enVoice);if(v){u.voice=v;u.lang=v.lang;}speechSynthesis.speak(u);}catch(e){}
+  /* recorded voice when the greeting has clips (the name Edwin, or no name); the phone voice for any other name */
+  var text=greet+' Where shall Nano drive today?',V=window.NanoVoice;
+  function tts(t){try{if(!window.speechSynthesis)return;speechSynthesis.cancel();var u=new SpeechSynthesisUtterance(t);u.lang='en-US';u.rate=0.9;u.pitch=1.05;
+    var v=bestVoice(st.enVoice);if(v){u.voice=v;u.lang=v.lang;}speechSynthesis.speak(u);}catch(e){}}
+  try{if(window.speechSynthesis)speechSynthesis.cancel();}catch(e){}
+  if(V&&V.has(text))V.say(text).then(function(rest){if(rest)tts(rest);});else{if(V)V.stop();tts(text);}
 };
 })();
 </script>

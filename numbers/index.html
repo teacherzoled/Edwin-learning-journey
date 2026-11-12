@@ -245,6 +245,7 @@ button:disabled{opacity:.35;cursor:default}
 
 <div id="app"></div>
 
+<script src="../voice/voice.js"></script>
 <script>
 (function(){
 "use strict";
@@ -405,13 +406,23 @@ function voiceFor(lang){var base=lang.slice(0,2),list=voicesFor(base);if(!list.l
   var want=base==='es'?state.settings.esVoice:state.settings.enVoice;
   if(want){var f=list.find(function(v){return v.name===want;});if(f)return f;}
   return list[0];}
+/* English goes to Nano's recorded voice (../voice/voice.js) when every sentence has a clip; otherwise, and for Spanish, the phone voice (tts).
+   keep=true means "say this after what is already being said" instead of cutting it off. */
+var sayTok=0;
+function tts(text,lang){try{if(!window.speechSynthesis)return;var u=new SpeechSynthesisUtterance(text);u.lang=lang||'en-US';u.rate=0.9;u.pitch=1.05;var v=voiceFor(u.lang);if(v){u.voice=v;u.lang=v.lang;}speechSynthesis.speak(u);}catch(e){}}
 function say(text,lang,keep){if(state.settings.mute||!state.settings.voice||!text)return;
-  try{if(!window.speechSynthesis)return;if(!keep)speechSynthesis.cancel();var u=new SpeechSynthesisUtterance(text);u.lang=lang||'en-US';u.rate=0.9;u.pitch=1.05;var v=voiceFor(u.lang);if(v){u.voice=v;u.lang=v.lang;}speechSynthesis.speak(u);}catch(e){}}
+  var V=window.NanoVoice,en=!lang||lang.slice(0,2)==='en';
+  if(!keep)hush();
+  var my=sayTok;
+  function go(){if(my!==sayTok)return;
+    if(V&&en&&V.has(text)){V.say(text).then(function(rest){if(rest&&my===sayTok)tts(rest,lang);});return;}
+    tts(text,lang);}
+  if(V&&keep)V.idle().then(go);else go();}
 function sayAlways(text,lang){var m=state.settings.mute,vo=state.settings.voice;state.settings.mute=false;state.settings.voice=true;say(text,lang);state.settings.mute=m;state.settings.voice=vo;}
 function muteBtn(){var off=state.settings.mute;return '<button class="ib mute'+(off?' off':'')+'" id="muteBtn" aria-pressed="'+off+'" aria-label="'+(off?'Sound is off. Turn sound on':'Sound is on. Turn sound off')+'">'+(off?ICON.soundOff:ICON.soundOn)+'</button>';}
 function bindMute(){var b=$('#muteBtn');if(!b)return;b.onclick=function(){state.settings.mute=!state.settings.mute;save();if(state.settings.mute)hush();
   b.outerHTML=muteBtn();bindMute();var sb=$('#sayBtn');if(sb)sb.disabled=state.settings.mute;if(!state.settings.mute){beep();}};}
-function hush(){try{if(window.speechSynthesis)speechSynthesis.cancel();}catch(e){}}
+function hush(){sayTok++;try{if(window.NanoVoice)NanoVoice.stop();}catch(e){}try{if(window.speechSynthesis)speechSynthesis.cancel();}catch(e){}}
 
 /* ---------- Timers ---------- */
 var timers=[],ticks=[];
@@ -821,6 +832,7 @@ function parents(){
      '<label><input type="checkbox" id="setMute"'+(state.settings.mute?'':' checked')+'> '+tr('Sound on (voice and game sounds)','Sonido activado (voz y sonidos del juego)')+'</label>'+
      '<label><input type="checkbox" id="setVoice"'+(state.settings.voice?' checked':'')+'> '+tr('Voice on','Voz activada')+'</label>'+
      '<label><input type="checkbox" id="setSpanish"'+(state.settings.spanish?' checked':'')+'> '+tr('Spanish echo in the Garage','Eco en español en el Garage')+'</label>'+
+     '<p class="note">'+tr('English phrases are spoken by a recorded computer voice (Microsoft Azure AI Speech, Ava). The English voice chosen below is only the backup, used when a phrase has no recording or the phone is offline.','Las frases en inglés las dice una voz de computadora grabada (Microsoft Azure AI Speech, Ava). La voz en inglés que escoja abajo es solo el respaldo, para cuando una frase no tiene grabación o el teléfono no tiene internet.')+'</p>'+
      '<div class="voicepick"><span>'+tr('English voice','Voz en inglés')+'</span><div class="vrow"><select id="enVoice"></select><button class="ghost" id="enTest">'+tr('Test','Probar')+'</button></div></div>'+
      '<div class="voicepick"><span>'+tr('Spanish voice (bridge only)','Voz en español (solo para el puente)')+'</span><div class="vrow"><select id="esVoice"></select><button class="ghost" id="esTest">'+tr('Test','Probar')+'</button></div><span class="note" id="vnote"></span></div>'+
      '<label>'+tr('Flash Lights shows for','Flash Lights se muestra por')+' <select id="setFlash"><option value="1000">'+tr('1 second','1 segundo')+'</option><option value="2000">'+tr('2 seconds','2 segundos')+'</option><option value="3000">'+tr('3 seconds','3 segundos')+'</option></select></label>'+

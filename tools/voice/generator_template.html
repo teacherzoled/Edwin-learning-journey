@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Learning Journey voice clips</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;font-family:Arial,Helvetica,sans-serif;background:#F4F6F8;color:#1F2933;line-height:1.45}
+.wrap{max-width:1400px;margin:0 auto;padding:0 1in 40px}
+h1{font-size:26px;margin:24px 0 4px}
+p.lead{margin:0 0 18px;color:#55606A}
+.card{background:#fff;border:1px solid #D5DBE1;border-radius:12px;padding:16px;margin-bottom:16px}
+label{display:block;font-weight:700;margin-bottom:4px}
+input[type=password],input[type=text],select{width:100%;font:inherit;padding:9px 10px;border:2px solid #C3CBD3;border-radius:8px;background:#fff}
+.row{display:flex;flex-wrap:wrap;gap:14px}
+.row>div{flex:1 1 260px}
+.note{font-size:14px;color:#55606A;margin:8px 0 0}
+button{font:inherit;font-weight:700;border:none;border-radius:8px;padding:10px 18px;background:#1F5FBF;color:#fff;cursor:pointer;margin:0 8px 8px 0}
+button.alt{background:#2A2E35}
+button.go{background:#1B7F3B}
+button:disabled{opacity:.45;cursor:default}
+.bar{height:22px;background:#E4E8EC;border-radius:999px;overflow:hidden;margin:10px 0 6px}
+.bar i{display:block;height:100%;width:0;background:#1B7F3B;transition:width .3s}
+#count{font-weight:700;font-size:20px}
+#status{font-weight:700;min-height:1.4em;margin:8px 0 0}
+#status.err{color:#B42318}
+#status.ok{color:#1B7F3B}
+ol{margin:0;padding-left:22px}
+ol li{margin-bottom:4px}
+#spot{margin-top:10px}
+#spot q{font-weight:700;quotes:none;display:block;margin-bottom:6px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Learning Journey voice clips</h1>
+  <p class="lead">This page asks Azure to say every phrase the apps use, one at a time, and packs the clips into one zip file. Open it in Microsoft Edge or Chrome on a computer.</p>
+
+  <div class="card">
+    <ol>
+      <li>Paste <b>KEY 1</b> and check the voice, accent and speed.</li>
+      <li>Press <b>Start</b> and leave this tab open. Azure's free tier allows about 20 clips a minute, so the full set takes about <b id="eta0"></b>.</li>
+      <li>When it reaches the end, press <b>Download zip</b> and send that file to Claude.</li>
+    </ol>
+    <p class="note">You can pause, close the tab or lose the connection. Finished clips are kept in this browser, and Start carries on from where it stopped. Your key is not saved.</p>
+  </div>
+
+  <div class="card">
+    <div class="row">
+      <div><label for="key">Speech key (KEY 1)</label><input id="key" type="password" autocomplete="off" placeholder="Paste KEY 1 here"></div>
+      <div><label for="region">Region</label><input id="region" type="text" value="eastus"></div>
+      <div><label for="voice">Voice</label>
+        <select id="voice">
+          <option value="en-US-AvaMultilingualNeural">Ava Multilingual</option>
+          <option value="en-US-AvaNeural">Ava (American only)</option>
+          <option value="en-GB-AdaMultilingualNeural">Ada Multilingual (British female)</option>
+          <option value="en-GB-SoniaNeural">Sonia (British female)</option>
+          <option value="en-GB-LibbyNeural">Libby (British female)</option>
+          <option value="en-GB-MaisieNeural">Maisie (British child)</option>
+          <option value="en-GB-OllieMultilingualNeural">Ollie Multilingual (British male)</option>
+        </select></div>
+      <div><label for="accent">Accent</label>
+        <select id="accent">
+          <option value="en-GB" selected>British ("pan" with ah)</option>
+          <option value="en-US">American</option>
+        </select></div>
+      <div><label for="rate">Speed</label>
+        <select id="rate">
+          <option value="-20%" selected>Slower</option>
+          <option value="-10%">A little slower</option>
+          <option value="0%">Normal</option>
+        </select></div>
+    </div>
+    <p class="note">Changing the voice, accent or speed after some clips are made would mix two styles. To change, press <b>Start over</b> first.</p>
+  </div>
+
+  <div class="card">
+    <div id="count">0 of 0 clips</div>
+    <div class="bar"><i id="fill"></i></div>
+    <div id="eta" class="note"></div>
+    <p style="margin:12px 0 0">
+      <button class="go" id="start">Start</button>
+      <button class="alt" id="pause" disabled>Pause</button>
+      <button id="zip" disabled>Download zip</button>
+      <button class="alt" id="check" disabled>Play a finished clip</button>
+      <button class="alt" id="reset">Start over</button>
+    </p>
+    <div id="status" role="status"></div>
+    <div id="spot"></div>
+  </div>
+</div>
+
+<script>
+/* [text to say, file name]. The file names are what the apps look up, so do not rename the clips. */
+var LIST=__LIST__;
+var GAP=3200;            /* ms between requests: about 18 a minute, under the free tier's 20 */
+function $(id){return document.getElementById(id);}
+function esc(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&apos;');}
+function status(msg,cls){var s=$('status');s.textContent=msg;s.className=cls||'';}
+function mins(n){var m=Math.ceil(n*GAP/60000);return m<=1?'about a minute':m+' minutes';}
+function ssml(text){return '<speak version="1.0" xmlns="http://www.w3.org/2001/10/synthesis" xml:lang="'+$('accent').value+'"><voice name="'+$('voice').value+'"><lang xml:lang="'+$('accent').value+'"><prosody rate="'+$('rate').value+'">'+esc(text)+'</prosody></lang></voice></speak>';}
+
+/* ---------- storage: finished clips live in this browser (IndexedDB) so the job can resume ---------- */
+var DBN='learningJourneyVoice2',db=null,mem={};
+function openDb(){return new Promise(function(res){try{var r=indexedDB.open(DBN,1);r.onupgradeneeded=function(){r.result.createObjectStore('clips');};r.onsuccess=function(){db=r.result;res();};r.onerror=function(){res();};}catch(e){res();}});}
+function put(name,buf){mem[name]=buf;return new Promise(function(res){if(!db)return res();try{var t=db.transaction('clips','readwrite');t.objectStore('clips').put(buf,name);t.oncomplete=res;t.onerror=res;t.onabort=res;}catch(e){res();}});}
+function loadAll(){return new Promise(function(res){if(!db)return res();try{var t=db.transaction('clips','readonly'),s=t.objectStore('clips'),c=s.openCursor();c.onsuccess=function(){var k=c.result;if(k){mem[k.key]=k.value;k.continue();}else res();};c.onerror=function(){res();};}catch(e){res();}});}
+function clearAll(){mem={};return new Promise(function(res){if(!db)return res();try{var t=db.transaction('clips','readwrite');t.objectStore('clips').clear();t.oncomplete=res;t.onerror=res;}catch(e){res();}});}
+
+/* ---------- Azure: plain web request first, Microsoft's Speech SDK if the browser blocks that ---------- */
+function viaRest(text){
+  return fetch('https://'+$('region').value.trim()+'.tts.speech.microsoft.com/cognitiveservices/v1',{method:'POST',
+    headers:{'Ocp-Apim-Subscription-Key':$('key').value.trim(),'Content-Type':'application/ssml+xml','X-Microsoft-OutputFormat':'audio-24khz-48kbitrate-mono-mp3'},
+    body:ssml(text)}).then(function(r){
+      if(r.status===401||r.status===403)throw new Error('KEY');
+      if(r.status===429)throw new Error('LIMIT');
+      if(r.status===400)throw new Error('VOICE');
+      if(!r.ok)throw new Error('HTTP '+r.status);
+      return r.arrayBuffer();});
+}
+var sdkLoading=null,restBlocked=false;
+function loadSdk(){
+  if(window.SpeechSDK)return Promise.resolve();
+  if(!sdkLoading)sdkLoading=new Promise(function(res,rej){var s=document.createElement('script');s.src='https://aka.ms/csspeech/jsbrowserpackageraw';s.onload=function(){window.SpeechSDK?res():rej(new Error('NET'));};s.onerror=function(){sdkLoading=null;rej(new Error('NET'));};document.head.appendChild(s);});
+  return sdkLoading;
+}
+function viaSdk(text){
+  return loadSdk().then(function(){return new Promise(function(res,rej){
+    var S=window.SpeechSDK,cfg=S.SpeechConfig.fromSubscription($('key').value.trim(),$('region').value.trim());
+    cfg.speechSynthesisOutputFormat=S.SpeechSynthesisOutputFormat.Audio24Khz48KBitRateMonoMp3;
+    var syn=new S.SpeechSynthesizer(cfg,null);
+    syn.speakSsmlAsync(ssml(text),function(r){syn.close();
+      if(r.audioData&&r.audioData.byteLength)res(r.audioData);
+      else{var d=r.errorDetails||'';rej(new Error(/401|403|Authentication/i.test(d)?'KEY':/429|quota|too many/i.test(d)?'LIMIT':(d||'No audio')));}},
+      function(e){syn.close();rej(new Error(String(e)));});});});
+}
+function speak(text){
+  if(restBlocked)return viaSdk(text);
+  return viaRest(text).catch(function(e){
+    if(e.message==='KEY'||e.message==='LIMIT'||e.message==='VOICE'||/^HTTP 5/.test(e.message))throw e;
+    return viaSdk(text).then(function(b){restBlocked=true;return b;});});
+}
+
+/* ---------- the job ---------- */
+var running=false,fails=0;
+function doneCount(){var n=0;for(var i=0;i<LIST.length;i++)if(mem[LIST[i][1]])n++;return n;}
+function paint(){var n=doneCount(),left=LIST.length-n;
+  $('count').textContent=n+' of '+LIST.length+' clips';$('fill').style.width=(100*n/LIST.length)+'%';
+  $('eta').textContent=left?(running?'About '+mins(left)+' left.':left+' clips still to make ('+mins(left)+').'):'All clips are ready.';
+  $('zip').disabled=n===0;$('check').disabled=n===0;$('start').disabled=running||left===0;$('pause').disabled=!running;
+  $('zip').textContent=left?'Download zip so far ('+n+')':'Download zip';}
+function nextIndex(){for(var i=0;i<LIST.length;i++)if(!mem[LIST[i][1]])return i;return -1;}
+function stop(msg,cls){running=false;paint();status(msg,cls);}
+function step(){
+  if(!running)return;
+  var i=nextIndex();
+  if(i<0){stop('Finished. Press Download zip and send the file to Claude.','ok');return;}
+  var item=LIST[i],t0=Date.now();
+  speak(item[0]).then(function(buf){fails=0;return put(item[1],buf);}).then(function(){
+    paint();status('Saying: '+item[0]);
+    setTimeout(step,Math.max(0,GAP-(Date.now()-t0)));
+  }).catch(function(e){
+    if(e.message==='KEY'){stop('Azure refused the key. Check KEY 1 and the region, then press Start.','err');return;}
+    if(e.message==='VOICE'){stop('Azure does not offer this voice with this accent. Choose another voice or accent, then press Start.','err');return;}
+    fails++;
+    if(fails>8){stop('Azure keeps failing ('+e.message+'). Check the internet connection, wait a few minutes, then press Start. Finished clips are kept.','err');return;}
+    var w=e.message==='LIMIT'?30000:8000*fails;
+    status((e.message==='LIMIT'?'Azure asked us to slow down.':'Small hiccup ('+e.message+').')+' Trying again in '+Math.round(w/1000)+' seconds…');
+    setTimeout(step,w);
+  });
+}
+$('start').onclick=function(){
+  if(!$('key').value.trim()){status('Paste KEY 1 first.','err');$('key').focus();return;}
+  running=true;fails=0;paint();status('Starting…');step();
+};
+$('pause').onclick=function(){stop('Paused. Press Start to carry on.');};
+$('reset').onclick=function(){
+  var b=$('reset');
+  if(b.dataset.sure!=='1'){b.dataset.sure='1';b.textContent='Really delete all finished clips?';setTimeout(function(){b.dataset.sure='';b.textContent='Start over';},4000);return;}
+  b.dataset.sure='';b.textContent='Start over';running=false;clearAll().then(function(){paint();status('Cleared. Press Start to begin again.');});
+};
+$('check').onclick=function(){
+  var have=LIST.filter(function(x){return mem[x[1]];});if(!have.length)return;
+  var it=have[Math.floor(Math.random()*have.length)],u=URL.createObjectURL(new Blob([mem[it[1]]],{type:'audio/mpeg'}));
+  $('spot').innerHTML='<q></q><audio controls autoplay></audio>';$('spot').querySelector('q').textContent=it[0];$('spot').querySelector('audio').src=u;
+};
+
+/* ---------- zip (stored, no compression: mp3 is already compressed) ---------- */
+var CRC=(function(){var t=[],c,n,k;for(n=0;n<256;n++){c=n;for(k=0;k<8;k++)c=c&1?0xEDB88320^(c>>>1):c>>>1;t[n]=c>>>0;}return t;})();
+function crc32(u8){var c=0xFFFFFFFF;for(var i=0;i<u8.length;i++)c=CRC[(c^u8[i])&0xFF]^(c>>>8);return (c^0xFFFFFFFF)>>>0;}
+function makeZip(files){
+  var parts=[],central=[],offset=0,enc=new TextEncoder();
+  files.forEach(function(f){
+    var name=enc.encode(f.name),data=new Uint8Array(f.data),crc=crc32(data);
+    var h=new DataView(new ArrayBuffer(30));
+    h.setUint32(0,0x04034b50,true);h.setUint16(4,20,true);h.setUint16(6,0x0800,true);h.setUint16(8,0,true);h.setUint16(10,0,true);h.setUint16(12,0x21,true);
+    h.setUint32(14,crc,true);h.setUint32(18,data.length,true);h.setUint32(22,data.length,true);h.setUint16(26,name.length,true);h.setUint16(28,0,true);
+    parts.push(h.buffer,name,data);
+    var c=new DataView(new ArrayBuffer(46));
+    c.setUint32(0,0x02014b50,true);c.setUint16(4,20,true);c.setUint16(6,20,true);c.setUint16(8,0x0800,true);c.setUint16(10,0,true);c.setUint16(12,0,true);c.setUint16(14,0x21,true);
+    c.setUint32(16,crc,true);c.setUint32(20,data.length,true);c.setUint32(24,data.length,true);c.setUint16(28,name.length,true);c.setUint32(42,offset,true);
+    central.push(c.buffer,name);
+    offset+=30+name.length+data.length;
+  });
+  var csize=0;central.forEach(function(p){csize+=p.byteLength||p.length;});
+  var e=new DataView(new ArrayBuffer(22));
+  e.setUint32(0,0x06054b50,true);e.setUint16(8,files.length,true);e.setUint16(10,files.length,true);e.setUint32(12,csize,true);e.setUint32(16,offset,true);
+  return new Blob(parts.concat(central,[e.buffer]),{type:'application/zip'});
+}
+$('zip').onclick=function(){
+  var files=[];LIST.forEach(function(x){if(mem[x[1]])files.push({name:x[1],data:mem[x[1]]});});
+  var info={voice:$('voice').value,accent:$('accent').value,rate:$('rate').value,made:new Date().toISOString(),clips:files.length,of:LIST.length};
+  files.push({name:'_info.json',data:new TextEncoder().encode(JSON.stringify(info)).buffer});
+  var a=document.createElement('a');a.href=URL.createObjectURL(makeZip(files));a.download='learning-journey-voice.zip';document.body.appendChild(a);a.click();a.remove();
+  status('Zip saved to your Downloads folder ('+(files.length-1)+' clips). Send it to Claude.','ok');
+};
+$('eta0').textContent=mins(LIST.length);
+openDb().then(loadAll).then(function(){paint();if(doneCount())status(doneCount()+' clips were already made in this browser. Press Start to carry on.');});
+</script>
+</body>
+</html>

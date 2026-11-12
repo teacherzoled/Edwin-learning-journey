@@ -204,6 +204,7 @@ body{margin:0}
   </section>
 </div>
 
+<script src="../voice/voice.js"></script>
 <script>
 (function(){
 /* ---------- Parents' language: English or Español. Shared by every stop and the hub (lang in nanoHub.v1).
@@ -363,24 +364,33 @@ function hasSpanish(){ loadVoices(); return voices.length===0 ? true : !!pickVoi
 function sayFix(t){ return t.replace(/\btapirs?\b/gi, m=>/s$/i.test(m)?'tah-peers':'tah-peer'); }
 function clearSpeaking(){ document.querySelectorAll('.tile.speaking').forEach(t=>t.classList.remove('speaking')); }
 let speakTimer=null;
-function speakSeq(items,lang){
-  if(!synthOK) return;
-  try{ speechSynthesis.cancel(); }catch(e){}
-  clearSpeaking(); clearTimeout(speakTimer);
+/* English goes to the recorded voice (../voice/voice.js) when every sentence of an item has a clip; otherwise, and for Spanish, the phone voice. */
+let seqTok=0;
+function speakSeq(items,lang,delay){
+  const V=window.NanoVoice;
+  if(!synthOK && !V) return;
+  stopSpeech();
+  const my=seqTok;
+  const fix = t => (lang!=='es' && typeof sayFix==='function') ? sayFix(t) : t;
   speakTimer=setTimeout(()=>{
-    const v=pickVoice(lang);
-    items.forEach((it,i)=>{
-      const u=new SpeechSynthesisUtterance(lang==='es' ? it.text : sayFix(it.text));
-      if(v) u.voice=v;
-      u.lang=v?v.lang:(lang==='es'?'es-MX':'en-US');
-      u.rate=0.85; u.pitch=1.05;
-      u.onstart=()=>{ clearSpeaking(); if(it.el) it.el.classList.add('speaking'); };
-      if(i===items.length-1) u.onend=clearSpeaking;
-      speechSynthesis.speak(u);
-    });
-  },80);
+    const v=synthOK?pickVoice(lang):null;
+    const mark = it => { clearSpeaking(); if(it.el) it.el.classList.add('speaking'); };
+    const utter = (text,it) => { const u=new SpeechSynthesisUtterance(text); if(v) u.voice=v; u.lang=v?v.lang:(lang==='es'?'es-MX':'en-US'); u.rate=0.85; u.pitch=1.05; u.onstart=()=>mark(it); return u; };
+    if(lang==='es' || !V){            /* phone voice only: queue everything at once, as before */
+      if(!synthOK) return;
+      items.forEach((it,i)=>{ const u=utter(fix(it.text),it); if(i===items.length-1) u.onend=clearSpeaking; speechSynthesis.speak(u); });
+      return;
+    }
+    const ttsOne = (text,it) => new Promise(res=>{ if(!synthOK) return res(); let done=false; const fin=()=>{ if(!done){ done=true; res(); } };
+      try{ const u=utter(text,it); u.onend=fin; u.onerror=fin; setTimeout(fin,1800+text.length*95); speechSynthesis.speak(u); }catch(e){ fin(); } });
+    let p=Promise.resolve();
+    items.forEach(it=>{ p=p.then(()=>{ if(my!==seqTok) return; const text=fix(it.text);
+      if(V.has(text)) return V.say(text,{onstart:()=>{ if(my===seqTok) mark(it); }}).then(rest=>{ if(rest && my===seqTok) return ttsOne(rest,it); });
+      return ttsOne(text,it); }); });
+    p.then(()=>{ if(my===seqTok) clearSpeaking(); });
+  },delay==null?80:delay);
 }
-function stopSpeech(){ if(synthOK){ try{ speechSynthesis.cancel(); }catch(e){} } clearTimeout(speakTimer); clearSpeaking(); }
+function stopSpeech(){ seqTok++; try{ if(window.NanoVoice) NanoVoice.stop(); }catch(e){} if(synthOK){ try{ speechSynthesis.cancel(); }catch(e){} } clearTimeout(speakTimer); clearSpeaking(); }
 
 // flight strip
 const stops=$('stops');

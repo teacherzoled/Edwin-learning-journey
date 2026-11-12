@@ -213,6 +213,7 @@ a.plink{color:var(--blue);font-weight:700}
 </head>
 <body>
 <div id="app"></div>
+<script src="../voice/voice.js"></script>
 <script>
 (function(){
 "use strict";
@@ -295,10 +296,15 @@ function esReady(){if(!S.spanish)return false;var all=allVoices();return all.len
 /* ---------- Speech and sequences ----------
    sayP speaks and resolves when finished. run() chains steps and is cancelled by hush() or the next run(). */
 var tok=0,srcs=[];
-function hush(){tok++;try{if(synthOK)speechSynthesis.cancel();}catch(e){}srcs.forEach(function(s){try{s.stop();}catch(e){}});srcs=[];}
+function hush(){tok++;try{if(window.NanoVoice)NanoVoice.stop();}catch(e){}try{if(synthOK)speechSynthesis.cancel();}catch(e){}srcs.forEach(function(s){try{s.stop();}catch(e){}});srcs=[];}
 function wait(ms){return new Promise(function(r){setTimeout(r,ms);});}
-function sayP(text,lang){return new Promise(function(res){
-  if(S.mute||!S.voice||!text||!synthOK)return res();
+/* English goes to Nano's recorded voice (../voice/voice.js) when every sentence has a clip; otherwise, and for Spanish, the phone voice (ttsP). */
+function sayP(text,lang){if(S.mute||!S.voice||!text)return Promise.resolve();
+  var V=window.NanoVoice;
+  if(V&&(!lang||lang.slice(0,2)==='en')&&V.has(text)){var my=tok;return V.say(text).then(function(rest){if(rest&&my===tok)return ttsP(rest,lang);});}
+  return ttsP(text,lang);}
+function ttsP(text,lang){return new Promise(function(res){
+  if(!text||!synthOK)return res();
   var done=false;function fin(){if(!done){done=true;res();}}
   try{var u=new SpeechSynthesisUtterance(text);u.lang=lang||'en-US';u.rate=0.85;u.pitch=1.05;var v=voiceFor(u.lang);if(v){u.voice=v;u.lang=v.lang;}
     u.onend=fin;u.onerror=fin;setTimeout(fin,1800+text.length*95);speechSynthesis.speak(u);}catch(e){fin();}});}
