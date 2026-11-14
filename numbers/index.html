@@ -833,6 +833,7 @@ function parents(){
      '<label><input type="checkbox" id="setVoice"'+(state.settings.voice?' checked':'')+'> '+tr('Voice on','Voz activada')+'</label>'+
      '<label><input type="checkbox" id="setSpanish"'+(state.settings.spanish?' checked':'')+'> '+tr('Spanish echo in the Garage','Eco en español en el Garage')+'</label>'+
      '<p class="note">'+tr('English phrases are spoken by a recorded computer voice (Microsoft Azure AI Speech, Ava). The English voice chosen below is only the backup, used when a phrase has no recording or the phone is offline.','Las frases en inglés las dice una voz de computadora grabada (Microsoft Azure AI Speech, Ava). La voz en inglés que escoja abajo es solo el respaldo, para cuando una frase no tiene grabación o el teléfono no tiene internet.')+'</p>'+
+     '<label>'+tr('Speed of the recorded voice','Velocidad de la voz grabada')+' <select id="setRate"><option value="0.85">'+tr('Slower','Más lenta')+'</option><option value="1">'+tr('Normal','Normal')+'</option><option value="1.15">'+tr('Faster','Más rápida')+'</option><option value="1.3">'+tr('Fastest','La más rápida')+'</option></select> <button class="ghost" id="rateTest">'+tr('Test','Probar')+'</button></label>'+
      '<div class="voicepick"><span>'+tr('English voice','Voz en inglés')+'</span><div class="vrow"><select id="enVoice"></select><button class="ghost" id="enTest">'+tr('Test','Probar')+'</button></div></div>'+
      '<div class="voicepick"><span>'+tr('Spanish voice (bridge only)','Voz en español (solo para el puente)')+'</span><div class="vrow"><select id="esVoice"></select><button class="ghost" id="esTest">'+tr('Test','Probar')+'</button></div><span class="note" id="vnote"></span></div>'+
      '<label>'+tr('Flash Lights shows for','Flash Lights se muestra por')+' <select id="setFlash"><option value="1000">'+tr('1 second','1 segundo')+'</option><option value="2000">'+tr('2 seconds','2 segundos')+'</option><option value="3000">'+tr('3 seconds','3 segundos')+'</option></select></label>'+
@@ -842,6 +843,11 @@ function parents(){
   $('#homeBtn').onclick=function(){go('home');};
   $$('.gear').forEach(function(b){b.onclick=function(){state.settings.gear=+b.dataset.gear;save();$$('.gear').forEach(function(x){x.setAttribute('aria-pressed',x===b?'true':'false');});};});
   var sf=$('#setFlash');sf.value=String(state.settings.flash);
+  /* recorded-voice speed is shared with every stop and the quizzes (voiceRate in nanoHub.v1) */
+  var sr=$('#setRate');function hubGet(){try{return JSON.parse(localStorage.getItem('nanoHub.v1')||'null')||{};}catch(e){return {};}}
+  var cur=+hubGet().voiceRate||1;sr.value=String(cur);if(sr.value!==String(cur))sr.value='1';
+  sr.onchange=function(){var o=hubGet();o.voiceRate=+sr.value;try{localStorage.setItem('nanoHub.v1',JSON.stringify(o));}catch(e){}sayAlways('Seven. 7 is a racing flag. Ready, set, go!','en-US');};
+  $('#rateTest').onclick=function(e){e.preventDefault();sayAlways('Seven. 7 is a racing flag. Ready, set, go!','en-US');};
   $('#setVoice').onchange=function(e){state.settings.voice=e.target.checked;if(!e.target.checked)hush();save();};
   $('#setSpanish').onchange=function(e){state.settings.spanish=e.target.checked;save();};
   sf.onchange=function(){state.settings.flash=+sf.value;save();};

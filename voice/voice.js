@@ -17,6 +17,9 @@ function files(text){var parts=split(text);if(!parts.length)return null;var out=
   for(var i=0;i<parts.length;i++){var f=Object.prototype.hasOwnProperty.call(MAP,parts[i])?MAP[parts[i]]:null;if(!f)return null;out.push(f);}
   return {parts:parts,files:out};}
 function off(){try{var o=JSON.parse(localStorage.getItem('nanoHub.v1')||'null');return !!(o&&o.clipVoice===false);}catch(e){return false;}}
+/* playback speed for the recorded voice, set in Number Garage · Parents (voiceRate in nanoHub.v1). Pitch stays the same. */
+function rate(){try{var o=JSON.parse(localStorage.getItem('nanoHub.v1')||'null'),r=o&&+o.voiceRate;if(r>=0.7&&r<=1.5)return r;}catch(e){}return 1;}
+function setRate(a){var r=rate();try{a.preservesPitch=true;a.webkitPreservesPitch=true;a.mozPreservesPitch=true;}catch(e){}try{a.defaultPlaybackRate=r;a.playbackRate=r;}catch(e){}}
 function has(text){return !off()&&!!files(text);}
 function endIdle(){var r=idleRes;idleRes=null;if(r)r();}
 /* stop(): cut off whatever is playing; the say() that started it resolves with '' so its caller carries on */
@@ -39,10 +42,10 @@ function say(text,opt){
       if(i>=f.files.length)return done('');
       var settled=false,timer=setTimeout(function(){fail();},WAIT);
       function fail(){if(settled)return;settled=true;clearTimeout(timer);if(my!==tok)return res('');try{a.pause();}catch(e){}done(rest());}
-      a.onplaying=function(){clearTimeout(timer);if(!started){started=true;try{opt&&opt.onstart&&opt.onstart();}catch(e){}}};
+      a.onplaying=function(){clearTimeout(timer);if(a.playbackRate!==rate())setRate(a);if(!started){started=true;try{opt&&opt.onstart&&opt.onstart();}catch(e){}}};
       a.onerror=fail;
       a.onended=function(){if(settled)return;settled=true;clearTimeout(timer);if(my!==tok)return res('');i++;setTimeout(next,GAP);};
-      try{a.src=base+f.files[i]+'.mp3';var p=a.play();if(p&&p.catch)p.catch(function(){if(my===tok)fail();else res('');});}catch(e){fail();}
+      try{a.src=base+f.files[i]+'.mp3';setRate(a);var p=a.play();if(p&&p.catch)p.catch(function(){if(my===tok)fail();else res('');});}catch(e){fail();}
     }
     next();
   });

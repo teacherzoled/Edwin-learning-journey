@@ -549,7 +549,7 @@ function parents(){
    '<div class="psec"><h3>'+tr('Settings','Ajustes')+'</h3><div class="settings">'+
      '<label><input type="checkbox" id="setMute"'+(S.mute?'':' checked')+'> '+tr('Sound on (voice and game sounds)','Sonido activado (voz y sonidos del juego)')+'</label>'+
      '<label><input type="checkbox" id="setSpanish"'+(S.spanish?' checked':'')+'> '+tr('Spanish bridge (spoken)','Puente al español (hablado)')+'</label>'+
-     '<p class="note">'+tr('Shared with every stop. Voices are chosen in <a class="plink" href="../numbers/#parents">Number Garage · Parents</a>.','Igual en todas las paradas. Las voces se escogen en <a class="plink" href="../numbers/#parents">Number Garage · Padres</a>.')+'</p>'+
+     '<p class="note">'+tr('Shared with every stop. Voices and the speed of the recorded voice are chosen in <a class="plink" href="../numbers/#parents">Number Garage · Parents</a>.','Igual en todas las paradas. Las voces y la velocidad de la voz grabada se escogen en <a class="plink" href="../numbers/#parents">Number Garage · Padres</a>.')+'</p>'+
      '<div id="resetBox"></div></div></div></div>';
   bindLangSw(parents);
   document.querySelector('#app .screen.parents').insertAdjacentHTML('beforeend',copyLine());
