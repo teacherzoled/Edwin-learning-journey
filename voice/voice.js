@@ -55,5 +55,7 @@ function idle(){return idleP;}
 /* phones only let a page start sound after a touch: wake the player on the first one */
 function unlock(){if(unlocked)return;unlocked=true;try{var a=audio();if(a.paused&&!a.src){a.src='data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQAAAAA=';var p=a.play();if(p&&p.catch)p.catch(function(){});}}catch(e){}}
 try{document.addEventListener('pointerdown',unlock,{capture:true,once:true});document.addEventListener('touchend',unlock,{capture:true,once:true});}catch(e){}
-window.NanoVoice={has:has,say:say,stop:stop,idle:idle,count:Object.keys(MAP).length};
+/* true while a recorded phrase is playing (including the short pause between its sentences) */
+function busy(){return !!idleRes;}
+window.NanoVoice={has:has,say:say,stop:stop,idle:idle,busy:busy,count:Object.keys(MAP).length};
 })();

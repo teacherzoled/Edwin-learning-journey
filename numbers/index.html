@@ -426,7 +426,16 @@ function hush(){sayTok++;try{if(window.NanoVoice)NanoVoice.stop();}catch(e){}try
 
 /* ---------- Timers ---------- */
 var timers=[],ticks=[];
-function later(fn,ms){timers.push(setTimeout(fn,ms));}
+/* Speech must finish before the next round starts or the lap cheer begins; otherwise the new clip cuts the old one off.
+   whenQuiet(fn) waits until nothing has been speaking for a short moment (at most 9 s), then runs fn. */
+function speechBusy(){try{if(window.NanoVoice&&NanoVoice.busy())return true;}catch(e){}try{if(window.speechSynthesis&&(speechSynthesis.speaking||speechSynthesis.pending))return true;}catch(e){}return false;}
+function whenQuiet(fn,ms){var t0=Date.now(),calm=0;(function poll(){
+  if(Date.now()-t0>9000)return fn();
+  if(speechBusy())calm=0;else calm+=100;
+  if(calm>=(ms==null?250:ms))return fn();
+  timers.push(setTimeout(poll,100));})();}
+function isRoundStart(fn){return fn===nextRound||(typeof traceRound==='function'&&fn===traceRound)||(typeof blNext==='function'&&fn===blNext);}
+function later(fn,ms){timers.push(setTimeout(function(){if(isRoundStart(fn))whenQuiet(fn);else fn();},ms));}
 function clearTimers(){timers.forEach(clearTimeout);ticks.forEach(clearInterval);timers=[];ticks=[];}
 
 /* ---------- Picking ---------- */
@@ -461,7 +470,7 @@ function lapStep(){state.lapProg++;
   if(state.lapProg>=5){state.lapProg=0;if(state.laps.date!==today())state.laps={date:today(),count:0};state.laps.count++;save();celebrate();}
   else save();
   var d=$('#dots');if(d)d.innerHTML=dotsHTML();}
-function celebrate(){fanfare();say('Lap complete! Great driving!');
+function celebrate(){fanfare();later(function(){whenQuiet(function(){say('Lap complete! Great driving!',null,true);},150);},300);
   var el=document.createElement('div');el.className='celebrate';el.innerHTML='<div class="banner"><b>Lap '+lapsToday()+'!</b><span>Honk honk!</span></div>';
   document.body.appendChild(el);var close=function(){if(el.parentNode)el.parentNode.removeChild(el);};el.onclick=close;setTimeout(close,2500);}
 

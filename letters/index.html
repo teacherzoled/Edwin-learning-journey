@@ -359,7 +359,16 @@ function recSupport(){
 
 /* ---------- Timers ---------- */
 var timers=[],introT=null;
-function later(fn,ms){timers.push(setTimeout(fn,ms));}
+/* Speech must finish before the next round starts or the lap cheer begins; otherwise the new clip cuts the old one off.
+   whenQuiet(fn) waits until nothing has been speaking for a short moment (at most 9 s), then runs fn. */
+function speechBusy(){try{if(window.NanoVoice&&NanoVoice.busy())return true;}catch(e){}try{if(window.speechSynthesis&&(speechSynthesis.speaking||speechSynthesis.pending))return true;}catch(e){}return false;}
+function whenQuiet(fn,ms){var t0=Date.now(),calm=0;(function poll(){
+  if(Date.now()-t0>9000)return fn();
+  if(speechBusy())calm=0;else calm+=100;
+  if(calm>=(ms==null?250:ms))return fn();
+  timers.push(setTimeout(poll,100));})();}
+function isRoundStart(fn){return fn===nextRound||(typeof traceRound==='function'&&fn===traceRound)||(typeof blNext==='function'&&fn===blNext);}
+function later(fn,ms){timers.push(setTimeout(function(){if(isRoundStart(fn))whenQuiet(fn);else fn();},ms));}
 /* The spoken intro of a screen waits a moment; any tap before then cancels it so it cannot talk over (or cut off) his answer */
 function intro(fn,ms){clearTimeout(introT);introT=setTimeout(fn,ms);}
 function cancelIntro(){clearTimeout(introT);introT=null;}
@@ -386,7 +395,7 @@ function lapStep(){state.lapProg++;
   if(state.lapProg>=5){state.lapProg=0;if(state.laps.date!==today())state.laps={date:today(),count:0};state.laps.count++;save();celebrate();}
   else save();
   var d=$('#dots');if(d)d.innerHTML=dotsHTML();}
-function celebrate(){fanfare();later(function(){sayP('Lap complete! Great driving!');},700);
+function celebrate(){fanfare();later(function(){whenQuiet(function(){sayP('Lap complete! Great driving!');},150);},700);
   var el=document.createElement('div');el.className='celebrate';el.innerHTML='<div class="banner"><b>Lap '+lapsToday()+'!</b><div class="bcar">'+carSVG(C.red,true)+'</div></div>';
   document.body.appendChild(el);var close=function(){if(el.parentNode)el.parentNode.removeChild(el);};el.onclick=close;setTimeout(close,2500);}
 function isStrongList(l){l=(l||[]).slice(-5);return l.length>=5&&l.filter(Boolean).length>=4;}
