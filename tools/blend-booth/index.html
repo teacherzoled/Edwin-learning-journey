@@ -1,0 +1,176 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#2A2E35">
+<meta name="robots" content="noindex">
+<title>Blend Booth</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Andika:wght@700&family=Atkinson+Hyperlegible:wght@400;700&display=swap">
+<style>
+/* Blend Booth: a parent tool (not linked from the hub). Records the part-word blends ("pi", "sa") that
+   Build-Up Tower plays between rows, so the clips can be added to sounds/blends/. */
+:root{--ink:#1D2127;--muted:#56606B;--line:#D2DAE0;--asph:#2A2E35;--lane:#F5C116;--red:#DD3B2A;--green:#23955A;--blue:#2B6BD3;--bg:#ECF0F2}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--ink);font-family:"Atkinson Hyperlegible",Arial,sans-serif;-webkit-tap-highlight-color:transparent}
+.wrap{max-width:560px;margin:0 auto;padding:12px 12px 40px}
+header{display:flex;align-items:center;justify-content:space-between;gap:8px;background:var(--asph);color:#fff;border-radius:16px;padding:10px 14px}
+header h1{margin:0;font-size:20px;color:var(--lane)}
+.langsw{display:flex;border:2px solid var(--lane);border-radius:999px;overflow:hidden}
+.langsw button{font:inherit;font-size:13px;font-weight:700;border:none;background:var(--asph);color:var(--lane);padding:5px 10px;cursor:pointer}
+.langsw button[aria-pressed="true"]{background:var(--lane);color:var(--asph)}
+.card{background:#fff;border:2px solid var(--line);border-radius:16px;padding:12px 14px;margin-top:12px}
+.card h2{margin:0 0 6px;font-size:17px}
+.card p,.card li{font-size:15px;line-height:1.4;margin:4px 0}
+.card ul{margin:4px 0;padding-left:20px}
+.row{display:grid;grid-template-columns:76px 1fr;gap:4px 12px;align-items:center;background:#fff;border:2px solid var(--line);border-radius:16px;padding:10px 12px;margin-top:10px}
+.row.done{border-color:var(--green)}
+.row.live{border-color:var(--red);box-shadow:0 0 0 3px rgba(221,59,42,.25)}
+.big{grid-row:span 2;font-family:Andika,"Andika Kid",Arial,sans-serif;font-size:44px;font-weight:700;text-align:center;line-height:1}
+.from{font-size:13px;color:var(--muted)}
+.btns{display:flex;flex-wrap:wrap;gap:6px}
+button.b{font:inherit;font-size:15px;font-weight:700;border:2px solid var(--asph);border-radius:12px;background:#fff;color:var(--asph);padding:8px 10px;min-height:42px;cursor:pointer}
+button.b.rec{background:var(--red);border-color:var(--red);color:#fff}
+button.b.rec.on{animation:pulse 1s infinite}
+button.b:disabled{opacity:.4}
+@keyframes pulse{50%{opacity:.6}}
+.st{font-size:13px;font-weight:700}
+.st.ok{color:var(--green)}.st.in{color:var(--blue)}
+.send{display:flex;flex-direction:column;gap:8px}
+.send button.b{background:var(--asph);color:var(--lane);font-size:17px;min-height:50px}
+.msg{font-size:14px;color:var(--muted)}
+.warn{color:var(--red);font-weight:700}
+.copy{text-align:center;font-size:12px;color:#55606A;margin:24px 0 0}
+</style>
+</head>
+<body>
+<div class="wrap" id="app"></div>
+<script>
+(function(){
+'use strict';
+/* ---------- Parent language (shared with the hub: nanoHub.v1 lang) ---------- */
+function hub(){try{return JSON.parse(localStorage.getItem('nanoHub.v1')||'null')||{};}catch(e){return {};}}
+function pl(){return hub().lang==='es'?'es':'en';}
+function setPl(l){try{var o=hub();o.lang=l;localStorage.setItem('nanoHub.v1',JSON.stringify(o));}catch(e){}}
+function tr(en,es){return pl()==='es'?es:en;}
+
+/* ---------- The blends Build-Up Tower needs: every part-word between the first letter and the whole word.
+   Read from Blend Road's WORDS list (picture words only, since only they appear in the Tower). ---------- */
+var FALLBACK=['sat','pat','tap','sit','sip','tip','pit','rat','rip','pin','rim','ran','man','map','mat','nap','tin','pan'];
+var BL=[];   /* [{b:'pi',from:['pit','pin'],inApp:false}] */
+function buildList(words){var m={},order=[];
+  words.forEach(function(w){for(var i=2;i<w.length;i++){var p=w.slice(0,i);if(!m[p]){m[p]=[];order.push(p);}if(m[p].indexOf(w)<0)m[p].push(w);}});
+  BL=order.map(function(p){return {b:p,from:m[p],inApp:false};});}
+function loadWords(){if(!window.fetch)return Promise.resolve(FALLBACK);
+  return fetch('../../blend/index.html',{cache:'no-store'}).then(function(r){return r.ok?r.text():'';}).then(function(t){
+    var re=/\{w:'([a-z]+)',(?:say:\{[^}]*\},)?pic:/g,m,out=[];while((m=re.exec(t)))out.push(m[1]);return out.length?out:FALLBACK;}).catch(function(){return FALLBACK;});}
+function checkInApp(){return Promise.all(BL.map(function(x){
+  return fetch('../../sounds/blends/'+x.b+'.mp3',{method:'HEAD',cache:'no-store'}).then(function(r){x.inApp=r.ok;}).catch(function(){});}));}
+
+/* ---------- Saved takes (IndexedDB, this phone only) ---------- */
+var TAKES={};   /* blend -> {blob,type,url} */
+var dbP=null;
+function idb(){if(dbP)return dbP;dbP=new Promise(function(res){try{if(!window.indexedDB)return res(null);var r=indexedDB.open('nanoBlendBooth',1);
+  r.onupgradeneeded=function(){try{r.result.createObjectStore('takes');}catch(e){}};r.onsuccess=function(){res(r.result);};r.onerror=r.onblocked=function(){res(null);};}catch(e){res(null);}});return dbP;}
+function dbPut(k,v){return idb().then(function(db){if(!db)return;return new Promise(function(res){try{var tx=db.transaction('takes','readwrite');tx.objectStore('takes').put(v,k);tx.oncomplete=tx.onerror=tx.onabort=function(){res();};}catch(e){res();}});});}
+function dbDel(k){return idb().then(function(db){if(!db)return;return new Promise(function(res){try{var tx=db.transaction('takes','readwrite');tx.objectStore('takes').delete(k);tx.oncomplete=tx.onerror=tx.onabort=function(){res();};}catch(e){res();}});});}
+function dbLoad(){return idb().then(function(db){if(!db)return;return new Promise(function(res){try{var c=db.transaction('takes','readonly').objectStore('takes').openCursor();
+  c.onsuccess=function(){var r=c.result;if(r){setTake(r.key,r.value.blob,r.value.type);r.continue();}else res();};c.onerror=function(){res();};}catch(e){res();}});});}
+function setTake(k,blob,type){if(TAKES[k]&&TAKES[k].url)URL.revokeObjectURL(TAKES[k].url);TAKES[k]={blob:blob,type:type||blob.type,url:URL.createObjectURL(blob)};}
+
+/* ---------- Playback ---------- */
+var cur=null;
+function stopAll(){if(cur){try{cur.pause();}catch(e){}cur=null;}}
+function play(url){return new Promise(function(res){stopAll();var a=new Audio(url);cur=a;a.onended=a.onerror=function(){res();};var p=a.play();if(p&&p.catch)p.catch(function(){res();});});}
+function hint(b){var seq=b.split('');var i=0;stopAll();
+  (function next(){if(i>=seq.length)return;play('../../sounds/'+seq[i++]+'.mp3').then(function(){setTimeout(next,120);});})();}
+
+/* ---------- Recording ---------- */
+var MIMES=['audio/webm;codecs=opus','audio/webm','audio/mp4','audio/ogg;codecs=opus','audio/ogg'];
+function pickMime(){if(!window.MediaRecorder||!MediaRecorder.isTypeSupported)return '';for(var i=0;i<MIMES.length;i++)if(MediaRecorder.isTypeSupported(MIMES[i]))return MIMES[i];return '';}
+function extFor(t){t=t||'';return t.indexOf('mp4')>=0?'m4a':t.indexOf('ogg')>=0?'ogg':'webm';}
+var stream=null,rec=null,recKey=null,stopTimer=null;
+function getStream(){if(stream)return Promise.resolve(stream);
+  return navigator.mediaDevices.getUserMedia({audio:{echoCancellation:false,noiseSuppression:true,autoGainControl:true}}).then(function(s){stream=s;return s;});}
+function startRec(k){stopAll();
+  getStream().then(function(s){var mime=pickMime(),chunks=[];
+    try{rec=mime?new MediaRecorder(s,{mimeType:mime}):new MediaRecorder(s);}catch(e){rec=new MediaRecorder(s);}
+    recKey=k;rec.ondataavailable=function(e){if(e.data&&e.data.size)chunks.push(e.data);};
+    rec.onstop=function(){var type=rec.mimeType||mime||'audio/webm',blob=new Blob(chunks,{type:type});clearTimeout(stopTimer);var key=recKey;rec=null;recKey=null;
+      if(blob.size>0){setTake(key,blob,type);dbPut(key,{blob:blob,type:type});}render();if(TAKES[key])play(TAKES[key].url);};
+    rec.start();render();stopTimer=setTimeout(stopRec,2500);
+  }).catch(function(){alert(tr('The microphone is blocked. Allow the microphone for this page in the browser settings, then try again.','El micrófono está bloqueado. Permite el micrófono para esta página en la configuración del navegador y vuelve a intentarlo.'));});}
+function stopRec(){if(rec&&rec.state!=='inactive'){try{rec.stop();}catch(e){}}}
+
+/* ---------- Zip (stored, no compression) so all takes go as one file ---------- */
+var CRC=(function(){var t=[],c,n,k;for(n=0;n<256;n++){c=n;for(k=0;k<8;k++)c=c&1?0xEDB88320^(c>>>1):c>>>1;t[n]=c>>>0;}return t;})();
+function crc32(u){var c=0xFFFFFFFF;for(var i=0;i<u.length;i++)c=CRC[(c^u[i])&255]^(c>>>8);return (c^0xFFFFFFFF)>>>0;}
+function makeZip(files){/* files: [{name, data:Uint8Array}] */
+  var enc=new TextEncoder(),parts=[],central=[],off=0;
+  function u16(v){return [v&255,(v>>>8)&255];}function u32(v){return [v&255,(v>>>8)&255,(v>>>16)&255,(v>>>24)&255];}
+  files.forEach(function(f){var nm=enc.encode(f.name),crc=crc32(f.data),sz=f.data.length;
+    var lh=new Uint8Array([].concat(u32(0x04034b50),u16(20),u16(0),u16(0),u16(0),u16(0x21),u32(crc),u32(sz),u32(sz),u16(nm.length),u16(0)));
+    parts.push(lh,nm,f.data);
+    central.push(new Uint8Array([].concat(u32(0x02014b50),u16(20),u16(20),u16(0),u16(0),u16(0),u16(0x21),u32(crc),u32(sz),u32(sz),u16(nm.length),u16(0),u16(0),u16(0),u16(0),u32(0),u32(off))),nm);
+    off+=lh.length+nm.length+sz;});
+  var cs=0;central.forEach(function(c){cs+=c.length;});
+  var end=new Uint8Array([].concat(u32(0x06054b50),u16(0),u16(0),u16(files.length),u16(files.length),u32(cs),u32(off),u16(0)));
+  return new Blob(parts.concat(central,[end]),{type:'application/zip'});}
+function stamp(){var d=new Date();function p(n){return (n<10?'0':'')+n;}return d.getFullYear()+'-'+p(d.getMonth()+1)+'-'+p(d.getDate());}
+function takeFiles(){return Promise.all(BL.filter(function(x){return TAKES[x.b];}).map(function(x){var t=TAKES[x.b];
+  return t.blob.arrayBuffer().then(function(ab){return {name:'blend-'+x.b+'.'+extFor(t.type),data:new Uint8Array(ab),blob:t.blob,type:t.type};});}));}
+function downloadZip(){takeFiles().then(function(fs){if(!fs.length)return;var z=makeZip(fs),a=document.createElement('a');
+  a.href=URL.createObjectURL(z);a.download='blend-booth-'+stamp()+'.zip';document.body.appendChild(a);a.click();setTimeout(function(){URL.revokeObjectURL(a.href);a.remove();},2000);});}
+function shareFiles(){takeFiles().then(function(fs){if(!fs.length)return;
+  var files=fs.map(function(f){return new File([f.blob],f.name,{type:(f.type||'audio/webm').split(';')[0]});});
+  var data={files:files,title:'Blend Booth'};
+  if(navigator.canShare&&navigator.canShare(data))navigator.share(data).catch(function(){});
+  else alert(tr('This phone cannot share several files at once. Use "Download all as one file" instead.','Este teléfono no puede compartir varios archivos a la vez. Usa "Descargar todo en un archivo".'));});}
+
+/* ---------- Screen ---------- */
+var $=function(s){return document.querySelector(s);};
+function render(){
+  var n=BL.filter(function(x){return TAKES[x.b];}).length,live=rec&&rec.state==='recording';
+  var canRec=!!(window.MediaRecorder&&navigator.mediaDevices&&navigator.mediaDevices.getUserMedia);
+  var h='<header><h1>Blend Booth</h1><div class="langsw" role="group" aria-label="Language / Idioma"><button data-lang="en" aria-pressed="'+(pl()==='en')+'">English</button><button data-lang="es" aria-pressed="'+(pl()==='es')+'">Español</button></div></header>';
+  h+='<div class="card"><h2>'+tr('How to record','Cómo grabar')+'</h2><ul>'+
+    tr('<li>Tap <b>Hear p + i</b> to hear the two sounds, then tap <b>Record</b> and say them <b>joined</b> as one smooth sound: <b>"pi"</b> as in <i>pit</i>.</li>'+
+       '<li>Keep the vowel <b>short</b>: "pi" rhymes with the start of <i>pit</i>, not <i>pie</i>. "ra" is the start of <i>rat</i>, not <i>ray</i>.</li>'+
+       '<li>Stop right after the vowel. No "uh", no ending sound.</li>'+
+       '<li>Recording stops by itself after 2½ seconds and plays back. Not happy? Record again.</li>'+
+       '<li>A quiet room helps. Hold the phone about a hand away from your mouth.</li>',
+       '<li>Toca <b>Hear p + i</b> para oír los dos sonidos, luego toca <b>Record</b> y dilos <b>unidos</b> en un solo sonido suave: <b>"pi"</b> como en <i>pit</i>.</li>'+
+       '<li>La vocal es <b>corta</b>: "pi" es el comienzo de <i>pit</i>, no <i>pie</i>. "ra" es el comienzo de <i>rat</i>, no <i>ray</i>.</li>'+
+       '<li>Detente justo después de la vocal. Sin "uh" y sin sonido final.</li>'+
+       '<li>La grabación se detiene sola a los 2½ segundos y se reproduce. ¿No te gusta? Graba otra vez.</li>'+
+       '<li>Ayuda un cuarto callado. Sostén el teléfono a una mano de distancia de la boca.</li>')+
+    '</ul>'+(canRec?'':'<p class="warn">'+tr('This browser cannot record. Open this page in Chrome (Android) or Safari (iPhone).','Este navegador no puede grabar. Abre esta página en Chrome (Android) o Safari (iPhone).')+'</p>')+'</div>';
+  BL.forEach(function(x){var t=TAKES[x.b],me=live&&recKey===x.b;
+    h+='<div class="row'+(t?' done':'')+(me?' live':'')+'"><div class="big">'+x.b+'</div>'+
+      '<div class="from">'+tr('for','para')+' '+x.from.join(', ')+' · '+(t?'<span class="st ok">'+tr('Recorded ✓','Grabado ✓')+'</span>':x.inApp?'<span class="st in">'+tr('Already in the app','Ya está en la app')+'</span>':tr('Not recorded','Sin grabar'))+'</div>'+
+      '<div class="btns"><button class="b" data-hint="'+x.b+'">'+tr('Hear','Oír')+' '+x.b.split('').join(' + ')+'</button>'+
+      '<button class="b rec'+(me?' on':'')+'" data-rec="'+x.b+'"'+(canRec&&(!live||me)?'':' disabled')+'>'+(me?tr('Stop','Parar'):t?tr('Record again','Grabar de nuevo'):tr('Record','Grabar'))+'</button>'+
+      (t?'<button class="b" data-play="'+x.b+'"'+(live?' disabled':'')+'>▶ '+tr('Play','Oír')+'</button><button class="b" data-del="'+x.b+'"'+(live?' disabled':'')+' aria-label="delete">✕</button>':'')+'</div></div>';});
+  h+='<div class="card send"><h2>'+tr('Send them to Claude','Enviarlas a Claude')+' ('+n+' / '+BL.length+')</h2>'+
+    '<p class="msg">'+tr('Your takes are saved on this phone until you delete them, so you can stop and come back. When you are done, download them as one file and attach it in the chat (or save it to Google Drive and say where).','Las grabaciones quedan guardadas en este teléfono hasta que las borres, así que puedes parar y volver. Cuando termines, descárgalas en un solo archivo y adjúntalo en el chat (o guárdalo en Google Drive y di dónde).')+'</p>'+
+    '<button class="b" id="zip"'+(n?'':' disabled')+'>'+tr('Download all as one file (.zip)','Descargar todo en un archivo (.zip)')+'</button>'+
+    '<button class="b" id="share"'+(n?'':' disabled')+'>'+tr('Share the recordings…','Compartir las grabaciones…')+'</button></div>';
+  h+='<p class="copy">&copy; '+new Date().getFullYear()+' Edwin Lopez. All rights reserved.</p>';
+  $('#app').innerHTML=h;
+}
+document.addEventListener('click',function(e){var b=e.target.closest('button');if(!b)return;var d=b.dataset;
+  if(d.lang){setPl(d.lang);render();}
+  else if(d.hint)hint(d.hint);
+  else if(d.rec){if(rec&&recKey===d.rec)stopRec();else if(!rec)startRec(d.rec);}
+  else if(d.play&&TAKES[d.play])play(TAKES[d.play].url);
+  else if(d.del){if(confirm(tr('Delete the recording of "'+d.del+'"?','¿Borrar la grabación de "'+d.del+'"?'))){URL.revokeObjectURL(TAKES[d.del].url);delete TAKES[d.del];dbDel(d.del).then(render);}}
+  else if(b.id==='zip')downloadZip();
+  else if(b.id==='share')shareFiles();
+});
+loadWords().then(function(ws){buildList(ws);return dbLoad();}).then(function(){render();return checkInApp();}).then(render);
+})();
+</script>
+</body>
+</html>

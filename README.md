@@ -14,7 +14,7 @@ Live site: https://teacherzoled.github.io/edwin-learning-journey/
 | `belize-symbols/` | Fly Over Belize | Review of his notes on Independence Day and the national symbols: flag, tapir, toucan, mahogany, black orchid |
 | `health/` | Ambulance Health Run | Review of his Health Education notes in three short roads he picks from: Safe water (12 stops), Germs (7) and Clean hands (11: where germs live, soap and water, the ABC scrub song, hand sanitizer, clean towel, nail clipper) |
 | `letters/` | Letter Road | Letter sounds in the school's order (s, a, t, p, i, r, n, m): Garage (learn), Trace Track (trace the small letter, then the capital), Sound Horn (hear the sound, tap the letter), First Sound Pickup (picture, tap its first letter), Twin Cars (capital to small letter), Say It (parent-scored), plus a starting check |
-| `blend/` | Blend Road | Blending: Drive the Road (learn), Which Road? (hear a word, tap it), Picture Stop (read a word, tap its picture), Build-Up Tower (the school's word pyramid: r, ri, rip, then tap the picture), Read It To Me (parent-scored) |
+| `blend/` | Blend Road | Blending: Drive the Road (learn), Which Road? (hear a word, tap it), Picture Stop (read a word, tap its picture), Build-Up Tower (the school's word pyramid: r, ri, rip, joined with recorded blends, then tap the picture), Read It To Me (parent-scored) |
 | `words/` | Word Parking | Sight words learned whole (I, a, see, one, two, he, she, the, has, my, boy, girl): Park It (hear a word, park on it), Spot the Word (read the sign, find the car that says it), Read and Pick (read "the boy", tap the picture), Read It To Me (parent-scored) |
 
 Stops marked "Coming soon" on the homepage: Sentence Trip (sentences around Belize) and Book Racetrack (first books).
@@ -67,6 +67,12 @@ Stops marked "Coming soon" on the homepage: Sentence Trip (sentences around Beli
 2. To use it in Read and Pick, add a phrase to `PHRASES` with a picture in that file's `PIC`, for example `{t:'the boy has',pic:'...',set:'kid'}`.
 3. Commit and push. New words start switched on; a parent can switch any word off in Word Parking · Parents.
 
+
+## Blend Booth and part-word blends
+
+`tools/blend-booth/` (not linked from the hub) is a parent tool for recording the part-word blends Build-Up Tower plays between rows: "pi" before "pit", "ra" before "rat". It reads the picture words from `blend/index.html`, lists every part-word they need, and marks those already in the app. Takes are kept on that phone (IndexedDB `nanoBlendBooth`) until deleted, and go out as one .zip. Each take is trimmed, levelled and saved as `sounds/blends/<blend>.mp3`.
+
+In the Tower, a middle row plays its sounds and then joins them (/p/ /i/, then "pi"); the next row starts from the blend (“pi”, then /t/) before the whole word. Blend Road fetches only the blends of picture words whose letters are switched on. A blend with no clip leaves that row as before (each sound on its own). New picture words appear in the Booth by themselves.
 
 ## Built-in letter sounds
 

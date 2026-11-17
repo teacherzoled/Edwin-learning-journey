@@ -342,6 +342,13 @@ function loadBundled(){if(!window.fetch)return Promise.resolve();
   return Promise.all(BUNDLED.filter(function(l){return need[l];}).map(function(l){if(REC[l])return null;
     return fetch('../sounds/'+l+'.mp3').then(function(r){return r.ok?r.blob():null;}).then(function(b){if(b&&!REC[l]){setRec(l,b,'');REC[l].bundled=true;}}).catch(function(){});}));}
 function hasRec(l){return !!REC[l];}
+/* Part-word blends ("pi", "sa") for Build-Up Tower, recorded in the Blend Booth (tools/blend-booth/) and kept in ../sounds/blends/<blend>.mp3.
+   Stored in REC as "bl:<blend>". Only the blends of picture words whose letters are all on are fetched; a missing clip leaves the Tower as before. */
+function loadBlends(){if(!window.fetch)return Promise.resolve();var on=(ON)||{},need={};
+  WORDS.forEach(function(W){if(!W.pic||!W.w.split('').every(function(c){return on[c];}))return;for(var i=2;i<W.w.length;i++)need[W.w.slice(0,i)]=true;});
+  return Promise.all(Object.keys(need).map(function(b){var k='bl:'+b;if(REC[k])return null;
+    return fetch('../sounds/blends/'+b+'.mp3').then(function(r){return r.ok?r.blob():null;}).then(function(x){if(x&&!REC[k]){setRec(k,x,'');REC[k].bundled=true;}}).catch(function(){});}));}
+function hasBlend(b){return !!REC['bl:'+b];}
 /* Decode once and trim the silence before and after the sound, so it plays the moment Nano reaches the tile */
 function decodeRec(r){if(r.tried)return Promise.resolve(r);r.tried=true;var a=ac();
   if(!a||!r.blob||!r.blob.arrayBuffer)return Promise.resolve(r);
@@ -683,8 +690,13 @@ function towerRound(){
     opts.map(function(o){return '<button class="pchoice wait" data-v="'+o+'" aria-label="picture" disabled>'+picSVG(WBY[o].pic)+'</button>';}).join(''));
   intro(prompt,350);
   $$('.trow').forEach(function(b){b.onclick=function(){var i=+b.dataset.i;if(busy||i!==row)return;ac();busy=true;b.classList.remove('next');b.classList.add('lit');
-    var spans=$$('span',b),steps=[];
-    for(var j=0;j<i;j++)(function(j){steps.push(function(){spans.forEach(function(s,k){s.classList.toggle('on',k===j);});return tileSound(W,j);});steps.push(function(){return wait(60);});})(j);
+    var spans=$$('span',b),steps=[],from=0;
+    function litTo(m){return function(){spans.forEach(function(s,k){s.classList.toggle('on',k<m);});};}
+    /* Successive blending: the row before comes back as one blended sound ("pi"), then the new sound (/t/). Without a blend clip each sound plays on its own. */
+    if(i>=3&&hasBlend(w.slice(0,i-1))){from=i-1;steps.push(litTo(i-1));steps.push(function(){return playSound('bl:'+w.slice(0,i-1));});steps.push(function(){return wait(60);});}
+    for(var j=from;j<i;j++)(function(j){steps.push(function(){spans.forEach(function(s,k){s.classList.toggle('on',k===j);});return tileSound(W,j);});steps.push(function(){return wait(60);});})(j);
+    /* A middle row ends by joining its sounds: /p/ /i/ then "pi" */
+    if(i>=2&&i<n&&hasBlend(w.slice(0,i))){steps.push(function(){return wait(150);});steps.push(litTo(i));steps.push(function(){return playSound('bl:'+w.slice(0,i));});}
     steps.push(function(){spans.forEach(function(s){s.classList.remove('on');});});
     if(i===n){steps.push(function(){return wait(250);});steps.push(function(){return sayP(cap1(w)+'.');});
       steps.push(function(){built=true;$$('.pchoice').forEach(function(x){x.classList.remove('wait');x.disabled=false;});return sayP('Which picture is it?');});}
@@ -773,7 +785,7 @@ if(state.laps.date!==today()){state.laps={date:today(),count:0};}
 save();
 try{if(synthOK)speechSynthesis.getVoices();}catch(e){}
 render();
-loadRecordings().then(loadBundled).then(function(){if(view==='parents')renderRecLine();});
+loadRecordings().then(loadBundled).then(loadBlends).then(function(){if(view==='parents')renderRecLine();});
 })();
 </script>
 </body>
