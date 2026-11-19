@@ -155,7 +155,7 @@ var app=document.getElementById('app');
 /* ---------- The script (what he says) ---------- */
 var NAME='Edwin Lopez';
 var WORDS=[{w:'pig'},{w:'pen'},{w:'pot'},{w:'pizza'},{w:'police'}];      /* same order on the poster */
-var SENT=[{w:'I',say:'I.'},{w:'see'},{w:'a'},{w:'big',big:true},{w:'pig',pic:'pig'}];
+var SENT=[{w:'I',say:'I.'},{w:'see'},{w:'a',snd:'u'},{w:'big',big:true},{w:'pig',pic:'pig'}];
 var LINES=['Good morning, everyone.','My name is '+NAME+'.','Today I will present on letter P.',
   'Letter P says /p/ as in pig, pen, pot, pizza, and police.','I see a big pig.','Thank you for your attention.'];
 var STOPS=[
@@ -267,11 +267,12 @@ function ttsP(text){return new Promise(function(res){
 function sayP(text){if(S.mute||!S.voice||!text)return Promise.resolve();var V=window.NanoVoice;
   if(V&&V.has(text)){var my=tok;return V.say(text).then(function(rest){if(rest&&my===tok)return ttsP(rest);});}
   return ttsP(text);}
-/* the letter sound: Kathryn J. Davis's Sound City Reading clip in ../../sounds/ (used with permission) */
+/* letter sounds: Kathryn J. Davis's Sound City Reading clips in ../../sounds/ (used with permission).
+   /p/ for the letter; her short-u clip for the word "a" in the sentence, the relaxed "uh" Ava uses when she reads it whole */
 function soundP(l){if(S.mute)return Promise.resolve();return new Promise(function(res){
   var done=false;function fin(){if(!done){done=true;snd=null;res();}}
-  try{var a=new Audio('../../sounds/'+l+'.mp3');snd=a;a.onended=fin;a.onerror=function(){if(!done){done=true;snd=null;ttsP('puh').then(res);}};
-    setTimeout(fin,3500);var p=a.play();if(p&&p.catch)p.catch(function(){if(!done){done=true;snd=null;ttsP('puh').then(res);}});}catch(e){fin();}});}
+  try{var a=new Audio('../../sounds/'+l+'.mp3');snd=a;a.onended=fin;a.onerror=function(){if(!done){done=true;snd=null;ttsP(l==='u'?'uh':'puh').then(res);}};
+    setTimeout(fin,3500);var p=a.play();if(p&&p.catch)p.catch(function(){if(!done){done=true;snd=null;ttsP(l==='u'?'uh':'puh').then(res);}});}catch(e){fin();}});}
 /* run(): a chain of steps, cancelled by hush() or the next run() */
 function run(steps){hush();var my=tok,p=Promise.resolve();
   steps.forEach(function(f){p=p.then(function(){if(my!==tok)return;return f(my);});});
@@ -287,7 +288,7 @@ function lineSteps(i){
     WORDS.forEach(function(w,k){st.push(function(){hiEls('[data-p="'+k+'"]');return sayP(k===WORDS.length-1?'and '+w.w:w.w);});st.push(function(){return wait(120);});});
     st.push(function(){clearHi();});return st;}
   if(i===4&&$('.sent')){var s=[];
-    SENT.forEach(function(w,k){s.push(function(){hiEls('[data-s="'+k+'"]');return sayP(w.say||w.w);});s.push(function(){return wait(220);});});
+    SENT.forEach(function(w,k){s.push(function(){hiEls('[data-s="'+k+'"]');return w.snd?soundP(w.snd):sayP(w.say||w.w);});s.push(function(){return wait(220);});});
     s.push(function(){hiEls('.sw');return wait(250);});s.push(function(){return sayP(LINES[4]);});s.push(function(){clearHi();});return s;}
   if(i===4)return [function(){hiEls('.sline');return sayP(LINES[4]);},function(){clearHi();}];
   return [function(){hiEls('.line .w');return sayP(LINES[i]);},function(){clearHi();}];}
@@ -433,7 +434,7 @@ function render(){S=readShared();clearHi();
   $('#listen').onclick=function(){stopRace();run(lineSteps(cur));};
   $('#race').onclick=function(){if(racing){stopRace();render();}else race();};
   document.querySelectorAll('.pic').forEach(function(b){b.onclick=function(){if(racing)return;var k=+b.dataset.p;run([function(){hiEls('[data-p="'+k+'"]');return sayP(WORDS[k].w);},function(){clearHi();}]);};});
-  document.querySelectorAll('.sw').forEach(function(b){b.onclick=function(){if(racing)return;var k=+b.dataset.s;run([function(){hiEls('[data-s="'+k+'"]');return sayP(SENT[k].say||SENT[k].w);},function(){clearHi();}]);};});
+  document.querySelectorAll('.sw').forEach(function(b){b.onclick=function(){if(racing)return;var k=+b.dataset.s;run([function(){hiEls('[data-s="'+k+'"]');return SENT[k].snd?soundP(SENT[k].snd):sayP(SENT[k].say||SENT[k].w);},function(){clearHi();}]);};});
 }
 
 /* copyright on every screen: a small fixed line, hidden where the Parents screen shows the in-page line */
