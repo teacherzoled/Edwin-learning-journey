@@ -2,7 +2,7 @@
 
 A home for Edwin Jr.'s learning apps, built for a phone. The homepage is a road, and each app is a stop on that road.
 
-Live site: https://teacherzoled.github.io/edwin-learning-journey/
+Live site: https://teacherzoled.github.io/Edwin-learning-journey/
 
 ## What is here
 
@@ -70,7 +70,7 @@ Stops marked "Coming soon" on the homepage: Sentence Trip (sentences around Beli
 
 ## Presentations (hidden)
 
-`presentations/` holds Edwin's class presentations for rehearsal, in any subject. It is **not linked from the hub**: type `/presentations/` after the site address (https://teacherzoled.github.io/edwin-learning-journey/presentations/). The first visit on a phone asks for the family code; once it is right the phone remembers it (`nanoPresent.v1`) and "Lock on this phone" forgets it. The pages also carry `noindex` so search engines skip them. This keeps casual visitors out; it is not real security, because the repository is public and anyone reading it can find the pages.
+`presentations/` holds Edwin's class presentations for rehearsal, in any subject. It is **not linked from the hub**: type `/presentations/` after the site address (https://teacherzoled.github.io/Edwin-learning-journey/presentations/). The first visit on a phone asks for the family code; once it is right the phone remembers it (`nanoPresent.v1`) and "Lock on this phone" forgets it. The pages also carry `noindex` so search engines skip them. This keeps casual visitors out; it is not real security, because the repository is public and anyone reading it can find the pages.
 
 - **The code** is stored as a number (a cyrb53 hash of the code in lower case, spaces trimmed) in `CODE` at the top of `presentations/index.html` and of every presentation page. To change the code, work out the new number with the `h53()` function in `presentations/index.html` and replace it in all those files.
 - **The list** is `LIST` in `presentations/index.html`: folder, subject (English and Spanish), title, due date (YYYY-MM-DD) and the big letters on its card. The card counts down to the due date and says "Presented" after it.
