@@ -68,6 +68,15 @@ Stops marked "Coming soon" on the homepage: Sentence Trip (sentences around Beli
 3. Commit and push. New words start switched on; a parent can switch any word off in Word Parking · Parents.
 
 
+## Presentations (hidden)
+
+`presentations/` holds Edwin's class presentations for rehearsal, in any subject. It is **not linked from the hub**: type `/presentations/` after the site address (https://teacherzoled.github.io/edwin-learning-journey/presentations/). The first visit on a phone asks for the family code; once it is right the phone remembers it (`nanoPresent.v1`) and "Lock on this phone" forgets it. The pages also carry `noindex` so search engines skip them. This keeps casual visitors out; it is not real security, because the repository is public and anyone reading it can find the pages.
+
+- **The code** is stored as a number (a cyrb53 hash of the code in lower case, spaces trimmed) in `CODE` at the top of `presentations/index.html` and of every presentation page. To change the code, work out the new number with the `h53()` function in `presentations/index.html` and replace it in all those files.
+- **The list** is `LIST` in `presentations/index.html`: folder, subject (English and Spanish), title, due date (YYYY-MM-DD) and the big letters on its card. The card counts down to the due date and says "Presented" after it.
+- **Letter P** (`presentations/letter-p/`, Language Art concept map, due 23 Nov 2026): six practice stops, one per line of his script (Listen, then he says it back; Race the whole show plays every stop and gives him his turn after each). The final stop is the finished poster with no script: letter in the middle, the five labelled pictures in the board's order (pig, pen, pot, pizza, police) and the sentence "I see a big pig." underneath. Help reads the next line and lights that part of the poster. "big" is shown with arms-wide arrows, not a picture, so he says the word and not the name of a picture. The /p/ is the Sound City Reading clip in `sounds/p.mp3`. Parents has the script, practice tips, and the presentation rubric (out of 32) to tick on each run, in English and Spanish.
+- **A new presentation:** copy `letter-p/` to a new folder, change `LINES`, `STOPS`, `WORDS`, `SENT` and the poster layout (`SPOTS`, `posterSVG`), add it to `LIST`, and add any new sentences to `tools/voice/voice_list.json` with `"apps":["presentations"]` so they can be given Ava clips (see Recorded voice). Until a clip exists, that line uses the phone voice.
+
 ## Blend Booth and part-word blends
 
 `tools/blend-booth/` (not linked from the hub) is a parent tool for recording the part-word blends Build-Up Tower plays between rows: "pi" before "pit", "ra" before "rat". It reads the picture words from `blend/index.html`, lists every part-word they need, and marks those already in the app. Takes are kept on that phone (IndexedDB `nanoBlendBooth`) until deleted, and go out as one .zip. Each take is trimmed, levelled and saved as `sounds/blends/<blend>.mp3`.

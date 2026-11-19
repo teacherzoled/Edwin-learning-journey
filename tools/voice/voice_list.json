@@ -8774,5 +8774,117 @@
 "apps": [
 "health"
 ]
+},
+{
+"t": "Good morning, everyone.",
+"f": "e14afffae8.mp3",
+"apps": [
+"presentations"
+]
+},
+{
+"t": "My name is Edwin Lopez.",
+"f": "1197b2fdc8.mp3",
+"apps": [
+"presentations"
+]
+},
+{
+"t": "Today I will present on letter P.",
+"f": "f67a001a46.mp3",
+"apps": [
+"presentations"
+]
+},
+{
+"t": "Letter P says",
+"f": "2498099108.mp3",
+"apps": [
+"presentations"
+]
+},
+{
+"t": "as in",
+"f": "a18e6a13cd.mp3",
+"apps": [
+"presentations"
+]
+},
+{
+"t": "pig",
+"f": "2cd4ba9308.mp3",
+"apps": [
+"presentations"
+]
+},
+{
+"t": "pen",
+"f": "31a841af7b.mp3",
+"apps": [
+"presentations"
+]
+},
+{
+"t": "pizza",
+"f": "1f6ccd2be7.mp3",
+"apps": [
+"presentations"
+]
+},
+{
+"t": "police",
+"f": "ee848a3b5b.mp3",
+"apps": [
+"presentations"
+]
+},
+{
+"t": "and police",
+"f": "a09467fd20.mp3",
+"apps": [
+"presentations"
+]
+},
+{
+"t": "big",
+"f": "95c4bea12e.mp3",
+"apps": [
+"presentations"
+]
+},
+{
+"t": "I see a big pig.",
+"f": "694c14261e.mp3",
+"apps": [
+"presentations"
+]
+},
+{
+"t": "Thank you for your attention.",
+"f": "b9a3b8e507.mp3",
+"apps": [
+"presentations"
+]
+},
+{
+"t": "Your turn!",
+"f": "276cf52477.mp3",
+"apps": [
+"presentations"
+]
+},
+{
+"t": "Poster time!",
+"f": "8527e245d3.mp3",
+"apps": [
+"presentations"
+]
+},
+{
+"t": "Now say it all with your poster.",
+"f": "79633301a8.mp3",
+"apps": [
+"presentations"
+]
 }
 ]
