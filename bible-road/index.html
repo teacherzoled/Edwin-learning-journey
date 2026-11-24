@@ -107,6 +107,21 @@ button:focus-visible{outline:3px solid var(--focus);outline-offset:3px}
 .results li.new{background:transparent;border:2px solid var(--tile-edge)}
 .results li small{font-weight:400;margin-left:6px;letter-spacing:1px;font-variant-numeric:tabular-nums}
 .strongline{font-family:var(--display);font-weight:800;font-size:1.15rem;color:var(--go)}
+.section{font-family:var(--display);font-weight:800;font-size:.9rem;letter-spacing:.06em;text-transform:uppercase;color:var(--nano)}
+.show{align-self:center;width:min(300px,100%);background:var(--tile);border:3px solid var(--tile-edge);border-radius:18px;padding:8px}
+.show svg{display:block;width:100%;height:auto}
+.opts.two{grid-template-columns:repeat(2,minmax(0,1fr));max-width:440px;align-self:center;width:100%}
+.opts.yn{grid-template-columns:repeat(2,minmax(0,1fr));max-width:320px;align-self:center;width:100%}
+.opts.yn .tile svg{max-width:92px}
+.routes{display:flex;flex-direction:column;gap:12px;width:100%;max-width:340px}
+.route{width:100%;display:flex;align-items:center;gap:12px;text-align:left;padding:8px 16px}
+.route svg{flex:none;width:52px;height:52px;background:#fff;border-radius:12px}
+.route span{display:flex;flex-direction:column;line-height:1.1}
+.route small{font-family:var(--body);font-weight:700;font-size:.85rem;opacity:.9}
+.route.zech{background:#2E86C1}.route.lost{background:#C0392B}
+.newtag{display:inline-block;font-style:normal;font-weight:800;background:#F4C430;color:#1E2A30;border-radius:999px;padding:0 8px;font-size:.8rem;margin-left:6px;vertical-align:middle}
+.storynote{max-width:60ch;border:2px dashed var(--tile-edge);border-radius:14px;padding:8px 12px;font-size:.95rem;color:var(--muted);text-align:left}
+.storynote b{color:var(--ink)}
 
 @media (max-width:480px){
   .wrap{gap:12px;padding-block:10px 24px}
@@ -119,6 +134,7 @@ button:focus-visible{outline:3px solid var(--focus);outline-offset:3px}
   .tile{padding:6px 4px 6px;border-width:3px;border-radius:16px}
   .tile.right::after{width:32px;height:32px;top:-10px;right:-8px}
   .lane{height:48px}
+  .show{width:min(170px,100%);padding:6px}
   .nano,.finish{width:44px;height:40px}
   .stops{left:22px;right:60px}
   .stops i{width:6px;height:6px;border-width:1px}
@@ -163,14 +179,15 @@ body{margin:0}
     <h1>Nano's Bible Road</h1>
     <div class="scene" id="startScene"></div>
     <div class="plrow pl-slot"></div>
-    <p class="parent" data-es="&lt;b&gt;Para mamá o papá:&lt;/b&gt; Cada pregunta se lee en voz alta y luego se nombra cada dibujo. Su niño toca un dibujo. Toque la bocina roja para oír la pregunta otra vez, o &lt;b&gt;Español&lt;/b&gt; para oírla en español. Cada respuesta correcta lleva a Nano una parada más cerca de la iglesia."><b>For Mom or Dad:</b> Each question is read aloud, then each picture is named. Your child taps a picture. Tap the red speaker to hear the question again, or <b>Español</b> to hear it in Spanish. Every right answer drives Nano one stop closer to church.</p>
-    <button class="go" id="startBtn">Start the drive</button>
+    <p class="parent" data-es="&lt;b&gt;Para mamá o papá:&lt;/b&gt; Escoja un camino para hoy: sus notas de la Palabra de Dios, o una de las historias bíblicas de la clase. Cada pregunta se lee en voz alta y luego se nombra cada dibujo. Su niño toca un dibujo, o &lt;b&gt;sí&lt;/b&gt; o &lt;b&gt;no&lt;/b&gt;. Toque la bocina roja para oír la pregunta otra vez, o &lt;b&gt;Español&lt;/b&gt; para oírla en español. Cada respuesta correcta lleva a Nano una parada más cerca de la iglesia."><b>For Mom or Dad:</b> Pick one road for today: his notes on God's Word, or one of the Bible stories from class. Each question is read aloud, then each picture is named. Your child taps a picture, or <b>yes</b> or <b>no</b>. Tap the red speaker to hear the question again, or <b>Español</b> to hear it in Spanish. Every right answer drives Nano one stop closer to church.</p>
+    <div class="routes" id="routes"></div>
     <p class="strongline" id="startProg" hidden></p>
     <p class="note" id="noVoice" hidden data-es="Este teléfono no puede leer en voz alta. Por favor léale cada pregunta a su niño.">This device cannot read aloud. Please read each question to your child.</p>
   <p class="copy">&copy; <span class="cyear">2026</span> Edwin Lopez. All rights reserved.</p>
   </section>
 
   <section class="card" id="quiz" hidden>
+    <div class="section" id="section"></div>
     <div class="prompt">
       <button class="speak" id="hear" aria-label="Hear the question again"></button>
       <div class="qtext" id="qtext"></div>
@@ -178,6 +195,7 @@ body{margin:0}
     <div class="tools">
       <button class="chip" id="hearEs">Español</button>
     </div>
+    <div class="show" id="show" hidden></div>
     <div class="opts" id="opts"></div>
     <div class="feedback" id="feedback" aria-live="polite"></div>
     <button class="go" id="next" hidden>Drive on!</button>
@@ -191,14 +209,17 @@ body{margin:0}
     <div class="strongline" id="strongline"></div>
     <div class="verse">
       <button class="speak" id="hearVerse" aria-label="Hear the memory verse"></button>
-      <p>Your word is a lamp to my feet and a light to my path.<small>Psalm 119:105 (NKJV)</small></p>
+      <p id="verseText">Your word is a lamp to my feet and a light to my path.<small>Psalm 119:105 (NKJV)</small></p>
     </div>
+    <p class="storynote" id="noteLost" hidden data-es="&lt;b&gt;Nota para los padres:&lt;/b&gt; En la parábola del hijo perdido (Lucas 15), Jesús enseña que Dios quiere perdonar tanto al que se fue lejos como al que se cree bueno. El centro de la historia es el padre paciente, que sigue amando a sus dos hijos y sale a buscarlos. Los niños que &amp;quot;se portan bien&amp;quot; también necesitan el perdón de Dios."><b>Parent note:</b> In the parable of the lost son (Luke 15), Jesus teaches that God wants to forgive both the one who ran far away and the one who thinks he is good. The heart of the story is the patient father, who keeps loving both sons and goes out to bring them home. "Good kids" need God's forgiveness too.</p>
+    <p class="storynote" id="noteZech" hidden data-es="&lt;b&gt;Nota para los padres:&lt;/b&gt; Lucas 1. Zacarías y Elisabet eran ancianos y oraban por un hijo. Dios contestó y cumplió Su promesa: nació Juan, quien preparó al pueblo para la venida del Señor. Pregúntele: ¿Qué le prometió Dios a Zacarías? ¿Cumplió Dios Su promesa?"><b>Parent note:</b> Luke 1. Zechariah and Elizabeth were old and had prayed for a child. God answered and kept His promise: John was born, and he got the people ready for the coming of the Lord. Ask him: What did God promise Zechariah? Did God keep His promise?</p>
     <div>
       <div class="plrow pl-slot"></div>
       <p class="parent" style="margin:0 0 8px" data-es="&lt;b&gt;Revisión para los padres:&lt;/b&gt; verde = firme (correcta al primer intento en 4 de sus últimos 5 viajes), borde rojo = todavía practicando, sin color = necesita más viajes. Las marcas muestran sus últimos 5 intentos; el más reciente va al final."><b>Parent check:</b> green = strong (right on the first try in 4 of his last 5 drives), red outline = still practising, plain = needs more drives. The marks show his last 5 tries, newest last.</p>
       <ul class="results" id="results"></ul>
     </div>
-    <button class="go" id="again">Drive again</button>
+    <button class="go" id="again">Drive this road again</button>
+    <button class="chip" id="otherRoad">Pick another road</button>
   <p class="copy">&copy; <span class="cyear">2026</span> Edwin Lopez. All rights reserved.</p>
   </section>
 </div>
@@ -251,6 +272,131 @@ const ICONS = {
   books1:bookStack(1), books2:bookStack(2), books3:bookStack(3),
   church:'<path d="M50 4 V22 M43 12 H57" stroke="'+K+'" stroke-width="4" stroke-linecap="round"/><path d="M18 50 L50 22 L82 50Z" fill="#C0392B" '+S+'/><rect x="24" y="48" width="52" height="42" fill="#FFF6E5" '+S+'/><path d="M43 90 V70 Q50 61 57 70 V90Z" fill="#7A4A2A" stroke="'+K+'" stroke-width="2"/><circle cx="50" cy="40" r="5" fill="#F2C230" stroke="'+K+'" stroke-width="2"/>'
 };
+/* ---------- people and pictures for the Bible stories (all original) ---------- */
+const S2='stroke="'+K+'" stroke-width="2" stroke-linejoin="round"';
+const SKIN=['#C68B59','#E0A97A','#8D5A3B','#F1C9A0'];
+/* One standing person, full height in a 100x100 box.
+   o: skin, hair ('short'|'long'|'pony'|'bun'|'curly'|'none'), hairCol, top, bottom ('pants'|'skirt'|'dress'), bot, beard, stache, hat, arms ('down'|'out'|'wave'), grey, kidSize */
+function person(o){
+  o=Object.assign({skin:SKIN[0],hair:'short',hairCol:'#2B1A10',top:'#3A7BD5',bottom:'pants',bot:'#2E4057',arms:'down'},o);
+  const sk=o.skin, hc=o.grey?'#C9CED3':o.hairCol;
+  let g='';
+  // long hair behind the head
+  if(o.hair==='long') g+='<path d="M34 24 Q34 8 50 8 Q66 8 66 24 L68 46 Q60 50 50 44 Q40 50 32 46Z" fill="'+hc+'" '+S2+'/>';
+  if(o.hair==='pony') g+='<path d="M64 18 Q78 18 76 34 Q72 30 66 30Z" fill="'+hc+'" '+S2+'/><path d="M36 18 Q22 18 24 34 Q28 30 34 30Z" fill="'+hc+'" '+S2+'/>';
+  if(o.hair==='bun') g+='<circle cx="50" cy="8" r="7" fill="'+hc+'" '+S2+'/>';
+  // legs
+  if(o.bottom==='pants'){
+    g+='<rect x="38" y="64" width="11" height="28" rx="3" fill="'+o.bot+'" '+S2+'/><rect x="51" y="64" width="11" height="28" rx="3" fill="'+o.bot+'" '+S2+'/>';
+  } else {
+    g+='<rect x="41" y="74" width="7" height="18" rx="3" fill="'+sk+'" '+S2+'/><rect x="52" y="74" width="7" height="18" rx="3" fill="'+sk+'" '+S2+'/>';
+  }
+  g+='<path d="M35 92 H49 V97 H33 Q33 92 35 92Z M51 92 H65 Q67 92 67 97 H51Z" fill="#3A3F44" stroke="'+K+'" stroke-width="1.5"/>';
+  // body
+  if(o.bottom==='dress') g+='<path d="M38 40 Q50 36 62 40 L70 78 H30 Z" fill="'+o.top+'" '+S+'/>';
+  else {
+    if(o.bottom==='skirt') g+='<path d="M38 60 H62 L68 78 H32Z" fill="'+o.bot+'" '+S2+'/>';
+    g+='<path d="M37 44 Q37 38 50 38 Q63 38 63 44 L64 66 H36 Z" fill="'+o.top+'" '+S+'/>';
+  }
+  // arms
+  const arm=(d)=>'<path d="'+d+'" fill="none" stroke="'+K+'" stroke-width="9" stroke-linecap="round"/><path d="'+d+'" fill="none" stroke="'+o.top+'" stroke-width="6" stroke-linecap="round"/>';
+  const handAt=(x,y)=>'<circle cx="'+x+'" cy="'+y+'" r="4.2" fill="'+sk+'" stroke="'+K+'" stroke-width="1.5"/>';
+  if(o.arms==='out'){ g+=arm('M38 44 Q28 46 20 40')+arm('M62 44 Q72 46 80 40')+handAt(18,39)+handAt(82,39); }
+  else if(o.arms==='wave'){ g+=arm('M38 44 Q30 54 30 64')+arm('M62 44 Q74 40 76 26')+handAt(30,66)+handAt(77,23); }
+  else { g+=arm('M38 44 Q31 54 31 64')+arm('M62 44 Q69 54 69 64')+handAt(31,66)+handAt(69,66); }
+  // head
+  g+='<rect x="46" y="32" width="8" height="8" fill="'+sk+'"/>';
+  g+='<circle cx="50" cy="22" r="13" fill="'+sk+'" '+S+'/>';
+  if(o.hair==='short'||o.hair==='pony'||o.hair==='bun') g+='<path d="M37 21 Q38 8 50 8 Q62 8 63 21 Q57 15 50 15 Q43 15 37 21Z" fill="'+hc+'" '+S2+'/>';
+  if(o.hair==='long') g+='<path d="M37 22 Q38 8 50 8 Q62 8 63 22 Q60 14 50 15 Q40 14 37 22Z" fill="'+hc+'"/>';
+  if(o.hair==='curly') g+='<g fill="'+hc+'" '+S2+'><circle cx="40" cy="13" r="5"/><circle cx="50" cy="10" r="5.5"/><circle cx="60" cy="13" r="5"/><circle cx="37" cy="20" r="4"/><circle cx="63" cy="20" r="4"/></g>';
+  if(o.grey && o.hair==='none') g+='<path d="M37 24 Q37 18 40 16 M63 24 Q63 18 60 16" fill="none" stroke="#C9CED3" stroke-width="4" stroke-linecap="round"/>';
+  g+='<circle cx="45" cy="22" r="1.8" fill="'+K+'"/><circle cx="55" cy="22" r="1.8" fill="'+K+'"/>';
+  if(o.beard) g+='<path d="M38 24 Q40 40 50 40 Q60 40 62 24 Q58 32 50 31 Q42 32 38 24Z" fill="'+hc+'" '+S2+'/>';
+  if(o.stache||o.beard) g+='<path d="M44 28 Q50 25 56 28 Q50 30 44 28Z" fill="'+hc+'" stroke="'+K+'" stroke-width="1.2"/>';
+  if(!o.beard) g+='<path d="M45 29 Q50 33 55 29" fill="none" stroke="'+K+'" stroke-width="1.8" stroke-linecap="round"/>';
+  if(o.hat==='cap') g+='<path d="M36 17 Q38 5 50 5 Q62 5 64 17Z" fill="'+(o.hatCol||'#D7263D')+'" '+S2+'/><path d="M60 16 H74" stroke="'+K+'" stroke-width="4" stroke-linecap="round"/>';
+  if(o.hat==='police') g+='<path d="M35 15 Q50 1 65 15 Z" fill="#1F3A8A" '+S2+'/><rect x="35" y="14" width="30" height="5" fill="#111" '+S2+'/><circle cx="50" cy="10" r="2.6" fill="#F4C430" stroke="'+K+'" stroke-width="1"/>';
+  return g;
+}
+/* place a whole person drawing at x,y with scale s */
+function at(x,y,s,inner){ return '<g transform="translate('+x+' '+y+') scale('+s+')">'+inner+'</g>'; }
+
+/* ---------- Bible story people (all original). One robed person, full height in a 100x100 box.
+   o: skin, robe, sash, cloth (head cloth colour, or '' for hair), hairCol, beard, grey, arms ('down'|'up'|'out'|'lips'|'write'|'hold'), mood ('happy'|'sad'|'scared'), kid ---------- */
+function robed(o){
+  o=Object.assign({skin:'#C68B59',robe:'#3C9A5F',sash:'#F4C430',cloth:'',hairCol:'#3A2212',arms:'down',mood:'happy'},o);
+  const sk=o.skin, hc=o.grey?'#D9DDE0':o.hairCol;
+  let g='';
+  if(o.long) g+='<path d="M35 24 Q35 8 50 8 Q65 8 65 24 L67 44 Q50 50 33 44Z" fill="'+hc+'" '+S2+'/>';
+  g+='<path d="M38 40 Q50 36 62 40 L70 92 H30 Z" fill="'+o.robe+'" '+S+'/>';
+  g+='<path d="M36 62 H64" stroke="'+o.sash+'" stroke-width="5"/><path d="M30 92 H70" stroke="'+K+'" stroke-width="3"/>';
+  g+='<path d="M38 92 h10 v4 h-12 Z M52 92 h10 l2 4 h-12Z" fill="#7A4A2A" stroke="'+K+'" stroke-width="1.2"/>';
+  const arm=(d)=>'<path d="'+d+'" fill="none" stroke="'+K+'" stroke-width="9" stroke-linecap="round"/><path d="'+d+'" fill="none" stroke="'+o.robe+'" stroke-width="6" stroke-linecap="round"/>';
+  const hand=(x,y)=>'<circle cx="'+x+'" cy="'+y+'" r="4.2" fill="'+sk+'" stroke="'+K+'" stroke-width="1.5"/>';
+  if(o.arms==='up') g+=arm('M40 44 Q30 34 26 18')+arm('M60 44 Q70 34 74 18')+hand(25,15)+hand(75,15);
+  else if(o.arms==='out') g+=arm('M40 44 Q28 46 18 38')+arm('M60 44 Q72 46 82 38')+hand(16,37)+hand(84,37);
+  else if(o.arms==='lips') g+=arm('M40 44 Q32 56 34 66')+hand(34,68);
+  else if(o.arms==='hold') g+=arm('M40 44 Q36 56 44 60')+arm('M60 44 Q64 56 56 60')+hand(45,60)+hand(55,60);
+  else g+=arm('M40 44 Q33 56 34 68')+arm('M60 44 Q67 56 66 68')+hand(34,70)+hand(66,70);
+  g+='<rect x="46" y="32" width="8" height="8" fill="'+sk+'"/>';
+  if(o.cloth) g+='<path d="M34 26 Q34 6 50 6 Q66 6 66 26 L68 42 H32Z" fill="'+o.cloth+'" '+S2+'/>';
+  g+='<circle cx="50" cy="22" r="13" fill="'+sk+'" '+S+'/>';
+  if(o.cloth) g+='<path d="M36 18 Q38 7 50 7 Q62 7 64 18 Q56 13 50 13 Q44 13 36 18Z" fill="'+o.cloth+'" '+S2+'/><path d="M36 15 Q50 10 64 15" stroke="'+(o.band||'#F4C430')+'" stroke-width="2.5" fill="none"/>';
+  else if(!o.bald) g+='<path d="M37 21 Q38 8 50 8 Q62 8 63 21 Q57 15 50 15 Q43 15 37 21Z" fill="'+hc+'" '+S2+'/>';
+  if(o.mood==='sad'){ g+='<path d="M41 20 L47 17.5 M59 20 L53 17.5" stroke="'+K+'" stroke-width="1.6" stroke-linecap="round"/>'; }
+  g+='<circle cx="45" cy="23" r="1.8" fill="'+K+'"/><circle cx="55" cy="23" r="1.8" fill="'+K+'"/>';
+  if(o.mood==='sad') g+='<path d="M48 26 Q47 29 48 30" stroke="#3AA0E8" stroke-width="2" fill="none"/>';
+  if(o.beard) g+='<path d="M38 25 Q40 42 50 42 Q60 42 62 25 Q58 33 50 32 Q42 33 38 25Z" fill="'+hc+'" '+S2+'/>';
+  const m=o.mood==='sad'?'M45 31 Q50 27 55 31':o.mood==='scared'?'M47 30 Q50 26 53 30 Q50 33 47 30Z':'M45 29 Q50 33 55 29';
+  if(!(o.arms==='lips')) g+='<path d="'+m+'" fill="'+(o.mood==='scared'?K:'none')+'" stroke="'+K+'" stroke-width="1.8" stroke-linecap="round"/>';
+  if(o.arms==='lips') g+='<path d="M45 30 H55" stroke="'+K+'" stroke-width="1.8" stroke-linecap="round"/>'+arm('M60 46 Q68 52 56 46')+'<rect x="47.5" y="22" width="5" height="16" rx="2.5" fill="'+sk+'" stroke="'+K+'" stroke-width="1.5"/><circle cx="51" cy="42" r="5.5" fill="'+sk+'" stroke="'+K+'" stroke-width="1.5"/>';
+  return g;
+}
+const R={
+  zech:{robe:'#3C9A5F',sash:'#F4C430',cloth:'',bald:false,grey:true,beard:true},
+  eliz:{robe:'#9B5DE5',sash:'#F07AA8',cloth:'#B98CE0',grey:true},
+  father:{robe:'#C0392B',sash:'#F4C430',cloth:'',grey:true,beard:true},
+  son:{robe:'#E67E22',sash:'#2E86C1',cloth:'#C0392B',band:'#C0392B',skin:'#C68B59'},
+  son2:{robe:'#8B5A2B',sash:'#3C9A5F',cloth:'',hairCol:'#2B1A10'}
+};
+const B={};
+B.temple='<path d="M8 36 L50 10 L92 36Z" fill="#E8D6A8" '+S+'/><rect x="12" y="36" width="76" height="8" fill="#D9C48F" '+S2+'/>'+
+  '<g fill="#F4E9CF" '+S2+'><rect x="16" y="44" width="10" height="40"/><rect x="34" y="44" width="10" height="40"/><rect x="56" y="44" width="10" height="40"/><rect x="74" y="44" width="10" height="40"/></g>'+
+  '<rect x="45" y="58" width="10" height="26" fill="#7A4A2A"/><rect x="8" y="84" width="84" height="8" fill="#D9C48F" '+S2+'/><circle cx="50" cy="26" r="4" fill="#F4C430" stroke="'+K+'" stroke-width="1.5"/>';
+B.oldcouple=at(-14,2,.92,robed(R.zech))+at(22,6,.88,robed(R.eliz));
+B.kids=at(-6,24,.74,person({hair:'short',top:'#3AA0E8',bot:'#2E5AA8'}))+at(32,24,.74,person({hair:'pony',top:'#F07AA8',bottom:'dress'}));
+B.angel='<path d="M34 46 Q4 30 10 8 Q26 20 40 34Z M66 46 Q96 30 90 8 Q74 20 60 34Z" fill="#fff" '+S2+'/><path d="M16 16 Q24 26 34 34 M84 16 Q76 26 66 34" stroke="#BFE6F5" stroke-width="2" fill="none"/>'+
+  robed({robe:'#FDFBF2',sash:'#F4C430',long:true,hairCol:'#E8C46A',arms:'out'})+'<ellipse cx="50" cy="5" rx="11" ry="3.5" fill="none" stroke="#F4C430" stroke-width="3"/>';
+B.babyb='<ellipse cx="50" cy="66" rx="30" ry="20" fill="#F4ECD6" '+S+'/><path d="M26 58 Q50 72 74 58 M28 72 Q50 84 72 72" fill="none" stroke="#C9B48A" stroke-width="3"/><circle cx="50" cy="42" r="15" fill="#E0A97A" '+S+'/><circle cx="45" cy="42" r="1.7" fill="'+K+'"/><circle cx="55" cy="42" r="1.7" fill="'+K+'"/><path d="M46 48 Q50 51 54 48" fill="none" stroke="'+K+'" stroke-width="1.6" stroke-linecap="round"/><path d="M44 30 Q50 25 56 30" fill="none" stroke="#5A3A22" stroke-width="2.5" stroke-linecap="round"/>';
+B.quiet=robed(Object.assign({},R.zech,{arms:'lips'}));
+B.tablet='<rect x="22" y="12" width="56" height="76" rx="5" fill="#C98E55" '+S+'/><rect x="28" y="18" width="44" height="64" rx="3" fill="#E8D6A8" '+S2+'/><path d="M34 34 Q38 28 42 34 T50 34 T58 34 T66 34 M34 48 Q38 42 42 48 T50 48 T58 48 M34 62 Q38 56 42 62 T50 62" fill="none" stroke="#5A3A22" stroke-width="2.5" stroke-linecap="round"/><path d="M70 74 L90 52" stroke="#7A4A2A" stroke-width="4" stroke-linecap="round"/>';
+B.praise=robed(Object.assign({},R.zech,{arms:'up'}))+'<g fill="#F4C430"><path d="M14 30 l3 6 6 1 -5 4 1 6 -5 -3 -5 3 1 -6 -5 -4 6 -1z"/><path d="M84 30 l3 6 6 1 -5 4 1 6 -5 -3 -5 3 1 -6 -5 -4 6 -1z"/></g>';
+function sons(n){ const sc=n===3?.7:.8, y=n===3?28:18, xs=n===1?[10]:n===2?[-6,30]:[-20,8,36]; return xs.map((x,i)=>at(x,y,sc,robed(i%2?R.son2:R.son))).join(''); }
+B.sons1=sons(1); B.sons2=sons(2); B.sons3=sons(3);
+B.sadfather=robed(Object.assign({},R.father,{mood:'sad'}));
+B.gladfather=robed(Object.assign({},R.father,{arms:'up'}));
+B.emptybag='<path d="M30 40 Q20 56 22 74 Q26 90 50 90 Q74 90 78 74 Q80 56 70 40Z" fill="#C9A26B" '+S+'/><path d="M32 40 Q50 30 68 40 Q60 34 50 34 Q40 34 32 40Z" fill="#A8834F" '+S2+'/><path d="M38 34 Q34 22 42 18 M62 34 Q66 22 58 18" fill="none" stroke="#7A4A2A" stroke-width="3"/>'+
+  '<path d="M40 60 Q50 54 60 60 M38 72 Q50 66 62 72" fill="none" stroke="#A8834F" stroke-width="2.5"/><text x="50" y="80" text-anchor="middle" font-family="Baloo 2,Arial,sans-serif" font-weight="800" font-size="18" fill="#5A3A22">0</text>';
+B.fullbag='<path d="M28 38 Q14 56 18 74 Q22 92 50 92 Q78 92 82 74 Q86 56 72 38Z" fill="#C9A26B" '+S+'/><path d="M36 38 Q50 30 64 38" fill="none" stroke="#7A4A2A" stroke-width="5"/>'+
+  '<g fill="#F4C430" stroke="'+K+'" stroke-width="1.8"><circle cx="40" cy="28" r="9"/><circle cx="58" cy="24" r="9"/><circle cx="50" cy="14" r="8"/></g><text x="50" y="76" text-anchor="middle" font-family="Baloo 2,Arial,sans-serif" font-weight="800" font-size="22" fill="#5A3A22">$</text>';
+B.pig='<path d="M80 52 Q92 48 88 40" fill="none" stroke="'+K+'" stroke-width="3" stroke-linecap="round"/><ellipse cx="54" cy="58" rx="32" ry="22" fill="#F7B6C8" '+S+'/>'+
+  '<rect x="34" y="74" width="8" height="14" rx="2" fill="#F7B6C8" '+S2+'/><rect x="64" y="74" width="8" height="14" rx="2" fill="#F7B6C8" '+S2+'/><circle cx="26" cy="50" r="16" fill="#F7B6C8" '+S+'/>'+
+  '<path d="M22 36 L18 26 L30 34Z M34 38 L38 28 L40 40Z" fill="#F7B6C8" '+S2+'/><ellipse cx="16" cy="54" rx="7" ry="5.5" fill="#F48FB1" '+S2+'/><circle cx="14" cy="54" r="1.4" fill="'+K+'"/><circle cx="18.5" cy="54" r="1.4" fill="'+K+'"/><circle cx="26" cy="45" r="2" fill="'+K+'"/>';
+B.chicken='<path d="M30 60 Q24 32 46 30 Q58 28 62 40 Q80 34 86 46 Q90 72 64 80 H42 Q30 78 30 60Z" fill="#fff" '+S+'/><path d="M44 30 Q42 20 48 18 Q50 24 54 20 Q56 26 52 30Z" fill="#D7263D" '+S2+'/>'+
+  '<path d="M30 44 L18 48 L30 52Z" fill="#F4C430" '+S2+'/><path d="M30 56 Q26 64 32 66" fill="#D7263D"/><circle cx="40" cy="42" r="2.4" fill="'+K+'"/><path d="M56 56 Q66 50 76 58 Q66 68 56 62Z" fill="#E8EEF2" '+S2+'/>'+
+  '<path d="M46 80 V92 M42 92 H50 M60 80 V92 M56 92 H64" stroke="#E0A800" stroke-width="3" stroke-linecap="round"/>';
+B.hug=at(-18,0,1,robed(Object.assign({},R.father,{arms:'out'})))+at(26,14,.84,robed(Object.assign({},R.son,{arms:'out'})))+'<path d="M50 10 c-4 -6 -12 -2 -8 4 l8 8 8 -8 c4 -6 -4 -10 -8 -4z" fill="#D7263D" stroke="'+K+'" stroke-width="1.2"/>';
+B.party='<path d="M12 4 V40 M36 6 V36" stroke="'+K+'" stroke-width="1.5"/><ellipse cx="12" cy="16" rx="9" ry="12" fill="#D7263D" '+S2+'/><ellipse cx="36" cy="16" rx="9" ry="12" fill="#3AA0E8" '+S2+'/><ellipse cx="86" cy="18" rx="9" ry="12" fill="#F4C430" '+S2+'/><path d="M86 30 V44" stroke="'+K+'" stroke-width="1.5"/>'+
+  '<path d="M8 68 H92 V76 H8Z" fill="#C98E55" '+S2+'/><path d="M16 76 V92 M84 76 V92" stroke="'+K+'" stroke-width="4"/>'+
+  '<ellipse cx="34" cy="64" rx="14" ry="5" fill="#fff" '+S2+'/><path d="M24 62 Q34 46 44 62Z" fill="#E89A4A" '+S2+'/><ellipse cx="66" cy="64" rx="14" ry="5" fill="#fff" '+S2+'/><g fill="#F28A1E" stroke="'+K+'" stroke-width="1.2"><circle cx="60" cy="58" r="5"/><circle cx="70" cy="58" r="5"/><circle cx="65" cy="52" r="5"/></g>'+
+  '<g fill="#F07AA8"><rect x="50" y="26" width="4" height="4" transform="rotate(20 52 28)"/><rect x="60" y="14" width="4" height="4"/><rect x="22" y="44" width="4" height="4" transform="rotate(30 24 46)"/><rect x="74" y="40" width="4" height="4"/></g>';
+B.walkhome=at(54,44,.46,'<path d="M10 46 L50 16 L90 46Z" fill="#E8C48A" '+S+'/><rect x="18" y="46" width="64" height="44" fill="#F4E1B8" '+S+'/><rect x="44" y="62" width="14" height="28" fill="#7A4A2A" '+S2+'/>')+at(-4,8,.86,robed(Object.assign({},R.son,{robe:'#B0703A',mood:'sad'})))+'<path d="M4 96 H96" stroke="#C9B48A" stroke-width="4" stroke-linecap="round"/>';
+function nameTag(n){ return '<rect x="8" y="26" width="84" height="48" rx="8" fill="#fff" '+S+'/><rect x="8" y="26" width="84" height="12" rx="6" fill="#3A7BD5"/><text x="50" y="66" text-anchor="middle" font-family="Andika,Century Gothic,Arial,sans-serif" font-weight="700" font-size="22" fill="#1E2A30">'+n+'</text>'; }
+B.nJohn=nameTag('John'); B.nNoah=nameTag('Noah'); B.nAdam=nameTag('Adam');
+Object.assign(ICONS,B);
+ICONS.yes='<circle cx="50" cy="50" r="40" fill="#25915A" '+S+'/><path d="M30 52 L44 66 L72 36" fill="none" stroke="#fff" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>';
+ICONS.no='<circle cx="50" cy="50" r="40" fill="#D7263D" '+S+'/><path d="M34 34 L66 66 M66 34 L34 66" stroke="#fff" stroke-width="10" stroke-linecap="round"/>';
 function svg(name, extra){return '<svg viewBox="0 0 100 100" aria-hidden="true"'+(extra||'')+'>'+ICONS[name]+'</svg>';}
 const SPK='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9h4l5-4v14l-5-4H4z" fill="currentColor"/><path d="M16 8.5a5 5 0 0 1 0 7M18.5 6a8.5 8.5 0 0 1 0 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>';
 
@@ -260,8 +406,18 @@ const LBL = {
   tree:['tree','the tree','el árbol'], bulb:['light','the light','la luz'], house:['house','the house','la casa'],
   ark:['ark','the ark','el arca'], books1:['one','one','uno'], books2:['two','two','dos'], books3:['three','three','tres'],
   earth:['world','the world','el mundo'], cross:['cross','the cross','la cruz'], crown:['crown','the crown','la corona'],
-  dove:['dove','the dove','la paloma'], stable:['stable','the stable','el establo'], river:['river','the river','el río']
+  dove:['dove','the dove','la paloma'], stable:['stable','the stable','el establo'], river:['river','the river','el río'],
+  yes:['Yes','yes','sí'], no:['No','no','no'],
+  temple:['Temple','the Temple','el templo'], oldcouple:['old man and woman','the old man and woman','los ancianos'], kids:['children','the children','los niños'],
+  angel:['angel','the angel','el ángel'], babyb:['baby','the baby','el bebé'], tablet:['writing tablet','the writing tablet','la tablilla'],
+  nJohn:['John','John','Juan'], nNoah:['Noah','Noah','Noé'], nAdam:['Adam','Adam','Adán'],
+  sons1:['one son','one son','un hijo'], sons2:['two sons','two sons','dos hijos'], sons3:['three sons','three sons','tres hijos'],
+  sadfather:['sad father','the sad father','el padre triste'], gladfather:['happy father','the happy father','el padre feliz'],
+  emptybag:['empty bag','the empty money bag','la bolsa vacía'], fullbag:['full bag','the bag full of money','la bolsa llena'],
+  pig:['pig','the pig','el cerdo'], chicken:['chicken','the chicken','la gallina'], dog:['dog','the dog','el perro'],
+  hug:['hug','the father hugging his son','el abrazo'], party:['party','the party','la fiesta']
 };
+ICONS.dog='<path d="M30 92 Q26 60 44 54 L62 54 Q76 58 76 92Z" fill="#B07A45" '+S+'/><path d="M76 82 Q90 76 88 64" fill="none" stroke="#B07A45" stroke-width="6" stroke-linecap="round"/><circle cx="50" cy="38" r="20" fill="#C48B55" '+S+'/><path d="M32 26 Q22 30 24 50 Q32 46 36 34Z" fill="#7A4A2A" '+S2+'/><path d="M68 26 Q78 30 76 50 Q68 46 64 34Z" fill="#7A4A2A" '+S2+'/><circle cx="43" cy="36" r="2.6" fill="'+K+'"/><circle cx="57" cy="36" r="2.6" fill="'+K+'"/><ellipse cx="50" cy="45" rx="5" ry="3.5" fill="'+K+'"/>';
 
 const QS_ALL = [
   {text:"Which one is the Bible, God's special book? Tap the Bible.", es:"¿Cuál es la Biblia, el libro especial de Dios? Toca la Biblia.", answer:'bible', opts:['bible','car','ball'], ok:"The Bible is a special book. It is the Word of God."},
@@ -278,8 +434,45 @@ const QS_ALL = [
   {text:"The crown shows God the Father. He made the world. Tap the crown.", es:"La corona representa a Dios el Padre. Él hizo el mundo. Toca la corona.", answer:'crown', opts:['crown','cross','dove'], ok:"The crown shows God the Father."},
   {text:"The dove shows God the Holy Spirit. He helps us be kind and loving. Tap the dove.", es:"La paloma representa a Dios el Espíritu Santo. Él nos ayuda a ser amables. Toca la paloma.", answer:'dove', opts:['dove','crown','cross'], ok:"The dove shows God the Holy Spirit. One God: the Father, the Son, and the Holy Spirit."}
 ];
+/* Zechariah (Luke 1) and The Lost Son (Luke 15), from his class story pages. Types: pick (default) and yesno; show = picture above yes/no. */
+const ZECH=[
+  {id:'z-priest', text:"Zechariah was a priest. He worked in God's Temple. Tap the Temple.", es:"Zacarías era sacerdote. Trabajaba en el templo de Dios. Toca el templo.", answer:'temple', opts:['temple','house','ark'], ok:"Zechariah worked in God's Temple."},
+  {id:'z-obey', type:'yesno', show:'oldcouple', text:"Zechariah and his wife Elizabeth loved God and obeyed Him. Did they obey God?", es:"Zacarías y su esposa Elisabet amaban a Dios y le obedecían. ¿Obedecían a Dios?", answer:'yes', ok:"Yes! Zechariah and Elizabeth obeyed God."},
+  {id:'z-old', text:"Zechariah and Elizabeth were very old, and they had no children. Tap the old man and woman.", es:"Zacarías y Elisabet eran muy ancianos y no tenían hijos. Toca a los ancianos.", answer:'oldcouple', opts:['oldcouple','kids','babyb'], ok:"They were very old, and they had no children."},
+  {id:'z-angel', text:"One day, an angel came to Zechariah in the Temple. Tap the angel.", es:"Un día, un ángel visitó a Zacarías en el templo. Toca el ángel.", answer:'angel', opts:['angel','dove','lamp'], ok:"An angel came to Zechariah."},
+  {id:'z-prayer', type:'yesno', show:'angel', text:"The angel said, Don't be afraid! God heard your prayer. Did God hear Zechariah's prayer?", es:"El ángel dijo: ¡No tengas miedo! Dios oyó tu oración. ¿Dios oyó la oración de Zacarías?", answer:'yes', ok:"Yes! God heard his prayer."},
+  {id:'z-baby', text:"God promised them a baby boy. Tap the baby.", es:"Dios les prometió un bebé. Toca al bebé.", answer:'babyb', opts:['babyb','ball','lamp'], ok:"God gave Zechariah and Elizabeth a baby boy!"},
+  {id:'z-quiet', type:'yesno', show:'quiet', text:"Zechariah did not believe the angel. So he could not talk until the baby was born. Could Zechariah talk?", es:"Zacarías no le creyó al ángel. Por eso no pudo hablar hasta que nació el bebé. ¿Podía hablar Zacarías?", answer:'no', ok:"No. Zechariah could not talk until the baby was born."},
+  {id:'z-tablet', text:"Zechariah wrote on a writing tablet. Tap the writing tablet.", es:"Zacarías escribió en una tablilla. Toca la tablilla.", answer:'tablet', opts:['tablet','mango','car'], ok:"He wrote on a writing tablet."},
+  {id:'z-john', text:"He wrote, His name is John. Tap the name John.", es:"Él escribió: Su nombre es Juan. Toca el nombre Juan.", answer:'nJohn', opts:['nJohn','nNoah','nAdam'], ok:"His name is John!"},
+  {id:'z-praise', type:'yesno', show:'praise', text:"Then Zechariah could talk again, and he praised God! Did Zechariah praise God?", es:"Entonces Zacarías pudo hablar otra vez, ¡y alabó a Dios! ¿Alabó Zacarías a Dios?", answer:'yes', ok:"Yes! Zechariah praised God. God keeps His promises."}
+];
+const LOST=[
+  {id:'l-two', text:"Jesus told a story about a father and his two sons. Tap two sons.", es:"Jesús contó una historia de un padre y sus dos hijos. Toca dos hijos.", answer:'sons2', opts:['sons1','sons2','sons3'], ok:"Two sons! A father and his two sons."},
+  {id:'l-sad', text:"The younger son took his share of his father's things and went far away. His father was sad. Tap the sad father.", es:"El hijo menor tomó su parte de las cosas de su padre y se fue lejos. Su padre estaba triste. Toca al padre triste.", answer:'sadfather', opts:['sadfather','gladfather'], ok:"His father was sad when his son left."},
+  {id:'l-money', text:"He spent all his money, and his new friends forgot about him. Tap the empty money bag.", es:"Gastó todo su dinero, y sus nuevos amigos se olvidaron de él. Toca la bolsa vacía.", answer:'emptybag', opts:['emptybag','fullbag'], ok:"His money ran out. The bag was empty."},
+  {id:'l-pigs', text:"He got a job feeding pigs. Tap the pig.", es:"Consiguió un trabajo dando de comer a los cerdos. Toca el cerdo.", answer:'pig', opts:['pig','chicken','dog'], ok:"He had to feed the pigs."},
+  {id:'l-hungry', type:'yesno', show:'pig', text:"He was so hungry, he wanted to eat the pigs' food! Was he hungry?", es:"Tenía tanta hambre que quería comer la comida de los cerdos. ¿Tenía hambre?", answer:'yes', ok:"Yes! He was very hungry."},
+  {id:'l-sorry', type:'yesno', show:'walkhome', text:"He said, I have been so silly. I will go back to my father and say sorry. Did he go home to say sorry?", es:"Él dijo: He sido muy tonto. Volveré a mi padre y le pediré perdón. ¿Regresó a casa a pedir perdón?", answer:'yes', ok:"Yes! He went home to say sorry."},
+  {id:'l-hug', text:"His father saw him coming. He ran to his son and hugged him! Tap the father hugging his son.", es:"Su padre lo vio venir. ¡Corrió hacia su hijo y lo abrazó! Toca al padre que abraza a su hijo.", answer:'hug', opts:['hug','sadfather','pig'], ok:"The father ran and hugged his son. He welcomed him home!"},
+  {id:'l-party', text:"The father threw a party, because his son was home. Tap the party.", es:"El padre hizo una fiesta porque su hijo regresó a casa. Toca la fiesta.", answer:'party', opts:['party','emptybag','temple'], ok:"A party! There is great joy in heaven when people come back to God."},
+  {id:'l-forgive', type:'yesno', show:'hug', text:"God is like the father in the story. When we say sorry, does God forgive us?", es:"Dios es como el padre de la historia. Cuando pedimos perdón, ¿Dios nos perdona?", answer:'yes', ok:"Yes! God loves us. When we say sorry, God forgives us and welcomes us home."}
+];
+const ROUTES={
+  notes:{name:"God's Word", list:QS_ALL, art:'bible', cls:'', sec:"God's Word", first:true,
+    verse:'Your word is a lamp to my feet and a light to my path.<small>Psalm 119:105 (NKJV)</small>',
+    say:"Let's say our verse. Your word is a lamp to my feet, and a light to my path. Psalm 119, verse 105.",
+    again:"Your word is a lamp to my feet, and a light to my path. Psalm 119, verse 105."},
+  zech:{name:'Zechariah', list:ZECH, art:'angel', cls:'zech', sec:'Zechariah', isNew:true, keepOrder:true, note:'noteZech',
+    verse:'God always keeps His promises.<small>Luke 1</small>',
+    say:"Zechariah and Elizabeth were very old. An angel told Zechariah that God heard his prayer, and that they would have a baby boy. Zechariah did not believe, so he could not talk. When the baby was born, he wrote, His name is John. Then he could talk, and he praised God. God always keeps His promises."},
+  lost:{name:'The Lost Son', list:LOST, art:'hug', cls:'lost', sec:'The Lost Son', isNew:true, keepOrder:true, note:'noteLost',
+    verse:'God loves us and forgives us when we say sorry.<small>Luke 15</small>',
+    say:"Jesus told a story about a father and two sons. The younger son went far away and spent all his money. He was so hungry, he fed pigs. He said, I will go home and say sorry. His father ran and hugged him, and threw a party. God loves us like that father. When we say sorry, God forgives us and welcomes us home."}
+};
+const ORDER=['notes','zech','lost'];
 const PRAISE=["Yes! Great job!","That's right!","Super! Nano drives on!","You got it!","Well done!"];
-const N=QS_ALL.length;
+let route='notes', N=QS_ALL.length;
 let QS=QS_ALL;
 
 const $=id=>document.getElementById(id);
@@ -333,7 +526,8 @@ function stopSpeech(){ seqTok++; try{ if(window.NanoVoice) NanoVoice.stop(); }ca
 
 // road
 const stops=$('stops');
-for(let i=0;i<N;i++){ const d=document.createElement('i'); stops.appendChild(d); }
+function buildStops(){ stops.innerHTML=''; for(let i=0;i<N;i++) stops.appendChild(document.createElement('i')); }
+buildStops();
 $('nano').innerHTML=svg('car');
 $('finish').innerHTML=svg('church');
 function setRoad(done){
@@ -361,15 +555,19 @@ function readQuestion(lang){
 
 function showQuestion(){
   const q=QS[idx]; locked=false;
+  $('section').textContent=ROUTES[route].sec;
   $('qtext').textContent=q.text;
   $('feedback').textContent=''; $('feedback').className='feedback';
   $('next').hidden=true; $('esNote').hidden=true;
+  const sh=$('show'); if(q.show){ sh.hidden=false; sh.innerHTML=svg(q.show); } else { sh.hidden=true; sh.innerHTML=''; }
   const box=$('opts'); box.innerHTML='';
-  shuffle(q.opts).forEach(k=>{
+  const yn=q.type==='yesno', opts=yn?['yes','no']:q.opts;
+  box.classList.toggle('yn',yn); box.classList.toggle('two',!yn&&opts.length===2);
+  (yn?opts:shuffle(opts)).forEach(k=>{
     const b=document.createElement('button');
     b.className='tile'; b.dataset.k=k; b.id='opt-'+k;
     b.setAttribute('aria-label',LBL[k][0]);
-    b.innerHTML=svg(k)+'<span>'+LBL[k][0]+'</span>';
+    b.innerHTML=svg(k)+(/^n[A-Z]/.test(k)?'':'<span>'+LBL[k][0]+'</span>');
     b.addEventListener('click',()=>choose(b));
     box.appendChild(b);
   });
@@ -390,6 +588,7 @@ function choose(b){
     setRoad(idx+1);
     $('next').hidden=false;
     $('next').textContent = idx===N-1 ? 'Finish the drive!' : 'Drive on!';
+    try{ $('next').scrollIntoView({block:'nearest',behavior:'smooth'}); }catch(e){}
     speakSeq([{text:p},{text:q.ok}],'en');
   } else {
     b.classList.add('wrong'); b.disabled=true;
@@ -407,39 +606,59 @@ const PKEY='nanoQuiz.bible.v1';
 function loadP(){ try{ const o=JSON.parse(localStorage.getItem(PKEY)||'null'); if(o&&o.hist) return o; }catch(e){} return {hist:{},drives:{date:'',count:0},total:0}; }
 function saveP(p){ try{ localStorage.setItem(PKEY,JSON.stringify(p)); }catch(e){} }
 function todayStr(){ const d=new Date(); return d.getFullYear()+'-'+(d.getMonth()+1)+'-'+d.getDate(); }
-function recordQ(id,first){ const p=loadP(); p.hist[id]=(p.hist[id]||[]).concat([first?1:0]).slice(-5); p.total=N; saveP(p); }
-function recordDrive(){ const p=loadP(), t=todayStr(); if(!p.drives||p.drives.date!==t) p.drives={date:t,count:0}; p.drives.count++; p.total=N; saveP(p); }
+function recordQ(id,first){ const p=loadP(); p.hist[id]=(p.hist[id]||[]).concat([first?1:0]).slice(-5); p.total=TOTAL; saveP(p); }
+function recordDrive(){ const p=loadP(), t=todayStr(); if(!p.drives||p.drives.date!==t) p.drives={date:t,count:0}; p.drives.count++; p.total=TOTAL; saveP(p); }
 function qState(h){ h=h||[]; if(h.length>=5&&h.filter(Boolean).length>=4) return 'strong'; return h.some(x=>!x)?'again':'new'; }
 function progLine(){ const p=loadP(), ids=CANON.map(q=>QID(q)); if(!ids.some(i=>p.hist[i])) return '';
   const strong=ids.filter(i=>qState(p.hist[i])==='strong').length, d=(p.drives&&p.drives.date===todayStr())?p.drives.count:0;
-  return '\u2605 '+strong+tr(' of ',' de ')+N+tr(' strong',' firmes')+(d?' \u00b7 '+d+tr(' drive'+(d>1?'s':'')+' today',' viaje'+(d>1?'s':'')+' hoy'):''); }
+  return '\u2605 '+strong+tr(' of ',' de ')+TOTAL+tr(' strong (all roads)',' firmes (todos los caminos)')+(d?' \u00b7 '+d+tr(' drive'+(d>1?'s':'')+' today',' viaje'+(d>1?'s':'')+' hoy'):''); }
 function progChips(){ const p=loadP();
-  return CANON.map(q=>{ const id=QID(q), h=p.hist[id]||[];
+  return ROUTES[route].list.map(q=>{ const id=QID(q), h=p.hist[id]||[];
     return '<li class="'+qState(h)+'">'+QLABEL(q)+(h.length?'<small>'+h.map(x=>x?'\u2713':'\u2717').join('')+'</small>':'')+'</li>'; }).join(''); }
 function showStartProg(){ const el=$('startProg'), t=progLine(); el.textContent=t; el.hidden=!t; }
+function routeLine(r){ const p=loadP(), ids=ROUTES[r].list.map(QID); if(!ids.some(i=>p.hist[i])) return '';
+  return '\u2605 '+ids.filter(i=>qState(p.hist[i])==='strong').length+' of '+ids.length+' strong'; }
 const BKEY={bible:'The Bible',lamp:'Lamp',feet:'Feet',bulb:'Light for my path',books2:'Two parts',earth:'God made the world',tree:'Adam and Eve',ark:"Noah's ark",stable:'Baby Jesus',river:'Jesus baptized',cross:'The cross',crown:'God the Father',dove:'Holy Spirit'};
-const CANON=QS_ALL, QID=q=>q.answer, QLABEL=q=>BKEY[q.answer]||LBL[q.answer][0];
+/* Progress ids: the first road keeps its old ids (the answer picture), so his saved tries carry over; the story roads use their own ids. */
+const CANON=QS_ALL.concat(ZECH,LOST), TOTAL=CANON.length, QID=q=>q.id||q.answer;
+const SKEY_LABEL={'z-priest':'Temple','z-obey':'They obeyed God','z-old':'Very old','z-angel':'The angel','z-prayer':'God heard','z-baby':'A baby boy','z-quiet':'Could not talk','z-tablet':'Writing tablet','z-john':'His name is John','z-praise':'Praised God',
+  'l-two':'Two sons','l-sad':'Sad father','l-money':'Money ran out','l-pigs':'Fed the pigs','l-hungry':'So hungry','l-sorry':'Went home to say sorry','l-hug':'Father hugged him','l-party':'The party','l-forgive':'God forgives'};
+const QLABEL=q=>q.id?SKEY_LABEL[q.id]:(BKEY[q.answer]||LBL[q.answer][0]);
 
 function showEnd(){
   $('quiz').hidden=true; $('end').hidden=false;
   const first=tries.filter(t=>t===1).length;
   recordDrive();
+  const R=ROUTES[route];
   $('stars').textContent = 'This drive: '+first+' of '+N+' right on the first try';
   $('strongline').textContent = progLine();
   $('results').innerHTML = progChips();
-  speakSeq([{text:"Hooray! Nano made it to church!"},{text:"Let's say our verse. Your word is a lamp to my feet, and a light to my path. Psalm 119, verse 105."}],'en');
+  $('verseText').innerHTML = R.verse;
+  $('noteLost').hidden = R.note!=='noteLost'; $('noteZech').hidden = R.note!=='noteZech';
+  speakSeq([{text:"Hooray! Nano made it to church!"},{text:R.say}],'en');
 }
 
-function begin(){
-  QS=[QS_ALL[0]].concat(shuffle(QS_ALL.slice(1)));
+/* The story roads keep the story's order; God's Word starts with the Bible, then mixes the rest. */
+function begin(r){
+  if(r) route=r;
+  const R=ROUTES[route];
+  QS = R.keepOrder ? R.list.slice() : [R.list[0]].concat(shuffle(R.list.slice(1)));
+  N=QS.length; buildStops();
   idx=0; tries=[]; setRoad(0);
   $('start').hidden=true; $('end').hidden=true; $('quiz').hidden=false;
   showQuestion();
 }
 
+function drawRoutes(){
+  $('routes').innerHTML=ORDER.map(r=>{ const R=ROUTES[r], pl=routeLine(r);
+    return '<button class="go route '+R.cls+'" data-r="'+r+'">'+svg(R.art)+'<span><b>'+R.name+(R.isNew?'<i class="newtag">new</i>':'')+'</b>'+
+      '<small>'+R.list.length+' stops'+(pl?' · '+pl:'')+'</small></span></button>'; }).join('');
+  $('routes').querySelectorAll('.route').forEach(b=>b.addEventListener('click',()=>begin(b.dataset.r)));
+}
+drawRoutes();
 showStartProg();
-$('startBtn').addEventListener('click',begin);
-$('again').addEventListener('click',begin);
+$('again').addEventListener('click',()=>begin());
+$('otherRoad').addEventListener('click',()=>{ stopSpeech(); $('end').hidden=true; $('quiz').hidden=true; $('start').hidden=false; drawRoutes(); showStartProg(); N=QS_ALL.length; buildStops(); setRoad(0); });
 $('hear').addEventListener('click',()=>readQuestion('en'));
 $('hearEs').addEventListener('click',()=>{
   if(!synthOK || !hasSpanish()){ $('esNote').hidden=false; return; }
@@ -449,7 +668,7 @@ $('next').addEventListener('click',()=>{
   stopSpeech();
   if(idx<N-1){ idx++; showQuestion(); } else { showEnd(); }
 });
-$('hearVerse').addEventListener('click',()=>speakSeq([{text:"Your word is a lamp to my feet, and a light to my path. Psalm 119, verse 105."}],'en'));
+$('hearVerse').addEventListener('click',()=>{ const R=ROUTES[route]; speakSeq([{text:R.again||R.say}],'en'); });
 document.addEventListener('visibilitychange',()=>{ if(document.hidden) stopSpeech(); });
 setRoad(0);
 applyPl();

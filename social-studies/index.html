@@ -1,0 +1,887 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#2A2E35">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>Police Patrol</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Andika:wght@400;700&family=Baloo+2:wght@600;800&display=swap">
+<style>
+/* Layout: one-screen picture game, built like Ambulance Health Run. Road strip on top (the police car drives home), one question card, picture tiles. */
+:root{
+  --bg:#EAF2F7; --card:#FFFFFF; --ink:#1E2A30; --muted:#56666D;
+  --road:#3A3F44; --lane:#F4C430; --siren:#1F3A8A;
+  --tile:#FFFBF0; --tile-edge:#D3C9B0;
+  --go:#25915A; --go-soft:#DDF3E6; --oops:#C8463F; --focus:#1F6FD6;
+  --display:"Baloo 2", "Trebuchet MS", system-ui, sans-serif;
+  --body:"Andika", "Verdana", system-ui, sans-serif;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#121C22; --card:#1B2830; --ink:#EEF3F5; --muted:#A9B7BD;
+    --road:#2A2F33; --tile:#F2ECDD; --tile-edge:#7E7563;
+    --go:#4CC283; --go-soft:#1E3A2C; --oops:#F07A72; --focus:#7FB2FF;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#121C22; --card:#1B2830; --ink:#EEF3F5; --muted:#A9B7BD;
+  --road:#2A2F33; --tile:#F2ECDD; --tile-edge:#7E7563;
+  --go:#4CC283; --go-soft:#1E3A2C; --oops:#F07A72; --focus:#7FB2FF;
+  color-scheme:dark;
+}
+html,body{height:100%}
+[hidden]{display:none!important}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:16px;line-height:1.45}
+button{font:inherit;color:inherit;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent}
+button:focus-visible{outline:3px solid var(--focus);outline-offset:3px}
+.wrap{max-width:860px;margin:0 auto;padding-block:16px 32px;
+  padding-left:max(16px, env(safe-area-inset-left, 0px));
+  padding-right:max(16px, env(safe-area-inset-right, 0px));
+  display:flex;flex-direction:column;gap:16px}
+h1,h2{font-family:var(--display);line-height:1.1;text-wrap:balance;margin:0}
+
+/* road strip */
+.road{display:flex;align-items:center;gap:10px}
+.lane{position:relative;flex:1;min-width:0;height:58px;background:var(--road);border-radius:14px;overflow:hidden}
+.lane::before{content:"";position:absolute;left:14px;right:60px;top:50%;height:4px;margin-top:-2px;
+  background:repeating-linear-gradient(90deg,var(--lane) 0 16px,transparent 16px 28px)}
+.stops{position:absolute;left:30px;right:76px;top:50%;display:flex;justify-content:space-between;transform:translateY(-50%)}
+.stops i{width:10px;height:10px;border-radius:50%;background:#6B7178;border:2px solid var(--road)}
+.stops i.done{background:var(--lane)}
+.amb{position:absolute;top:4px;width:58px;height:50px;left:4px;transition:left .7s cubic-bezier(.3,1.4,.5,1)}
+.amb.flash .light{animation:flash .25s steps(1) 6}
+.amb.flash .light2{animation:flash2 .25s steps(1) 6}
+@keyframes flash{50%{fill:#3A7BD5}}
+@keyframes flash2{50%{fill:#D7263D}}
+.finish{position:absolute;right:6px;top:4px;width:50px;height:50px}
+.count{font-family:var(--display);font-weight:800;font-size:1.1rem;min-width:3.6em;text-align:right;font-variant-numeric:tabular-nums;color:var(--muted)}
+
+/* cards */
+.card{background:var(--card);border-radius:22px;padding:20px;display:flex;flex-direction:column;gap:16px;box-shadow:0 2px 0 rgba(0,0,0,.06)}
+.section{font-family:var(--display);font-weight:800;font-size:.9rem;letter-spacing:.06em;text-transform:uppercase;color:var(--siren)}
+.prompt{display:flex;gap:14px;align-items:flex-start}
+.speak{flex:none;width:64px;height:64px;border-radius:50%;border:0;background:var(--siren);color:#fff;display:grid;place-items:center;box-shadow:0 4px 0 #0F1F4D}
+.speak:active{transform:translateY(3px);box-shadow:0 1px 0 #0F1F4D}
+.speak svg{width:32px;height:32px}
+.qtext{font-size:clamp(1.25rem,3.6vw,1.65rem);font-weight:700;min-width:0}
+.tools{display:flex;flex-wrap:wrap;gap:10px}
+.chip{border:2px solid var(--tile-edge);background:transparent;border-radius:999px;padding:6px 14px;font-size:.95rem;font-weight:700;color:var(--muted)}
+.show{align-self:center;width:min(300px,100%);background:var(--tile);border:3px solid var(--tile-edge);border-radius:18px;padding:8px}
+.show.wide{width:min(420px,100%)}
+.show svg{display:block;width:100%;height:auto}
+.findbar{display:flex;gap:6px;justify-content:center}
+.findbar i{width:16px;height:16px;border-radius:50%;border:3px solid var(--tile-edge)}
+.findbar i.got{background:var(--go);border-color:var(--go)}
+
+.opts{display:grid;grid-template-columns:repeat(var(--cols,3),minmax(0,1fr));gap:14px}
+.opts.narrow{max-width:440px;align-self:center;width:100%}
+.opts.yn{max-width:320px}
+.opts.yn .tile svg{max-width:92px}
+.tile{position:relative;background:var(--tile);border:3px solid var(--tile-edge);border-radius:20px;padding:10px 8px 8px;
+  display:flex;flex-direction:column;align-items:center;gap:4px;min-width:0;color:#1E2A30;transition:transform .15s,opacity .2s}
+@media (hover:hover){.tile:hover{transform:translateY(-3px)}}
+.tile svg{width:100%;max-width:150px;aspect-ratio:1;height:auto;display:block}
+.tile span{font-family:var(--display);font-weight:600;font-size:clamp(.95rem,2.8vw,1.2rem);text-align:center;line-height:1.15}
+.tile.speaking{border-color:#F4C430;box-shadow:0 0 0 4px rgba(244,196,48,.5)}
+.tile.right{border-color:var(--go);box-shadow:0 0 0 5px var(--go-soft)}
+.tile.right::after{content:"";position:absolute;top:-12px;right:-10px;width:40px;height:40px;border-radius:50%;
+  background:var(--go) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M5 12.5l4.5 4.5L19 7.5' fill='none' stroke='white' stroke-width='3.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center/70% no-repeat}
+.tile.wrong{opacity:.35;animation:shake .4s}
+.tile:disabled{cursor:default;transform:none}
+@keyframes shake{20%{transform:translateX(-8px)}40%{transform:translateX(8px)}60%{transform:translateX(-5px)}80%{transform:translateX(5px)}}
+
+.feedback{min-height:1.6em;font-size:1.15rem;font-weight:700;text-align:center}
+.feedback.good{color:var(--go)}
+.feedback.try{color:var(--oops)}
+.feedback.more{color:var(--muted)}
+.go{align-self:center;border:0;border-radius:16px;background:var(--go);color:#fff;font-family:var(--display);font-weight:800;font-size:1.35rem;padding:10px 30px;box-shadow:0 4px 0 rgba(0,0,0,.25)}
+.go:active{transform:translateY(3px);box-shadow:0 1px 0 rgba(0,0,0,.25)}
+.note{font-size:.9rem;color:var(--muted)}
+
+.hero{display:flex;flex-direction:column;align-items:center;text-align:center;gap:14px}
+.hero h1{font-size:clamp(2rem,7vw,3rem);font-weight:800}
+.hero .scene{width:min(340px,100%)}
+.hero .scene svg{width:100%;height:auto;display:block}
+.parent{max-width:60ch;color:var(--muted)}
+.parent b{color:var(--ink)}
+.safety{max-width:60ch;border:2px dashed var(--siren);border-radius:14px;padding:8px 12px;font-size:.95rem}
+.recap{display:flex;gap:12px;align-items:center}
+.facts{display:flex;flex-wrap:wrap;justify-content:center;gap:8px;width:100%;max-width:600px}
+.facts div{box-sizing:border-box;flex:0 1 calc(20% - 8px);background:var(--tile);border:3px solid var(--tile-edge);border-radius:16px;padding:6px;color:#1E2A30;font-family:var(--display);font-weight:600;font-size:.9rem;line-height:1.1;min-width:0}
+.facts svg{width:100%;height:auto;display:block}
+.stars{font-family:var(--display);font-size:1.5rem;font-weight:800}
+.results{list-style:none;margin:0;padding:0;display:flex;flex-wrap:wrap;gap:8px;justify-content:center}
+.results li{border-radius:999px;padding:4px 12px;font-size:.9rem;font-weight:700;background:var(--go-soft);color:var(--ink)}
+.results li.again{background:transparent;border:2px solid var(--oops)}
+.results li.new{background:transparent;border:2px solid var(--tile-edge)}
+.results li small{font-weight:400;margin-left:6px;letter-spacing:1px;font-variant-numeric:tabular-nums}
+.strongline{font-family:var(--display);font-weight:800;font-size:1.15rem;color:var(--go)}
+.routes{display:flex;flex-direction:column;gap:12px;width:100%;max-width:340px}
+.route{width:100%;display:flex;align-items:center;gap:12px;text-align:left;padding:8px 16px}
+.route svg{flex:none;width:52px;height:52px;background:#fff;border-radius:12px}
+.route span{display:flex;flex-direction:column;line-height:1.1}
+.route small{font-family:var(--body);font-weight:700;font-size:.85rem;opacity:.9}
+.route.me{background:#1F3A8A}.route.wear{background:#E06E10}.route.fam{background:#25915A}.route.addr{background:#7B4FC4}
+.newtag{display:inline-block;font-style:normal;font-weight:800;background:#F4C430;color:#1E2A30;border-radius:999px;padding:0 8px;font-size:.8rem;margin-left:6px;vertical-align:middle}
+.scrub{border-color:#7FB2D6}
+.scrub svg{max-width:220px}
+.scrub .sg{transition:opacity .35s}
+.scrub .sg.gone{opacity:0}
+.scrub .bub{opacity:0;transition:opacity .3s}
+.scrub .bub.on{opacity:1}
+.abc{grid-column:1/-1;display:flex;flex-wrap:wrap;justify-content:center;gap:2px 6px;font-family:var(--display);font-weight:800;font-size:1.25rem}
+.abc b{color:var(--muted);opacity:.35}
+.abc b.on{color:var(--go);opacity:1}
+.abc b.now{color:var(--siren);opacity:1;transform:scale(1.35)}
+
+@media (max-width:480px){
+  .wrap{gap:12px;padding-block:10px 24px}
+  .card{padding:14px 12px;gap:10px;border-radius:18px}
+  .prompt{gap:10px}
+  .speak{width:52px;height:52px}
+  .speak svg{width:26px;height:26px}
+  .qtext{font-size:1.2rem;line-height:1.3}
+  .show{width:min(180px,100%);padding:6px}
+  .show.wide{width:100%}
+  .opts{gap:8px}
+  .tile{padding:6px 4px;border-radius:16px}
+  .tile.right::after{width:32px;height:32px;top:-10px;right:-8px}
+  .lane{height:48px}
+  .amb,.finish{width:46px;height:42px}
+  .stops{left:22px;right:60px}
+  .stops i{width:6px;height:6px;border-width:1px}
+  .lane::before{right:50px}
+  .count{font-size:1rem;min-width:3.2em}
+  .feedback{font-size:1.05rem}
+  .go{font-size:1.25rem;padding:10px 26px;width:100%;max-width:320px}
+  .hero h1{font-size:2.1rem}
+  .parent{font-size:.95rem}
+  .facts div{font-size:.78rem;padding:4px;flex-basis:calc(33.3% - 8px)}
+}
+
+/* Settings box (parents) */
+.setup{width:100%;max-width:420px;text-align:left;border:2px solid var(--tile-edge);border-radius:16px;padding:8px 14px;background:var(--card)}
+.setup summary{font-family:var(--display);font-weight:800;cursor:pointer;color:var(--ink);padding:4px 0}
+.setup .note{margin:6px 0}
+.setrow{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:8px 0;color:var(--ink);font-size:.95rem}
+.setrow select{font:inherit;font-size:1rem;padding:4px 8px;border-radius:10px;border:2px solid var(--tile-edge)}
+.seg{display:inline-flex;border:2px solid #2A2E35;border-radius:999px;overflow:hidden}
+.seg button{border:0;background:#fff;color:#2A2E35;padding:5px 14px;font-weight:700}
+.seg button[aria-pressed="true"]{background:#2A2E35;color:#F5C116}
+.field{display:flex;flex-direction:column;gap:2px;margin:8px 0;font-size:.9rem;font-weight:700;color:var(--muted)}
+.field input{font:inherit;font-size:1rem;font-weight:400;color:#1E2A30;padding:8px 10px;border-radius:10px;border:2px solid var(--tile-edge);background:#fff}
+.check{display:flex;gap:8px;align-items:flex-start;font-size:.9rem;color:var(--ink);margin:10px 0}
+.check input{width:20px;height:20px;flex:none;margin-top:2px}
+.setup .go{width:100%;margin-top:6px}
+/* text tiles (names and places) */
+.tile.word svg{aspect-ratio:auto;max-width:170px}
+.facts div.wide{flex-basis:100%;font-size:1.05rem;padding:8px 12px;text-align:left}
+/* the address card, like the page in his notebook */
+.addrcard{background:var(--tile);border:3px dashed #2A2E35;border-radius:12px;padding:10px 12px 6px;display:flex;flex-direction:column;gap:6px;color:#1E2A30;max-width:420px;width:100%;justify-self:center}
+.addrcard.right{border-color:var(--go);box-shadow:0 0 0 5px var(--go-soft)}
+.addrtitle{font-family:var(--display);font-weight:800;font-size:1.2rem;text-align:center}
+.addrline{display:flex;gap:8px;align-items:baseline;text-align:left;border:2px solid var(--tile-edge);background:#fff;border-radius:12px;padding:8px 12px;font-size:1.1rem}
+.addrline b{font-family:var(--display);min-width:5.2em}
+.addrline span{border-bottom:2px solid #9AA3AB;flex:1;min-width:0}
+.addrline.done{border-color:var(--go);background:var(--go-soft)}
+.addrhouse{width:90px;align-self:center}
+@media (max-width:480px){ .addrline{font-size:1rem;padding:6px 10px} .addrhouse{width:64px} }
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+
+.home{flex:0 0 auto;width:48px;height:48px;border-radius:14px;background:#2A2E35;color:#fff;display:grid;place-items:center}
+.home svg{width:26px;height:26px}
+.home:focus-visible{outline:3px solid #1F6FD6;outline-offset:3px}
+body{margin:0}
+.plrow{display:flex;justify-content:flex-end;margin:0 0 6px}
+.langsw{display:inline-flex;border:2px solid #2A2E35;border-radius:999px;overflow:hidden}
+.langsw button{font:inherit;font-size:13px;font-weight:700;border:none;background:#fff;color:#2A2E35;padding:5px 10px;cursor:pointer;min-height:0;box-shadow:none;border-radius:0;margin:0}
+.langsw button[aria-pressed="true"]{background:#2A2E35;color:#F5C116}
+.copy{text-align:center;font-size:12px;color:#55606A;margin:0;line-height:1.3}
+.copy-fix{position:fixed;left:0;right:0;bottom:env(safe-area-inset-bottom,0px);margin:0;text-align:center;font-size:10px;line-height:12px;color:#55606A;pointer-events:none;z-index:1}
+.copy-fix[hidden]{display:none}
+</style>
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="road" aria-label="Progress">
+    <a class="home" href="../" aria-label="Back to the road"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 11.5 12 4l9 7.5" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/><path d="M6 10v9h4.5v-5h3v5H18v-9" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linejoin="round"/></svg></a>
+    <div class="lane">
+      <div class="stops" id="stops"></div>
+      <div class="amb" id="amb"></div>
+      <div class="finish" id="finish"></div>
+    </div>
+    <div class="count" id="count">0 / 8</div>
+  </div>
+
+  <section class="card hero" id="start">
+    <h1>Police Patrol!</h1>
+    <div class="scene" id="startScene"></div>
+    <div class="plrow pl-slot"></div>
+    <p class="parent" data-es="&lt;b&gt;Para mamá o papá:&lt;/b&gt; Repaso de sus notas de Estudios Sociales. Escoja un camino para hoy. Cada pregunta se lee en voz alta y luego se nombra cada dibujo. Toque la bocina azul para oírla otra vez, o &lt;b&gt;Español&lt;/b&gt; para oírla en español. Cada respuesta correcta acerca la patrulla a la casa."><b>For Mom or Dad:</b> A review of his Social Studies notes. Pick one road for today. Each question is read aloud, then each picture is named. Tap the blue speaker to hear it again, or <b>Español</b> for Spanish. Every right answer drives the police car closer to home.</p>
+    <div class="routes" id="routes"></div>
+    <p class="safety" id="addrNeed" hidden data-es="El camino &lt;b&gt;My address&lt;/b&gt; necesita la dirección. Escríbala abajo en &lt;b&gt;Ajustes&lt;/b&gt;.">The <b>My address</b> road needs your address. Type it in <b>Settings</b> below.</p>
+    <details class="setup" id="setup">
+      <summary data-es="Ajustes para mamá o papá">Settings for Mom or Dad</summary>
+      <p class="note" data-es="Se guardan solo en este teléfono. No se envían a ninguna parte.">Saved on this phone only. Nothing is sent anywhere.</p>
+      <p class="note" id="nameRow" style="color:var(--ink);font-size:.95rem"></p>
+      <div class="setrow"><span data-es="Edad">Age</span>
+        <select id="sAge" aria-label="Age"></select></div>
+      <div class="setrow"><span data-es="Su hijo o hija es">Your child is a</span>
+        <span class="seg" role="group"><button type="button" id="sBoy" aria-pressed="true" data-es="niño">boy</button><button type="button" id="sGirl" aria-pressed="false" data-es="niña">girl</button></span></div>
+      <p class="note" style="margin-top:6px" data-es="&lt;b&gt;Mi dirección&lt;/b&gt;, como la escribió en su cuaderno:"><b>My address</b>, as it is written in his notebook:</p>
+      <label class="field"><span data-es="Área o barrio">Area</span><input id="aArea" autocomplete="off" placeholder="Barrio …"></label>
+      <label class="field"><span data-es="Pueblo o ciudad">Town</span><input id="aTown" autocomplete="off"></label>
+      <label class="field"><span data-es="Distrito o departamento">District</span><input id="aDistrict" autocomplete="off"></label>
+      <label class="field"><span data-es="País">Country</span><input id="aCountry" autocomplete="off" list="countryList"></label>
+      <datalist id="countryList"><option value="Belize"><option value="Guatemala"><option value="Mexico"><option value="Honduras"></datalist>
+      <label class="check"><input type="checkbox" id="sEsNames"> <span data-es="Decir los nombres de lugares con la voz en español">Say the place names with the Spanish voice</span></label>
+      <button class="go" id="sSave" type="button" data-es="Guardar">Save</button>
+      <p class="note" id="sSaved" aria-live="polite"></p>
+    </details>
+    <p class="strongline" id="startProg" hidden></p>
+    <p class="note" id="noVoice" hidden data-es="Este teléfono no puede leer en voz alta. Por favor léale cada pregunta a su niño.">This device cannot read aloud. Please read each question to your child.</p>
+  <p class="copy">&copy; <span class="cyear">2026</span> Edwin Lopez. All rights reserved.</p>
+  </section>
+
+  <section class="card" id="quiz" hidden>
+    <div class="section" id="section"></div>
+    <div class="prompt">
+      <button class="speak" id="hear" aria-label="Hear the question again"></button>
+      <div class="qtext" id="qtext"></div>
+    </div>
+    <div class="tools">
+      <button class="chip" id="hearEs">Español</button>
+      <button class="chip" id="sirenBtn" aria-pressed="true">Siren: on</button>
+    </div>
+    <div class="show" id="show" hidden></div>
+    <div class="findbar" id="findbar" hidden></div>
+    <div class="opts" id="opts"></div>
+    <div class="feedback" id="feedback" aria-live="polite"></div>
+    <button class="go" id="next" hidden>Drive on!</button>
+    <p class="note" id="esNote" hidden data-es="Este teléfono no tiene voz en español. Diga usted la pregunta en español.">No Spanish voice on this device. Say the question in Spanish yourself.</p>
+  </section>
+
+  <section class="card hero" id="end" hidden>
+    <h2 style="font-size:clamp(1.8rem,6vw,2.6rem)">The police car made it home!</h2>
+    <div class="recap">
+      <button class="speak" id="hearRecap" aria-label="Hear what we learned"></button>
+      <p class="parent" style="margin:0;text-align:left" id="factsTitle"></p>
+    </div>
+    <div class="facts" id="facts"></div>
+    <p class="parent" style="margin:0" id="endLine"></p>
+    <p class="safety" id="doIt" hidden data-es="&lt;b&gt;Practíquenlo:&lt;/b&gt; pídale que diga su dirección completa en voz alta (área, pueblo, distrito, país) cuando salgan juntos. Dígale que, si se pierde, se la diga a un policía o a la maestra."><b>Practise it:</b> ask him to say his whole address out loud (area, town, district, country) when you are out together. Tell him that if he is ever lost, he can say it to a police officer or his teacher.</p>
+    <div class="stars" id="stars"></div>
+    <div class="strongline" id="strongline"></div>
+    <div>
+      <div class="plrow pl-slot"></div>
+      <p class="parent" style="margin:0 0 8px" data-es="&lt;b&gt;Revisión para los padres:&lt;/b&gt; verde = firme (correcta al primer intento en 4 de sus últimos 5 viajes), borde rojo = todavía practicando, sin color = necesita más viajes. Las marcas muestran sus últimos 5 intentos; el más reciente va al final."><b>Parent check:</b> green = strong (right on the first try in 4 of his last 5 drives), red outline = still practising, plain = needs more drives. The marks show his last 5 tries, newest last.</p>
+      <ul class="results" id="results"></ul>
+    </div>
+    <button class="go" id="again">Drive this road again</button>
+    <button class="chip" id="otherRoad">Pick another road</button>
+  <p class="copy">&copy; <span class="cyear">2026</span> Edwin Lopez. All rights reserved.</p>
+  </section>
+</div>
+
+<script src="../voice/voice.js"></script>
+<script>
+(function(){
+/* ---------- Parents' language: English or Español. Shared by every stop and the hub (lang in nanoHub.v1).
+   Only text for parents switches. The child's screens and everything spoken stay in English. ---------- */
+function pl(){try{var o=JSON.parse(localStorage.getItem('nanoHub.v1')||'null');return o&&o.lang==='es'?'es':'en';}catch(e){return 'en';}}
+function tr(en,es){return pl()==='es'?es:en;}
+function setPl(l){try{var o=JSON.parse(localStorage.getItem('nanoHub.v1')||'null')||{};o.lang=l;localStorage.setItem('nanoHub.v1',JSON.stringify(o));}catch(e){}}
+function langSw(){var l=pl();return '<div class="langsw" role="group" aria-label="Language / Idioma"><button type="button" data-lang="en" lang="en" aria-pressed="'+(l==='en')+'">English</button><button type="button" data-lang="es" lang="es" aria-pressed="'+(l==='es')+'">Español</button></div>';}
+function bindLangSw(redraw){[].forEach.call(document.querySelectorAll('.langsw button'),function(b){b.onclick=function(){setPl(b.getAttribute('data-lang'));redraw();};});}
+/* Parent text marked data-es switches; everything the child sees and hears stays English. */
+function applyPl(){var l=pl();
+  document.querySelectorAll('[data-es]').forEach(function(el){if(el._en==null)el._en=el.innerHTML;el.innerHTML=l==='es'?el.getAttribute('data-es'):el._en;el.lang=l;});
+  document.querySelectorAll('.pl-slot').forEach(function(s){s.innerHTML=langSw();});bindLangSw(applyPl);
+  try{showStartProg();drawNameRow();var sl=document.getElementById('strongline');if(sl)sl.textContent=progLine();}catch(e){}}
+
+/* ---------- drawings for Police Patrol (all original, 100x100) ---------- */
+const K='#2b1a10';
+const S='stroke="'+K+'" stroke-width="3" stroke-linejoin="round"';
+const S2='stroke="'+K+'" stroke-width="2" stroke-linejoin="round"';
+const SKIN=['#C68B59','#E0A97A','#8D5A3B','#F1C9A0'];
+/* One standing person, full height in a 100x100 box.
+   o: skin, hair ('short'|'long'|'pony'|'bun'|'curly'|'none'), hairCol, top, bottom ('pants'|'skirt'|'dress'), bot, beard, stache, hat, arms ('down'|'out'|'wave'), grey, kidSize */
+function person(o){
+  o=Object.assign({skin:SKIN[0],hair:'short',hairCol:'#2B1A10',top:'#3A7BD5',bottom:'pants',bot:'#2E4057',arms:'down'},o);
+  const sk=o.skin, hc=o.grey?'#C9CED3':o.hairCol;
+  let g='';
+  // long hair behind the head
+  if(o.hair==='long') g+='<path d="M34 24 Q34 8 50 8 Q66 8 66 24 L68 46 Q60 50 50 44 Q40 50 32 46Z" fill="'+hc+'" '+S2+'/>';
+  if(o.hair==='pony') g+='<path d="M64 18 Q78 18 76 34 Q72 30 66 30Z" fill="'+hc+'" '+S2+'/><path d="M36 18 Q22 18 24 34 Q28 30 34 30Z" fill="'+hc+'" '+S2+'/>';
+  if(o.hair==='bun') g+='<circle cx="50" cy="8" r="7" fill="'+hc+'" '+S2+'/>';
+  // legs
+  if(o.bottom==='pants'){
+    g+='<rect x="38" y="64" width="11" height="28" rx="3" fill="'+o.bot+'" '+S2+'/><rect x="51" y="64" width="11" height="28" rx="3" fill="'+o.bot+'" '+S2+'/>';
+  } else {
+    g+='<rect x="41" y="74" width="7" height="18" rx="3" fill="'+sk+'" '+S2+'/><rect x="52" y="74" width="7" height="18" rx="3" fill="'+sk+'" '+S2+'/>';
+  }
+  g+='<path d="M35 92 H49 V97 H33 Q33 92 35 92Z M51 92 H65 Q67 92 67 97 H51Z" fill="#3A3F44" stroke="'+K+'" stroke-width="1.5"/>';
+  // body
+  if(o.bottom==='dress') g+='<path d="M38 40 Q50 36 62 40 L70 78 H30 Z" fill="'+o.top+'" '+S+'/>';
+  else {
+    if(o.bottom==='skirt') g+='<path d="M38 60 H62 L68 78 H32Z" fill="'+o.bot+'" '+S2+'/>';
+    g+='<path d="M37 44 Q37 38 50 38 Q63 38 63 44 L64 66 H36 Z" fill="'+o.top+'" '+S+'/>';
+  }
+  // arms
+  const arm=(d)=>'<path d="'+d+'" fill="none" stroke="'+K+'" stroke-width="9" stroke-linecap="round"/><path d="'+d+'" fill="none" stroke="'+o.top+'" stroke-width="6" stroke-linecap="round"/>';
+  const handAt=(x,y)=>'<circle cx="'+x+'" cy="'+y+'" r="4.2" fill="'+sk+'" stroke="'+K+'" stroke-width="1.5"/>';
+  if(o.arms==='out'){ g+=arm('M38 44 Q28 46 20 40')+arm('M62 44 Q72 46 80 40')+handAt(18,39)+handAt(82,39); }
+  else if(o.arms==='wave'){ g+=arm('M38 44 Q30 54 30 64')+arm('M62 44 Q74 40 76 26')+handAt(30,66)+handAt(77,23); }
+  else { g+=arm('M38 44 Q31 54 31 64')+arm('M62 44 Q69 54 69 64')+handAt(31,66)+handAt(69,66); }
+  // head
+  g+='<rect x="46" y="32" width="8" height="8" fill="'+sk+'"/>';
+  g+='<circle cx="50" cy="22" r="13" fill="'+sk+'" '+S+'/>';
+  if(o.hair==='short'||o.hair==='pony'||o.hair==='bun') g+='<path d="M37 21 Q38 8 50 8 Q62 8 63 21 Q57 15 50 15 Q43 15 37 21Z" fill="'+hc+'" '+S2+'/>';
+  if(o.hair==='long') g+='<path d="M37 22 Q38 8 50 8 Q62 8 63 22 Q60 14 50 15 Q40 14 37 22Z" fill="'+hc+'"/>';
+  if(o.hair==='curly') g+='<g fill="'+hc+'" '+S2+'><circle cx="40" cy="13" r="5"/><circle cx="50" cy="10" r="5.5"/><circle cx="60" cy="13" r="5"/><circle cx="37" cy="20" r="4"/><circle cx="63" cy="20" r="4"/></g>';
+  if(o.grey && o.hair==='none') g+='<path d="M37 24 Q37 18 40 16 M63 24 Q63 18 60 16" fill="none" stroke="#C9CED3" stroke-width="4" stroke-linecap="round"/>';
+  g+='<circle cx="45" cy="22" r="1.8" fill="'+K+'"/><circle cx="55" cy="22" r="1.8" fill="'+K+'"/>';
+  if(o.beard) g+='<path d="M38 24 Q40 40 50 40 Q60 40 62 24 Q58 32 50 31 Q42 32 38 24Z" fill="'+hc+'" '+S2+'/>';
+  if(o.stache||o.beard) g+='<path d="M44 28 Q50 25 56 28 Q50 30 44 28Z" fill="'+hc+'" stroke="'+K+'" stroke-width="1.2"/>';
+  if(!o.beard) g+='<path d="M45 29 Q50 33 55 29" fill="none" stroke="'+K+'" stroke-width="1.8" stroke-linecap="round"/>';
+  if(o.hat==='cap') g+='<path d="M36 17 Q38 5 50 5 Q62 5 64 17Z" fill="'+(o.hatCol||'#D7263D')+'" '+S2+'/><path d="M60 16 H74" stroke="'+K+'" stroke-width="4" stroke-linecap="round"/>';
+  if(o.hat==='police') g+='<path d="M35 15 Q50 1 65 15 Z" fill="#1F3A8A" '+S2+'/><rect x="35" y="14" width="30" height="5" fill="#111" '+S2+'/><circle cx="50" cy="10" r="2.6" fill="#F4C430" stroke="'+K+'" stroke-width="1"/>';
+  return g;
+}
+/* place a whole person drawing at x,y with scale s */
+function at(x,y,s,inner){ return '<g transform="translate('+x+' '+y+') scale('+s+')">'+inner+'</g>'; }
+
+const P={
+  dad:   {skin:SKIN[0],hair:'short',top:'#3C9A5F',bot:'#2E4057',stache:true},
+  mom:   {skin:SKIN[0],hair:'long',hairCol:'#4A2A16',top:'#E86A9A',bottom:'skirt',bot:'#7B4FC4'},
+  boy:   {skin:SKIN[0],hair:'short',top:'#F28A1E',bot:'#2E5AA8'},
+  girl:  {skin:SKIN[0],hair:'pony',hairCol:'#3A2212',top:'#F4C430',bottom:'dress'},
+  uncle: {skin:SKIN[2],hair:'short',hairCol:'#1E120A',top:'#8B5A2B',bot:'#3A3F44',beard:true,hat:'cap',hatCol:'#2E86C1'},
+  aunt:  {skin:SKIN[2],hair:'bun',hairCol:'#1E120A',top:'#2BA59B',bottom:'dress'},
+  officer:{skin:SKIN[0],hair:'short',top:'#1F3A8A',bot:'#1F3A8A',hat:'police',arms:'wave'}
+};
+const ICONS={};
+ICONS.boy=person(P.boy);
+ICONS.girl=person(P.girl);
+ICONS.dad=person(P.dad);
+ICONS.mom=person(P.mom);
+ICONS.uncle=person(P.uncle);
+ICONS.aunt=person(P.aunt);
+ICONS.brother=person(Object.assign({},P.boy,{top:'#3AA0E8',arms:'wave'}));
+ICONS.sister=person(Object.assign({},P.girl,{top:'#F07AA8',arms:'wave'}));
+ICONS.officer=person(P.officer)+'<path d="M44 46 L50 50 L56 46 L56 54 Q50 58 44 54Z" fill="#F4C430" stroke="'+K+'" stroke-width="1.2"/>';
+ICONS.parents=at(-6,6,.9,person(P.dad))+at(16,6,.9,person(P.mom));
+ICONS.siblings=at(-14,14,.82,person(Object.assign({},P.boy,{top:'#3AA0E8'})))+at(46,14,.82,person(Object.assign({},P.girl,{top:'#F07AA8'})))+at(18,40,.58,person(Object.assign({},P.boy,{top:'#6CC04A',hair:'curly'})));
+function familyGroup(){ return at(-12,2,.78,person(P.dad))+at(40,2,.78,person(P.mom))+at(4,34,.6,person(P.boy))+at(38,34,.6,person(P.girl)); }
+ICONS.family=familyGroup();
+ICONS.family4=familyGroup();
+ICONS.baby='<ellipse cx="50" cy="66" rx="28" ry="22" fill="#BFE6F5" '+S+'/><path d="M30 60 Q50 74 70 60" fill="none" stroke="#7FB2D6" stroke-width="3"/><circle cx="50" cy="40" r="16" fill="'+SKIN[3]+'" '+S+'/><path d="M46 26 Q50 20 54 26" fill="none" stroke="#7A4A2A" stroke-width="2.5" stroke-linecap="round"/><circle cx="44" cy="40" r="1.8" fill="'+K+'"/><circle cx="56" cy="40" r="1.8" fill="'+K+'"/><path d="M46 47 Q50 50 54 47" fill="none" stroke="'+K+'" stroke-width="1.8" stroke-linecap="round"/>';
+
+// clothes
+ICONS.pants='<path d="M28 12 H72 L78 90 H56 L50 40 L44 90 H22Z" fill="#2E5AA8" '+S+'/><path d="M28 22 H72" stroke="'+K+'" stroke-width="2.5"/><path d="M50 22 V40" stroke="'+K+'" stroke-width="2"/><circle cx="50" cy="17" r="2.2" fill="#F4C430"/>';
+ICONS.shirt='<path d="M36 12 L50 20 L64 12 L88 26 L80 44 L70 40 V90 H30 V40 L20 44 L12 26Z" fill="#F28A1E" '+S+'/><path d="M50 20 V90" stroke="'+K+'" stroke-width="2"/><path d="M36 12 L44 26 L50 20 L56 26 L64 12" fill="#E06E10" '+S2+'/><g fill="#fff" stroke="'+K+'" stroke-width="1.2"><circle cx="54" cy="38" r="2.2"/><circle cx="54" cy="54" r="2.2"/><circle cx="54" cy="70" r="2.2"/></g>';
+ICONS.shoes='<path d="M8 60 Q10 46 22 48 Q30 54 40 52 Q48 54 48 66 V72 H8Z" fill="#3AA0E8" '+S+'/><path d="M8 72 H48" stroke="#fff" stroke-width="5"/><path d="M8 66 H48 V74 H8Z" fill="#fff" '+S2+'/><path d="M22 54 L30 50 M26 58 L34 54" stroke="#fff" stroke-width="2.2" stroke-linecap="round"/>'+
+  '<path d="M52 72 Q54 58 66 60 Q74 66 84 64 Q92 66 92 78 V84 H52Z" fill="#3AA0E8" '+S+'/><path d="M52 78 H92 V86 H52Z" fill="#fff" '+S2+'/><path d="M66 66 L74 62 M70 70 L78 66" stroke="#fff" stroke-width="2.2" stroke-linecap="round"/>';
+ICONS.dress='<path d="M38 8 H62 L60 30 Q74 50 84 90 H16 Q26 50 40 30Z" fill="#B54FC4" '+S+'/><path d="M40 30 H60" stroke="'+K+'" stroke-width="3"/><path d="M38 8 Q50 18 62 8" fill="#F4C430" '+S2+'/><path d="M30 62 Q50 70 70 62 M24 78 Q50 86 76 78" fill="none" stroke="#E7B7EE" stroke-width="3"/><path d="M38 8 L28 18 L34 26 L40 22 M62 8 L72 18 L66 26 L60 22" fill="#F4C430" '+S2+'/>';
+ICONS.hat='<ellipse cx="50" cy="66" rx="42" ry="14" fill="#3A7BD5" '+S+'/><path d="M26 64 Q26 30 50 30 Q74 30 74 64Z" fill="#3A7BD5" '+S+'/><path d="M27 56 Q50 64 73 56 L74 64 Q50 72 26 64Z" fill="#B54FC4" '+S2+'/><circle cx="64" cy="58" r="5" fill="#F07AA8" '+S2+'/>';
+// things
+ICONS.mango='<path d="M28 60 Q20 30 50 25 Q81 23 79 54 Q75 83 48 81 Q33 79 28 60Z" fill="#F5A623" '+S+'/><path d="M50 25 Q58 9 74 12 Q66 26 50 25Z" fill="#3C9A3C" stroke="'+K+'" stroke-width="2.5"/>';
+ICONS.dog='<path d="M30 92 Q26 60 44 54 L62 54 Q76 58 76 92Z" fill="#B07A45" '+S+'/><path d="M76 82 Q90 76 88 64" fill="none" stroke="#B07A45" stroke-width="6" stroke-linecap="round"/>'+
+      '<circle cx="50" cy="38" r="20" fill="#C48B55" '+S+'/><path d="M32 26 Q22 30 24 50 Q32 46 36 34Z" fill="#7A4A2A" '+S2+'/><path d="M68 26 Q78 30 76 50 Q68 46 64 34Z" fill="#7A4A2A" '+S2+'/>'+
+      '<circle cx="43" cy="36" r="2.6" fill="'+K+'"/><circle cx="57" cy="36" r="2.6" fill="'+K+'"/><ellipse cx="50" cy="45" rx="5" ry="3.5" fill="'+K+'"/>';
+ICONS.car='<path d="M8 64 Q9 49 24 46 L37 33 Q41 29 49 29 L64 29 Q71 29 75 35 L83 46 Q93 49 93 60 L93 66 L8 66 Z" fill="#E23B2E" '+S+'/><path d="M41 35 L50 35 L50 46 L31 46 Z" fill="#BFE6F5"/><path d="M55 35 L64 35 L73 46 L55 46 Z" fill="#BFE6F5"/><circle cx="27" cy="68" r="11" fill="#222"/><circle cx="27" cy="68" r="4.5" fill="#ccc"/><circle cx="74" cy="68" r="11" fill="#222"/><circle cx="74" cy="68" r="4.5" fill="#ccc"/>';
+ICONS.house='<path d="M10 46 L50 14 L90 46Z" fill="#B23A2E" '+S+'/><rect x="18" y="46" width="64" height="44" fill="#F4E1B8" '+S+'/><rect x="44" y="62" width="14" height="28" fill="#7A4A2A" '+S2+'/><rect x="24" y="56" width="14" height="12" fill="#BFE6F5" '+S2+'/><rect x="64" y="56" width="12" height="12" fill="#BFE6F5" '+S2+'/><rect x="66" y="20" width="8" height="16" fill="#9AA3AB" '+S2+'/>';
+ICONS.town='<rect x="8" y="44" width="26" height="46" fill="#F4E1B8" '+S2+'/><path d="M6 46 L21 32 L36 46Z" fill="#B23A2E" '+S2+'/><rect x="38" y="24" width="26" height="66" fill="#D6E4EE" '+S2+'/><path d="M51 8 V24 M45 14 H57" stroke="'+K+'" stroke-width="3"/><path d="M38 26 L51 16 L64 26Z" fill="#E8C48A" '+S2+'/><rect x="68" y="50" width="26" height="40" fill="#FFE3A3" '+S2+'/><path d="M66 52 L81 40 L96 52Z" fill="#3C9A5F" '+S2+'/>'+
+  '<g fill="#BFE6F5" stroke="'+K+'" stroke-width="1.2"><rect x="14" y="54" width="7" height="7"/><rect x="44" y="34" width="6" height="8"/><rect x="54" y="34" width="6" height="8"/><rect x="44" y="52" width="6" height="8"/><rect x="54" y="52" width="6" height="8"/><rect x="74" y="58" width="6" height="7"/></g><rect x="47" y="72" width="8" height="18" fill="#7A4A2A"/><path d="M2 92 H98" stroke="'+K+'" stroke-width="3"/>';
+ICONS.map='<path d="M8 22 L34 12 L66 22 L92 12 V78 L66 88 L34 78 L8 88Z" fill="#CFE6C6" '+S+'/><path d="M34 12 V78 M66 22 V88" stroke="#8FB58A" stroke-width="2.5"/><path d="M14 60 Q30 48 44 56 T80 44" fill="none" stroke="#3AA0E8" stroke-width="3.5"/>'+
+  '<path d="M56 24 a12 12 0 0 1 12 12 c0 10 -12 22 -12 22 s-12 -12 -12 -22 a12 12 0 0 1 12 -12z" fill="#D7263D" '+S2+'/><circle cx="56" cy="36" r="4.5" fill="#fff"/>';
+ICONS.cake=function(n){ let g='<ellipse cx="50" cy="90" rx="44" ry="7" fill="#E8EEF2" '+S2+'/><rect x="16" y="58" width="68" height="30" rx="6" fill="#C9A0DC" '+S+'/><path d="M16 66 Q24 76 33 66 Q42 76 50 66 Q58 76 67 66 Q76 76 84 66" fill="none" stroke="#fff" stroke-width="4" stroke-linecap="round"/>';
+  const w=Math.min(9,62/Math.max(n,1)); const step=(64-w)/Math.max(n-1,1);
+  for(let i=0;i<n;i++){ const x=n===1?50-w/2:18+i*step; g+='<rect x="'+x.toFixed(1)+'" y="34" width="'+w.toFixed(1)+'" height="24" rx="2" fill="#fff" stroke="'+K+'" stroke-width="1.6"/><path d="M'+(x+1.5).toFixed(1)+' 40 H'+(x+w-1.5).toFixed(1)+' M'+(x+1.5).toFixed(1)+' 48 H'+(x+w-1.5).toFixed(1)+'" stroke="#9B5DE5" stroke-width="2"/>'+
+    '<path d="M'+(x+w/2).toFixed(1)+' 20 Q'+(x+w/2+5).toFixed(1)+' 28 '+(x+w/2).toFixed(1)+' 33 Q'+(x+w/2-5).toFixed(1)+' 28 '+(x+w/2).toFixed(1)+' 20Z" fill="#F4C430" stroke="#E07A10" stroke-width="1.2"/>'; }
+  return g; };
+ICONS.star='<path d="M50 8 L61 36 L92 38 L68 58 L76 90 L50 72 L24 90 L32 58 L8 38 L39 36Z" fill="#F4C430" '+S+'/><circle cx="42" cy="48" r="3" fill="'+K+'"/><circle cx="58" cy="48" r="3" fill="'+K+'"/><path d="M42 58 Q50 66 58 58" fill="none" stroke="'+K+'" stroke-width="2.5" stroke-linecap="round"/>';
+ICONS.yes='<circle cx="50" cy="50" r="40" fill="#25915A" '+S+'/><path d="M30 52 L44 66 L72 36" fill="none" stroke="#fff" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>';
+ICONS.no='<circle cx="50" cy="50" r="40" fill="#D7263D" '+S+'/><path d="M34 34 L66 66 M66 34 L34 66" stroke="#fff" stroke-width="10" stroke-linecap="round"/>';
+// flags (simple)
+ICONS.flagBelize='<rect x="6" y="20" width="88" height="60" fill="#1D3F94" '+S2+'/><rect x="6" y="20" width="88" height="7" fill="#CE1126"/><rect x="6" y="73" width="88" height="7" fill="#CE1126"/><circle cx="50" cy="50" r="18" fill="#fff"/><circle cx="50" cy="50" r="15" fill="none" stroke="#2E7D32" stroke-width="3" stroke-dasharray="4 2"/><path d="M44 44 H56 V52 Q56 58 50 60 Q44 58 44 52Z" fill="#3A7BD5" stroke="'+K+'" stroke-width="1.2"/><circle cx="50" cy="38" r="4" fill="#2E7D32"/><rect x="6" y="20" width="88" height="60" fill="none" '+S2+'/>';
+ICONS.flagGuatemala='<rect x="6" y="20" width="88" height="60" fill="#fff"/><rect x="6" y="20" width="29" height="60" fill="#4997D0"/><rect x="65" y="20" width="29" height="60" fill="#4997D0"/><path d="M42 58 Q50 66 58 58" fill="none" stroke="#3C9A3C" stroke-width="3"/><path d="M42 58 Q38 48 44 40 M58 58 Q62 48 56 40" fill="none" stroke="#3C9A3C" stroke-width="3"/><rect x="45" y="42" width="10" height="12" rx="1" fill="#F4E1B8" stroke="'+K+'" stroke-width="1"/><path d="M48 40 Q52 34 56 38" fill="none" stroke="#2E7D32" stroke-width="2.5"/><rect x="6" y="20" width="88" height="60" fill="none" '+S2+'/>';
+ICONS.flagMexico='<rect x="6" y="20" width="88" height="60" fill="#fff"/><rect x="6" y="20" width="29" height="60" fill="#006847"/><rect x="65" y="20" width="29" height="60" fill="#CE1126"/><ellipse cx="50" cy="52" rx="8" ry="6" fill="#8B5A2B"/><path d="M42 58 Q50 64 58 58" fill="none" stroke="#3C9A3C" stroke-width="2.5"/><rect x="6" y="20" width="88" height="60" fill="none" '+S2+'/>';
+ICONS.flagHonduras='<rect x="6" y="20" width="88" height="60" fill="#fff"/><rect x="6" y="20" width="88" height="20" fill="#0073CF"/><rect x="6" y="60" width="88" height="20" fill="#0073CF"/><g fill="#0073CF"><circle cx="50" cy="50" r="2.5"/><circle cx="40" cy="46" r="2.5"/><circle cx="60" cy="46" r="2.5"/><circle cx="40" cy="54" r="2.5"/><circle cx="60" cy="54" r="2.5"/></g><rect x="6" y="20" width="88" height="60" fill="none" '+S2+'/>';
+ICONS.flag='<path d="M22 10 V92" stroke="'+K+'" stroke-width="4" stroke-linecap="round"/><path d="M24 14 H82 L72 32 L82 50 H24Z" fill="#F4C430" '+S2+'/>';
+// police car (side view, faces right) and police station
+ICONS.police='<path d="M6 30 H58 V24 Q58 20 62 20 H64" fill="none"/>'+
+  '<path d="M6 62 Q7 48 20 46 L34 32 Q38 28 46 28 L64 28 Q71 28 75 34 L84 46 Q94 48 94 58 L94 66 L6 66 Z" fill="#fff" '+S+'/>'+
+  '<path d="M6 52 H94 V62 H6Z" fill="#1F3A8A"/><path d="M6 62 Q7 48 20 46 L34 32 Q38 28 46 28 L64 28 Q71 28 75 34 L84 46 Q94 48 94 58 L94 66 L6 66 Z" fill="none" '+S+'/>'+
+  '<path d="M38 34 L49 34 L49 46 L26 46 Z" fill="#BFE6F5" '+S2+'/><path d="M54 34 L64 34 Q68 34 70 37 L76 46 L54 46 Z" fill="#BFE6F5" '+S2+'/>'+
+  '<rect class="light" x="44" y="20" width="9" height="8" rx="2" fill="#D7263D" '+S2+'/><rect class="light2" x="53" y="20" width="9" height="8" rx="2" fill="#3A7BD5" '+S2+'/>'+
+  '<text x="40" y="61" text-anchor="middle" font-family="Baloo 2, Arial, sans-serif" font-weight="800" font-size="10" fill="#fff">POLICE</text>'+
+  '<circle cx="26" cy="68" r="10" fill="#222"/><circle cx="26" cy="68" r="4" fill="#ccc"/><circle cx="76" cy="68" r="10" fill="#222"/><circle cx="76" cy="68" r="4" fill="#ccc"/><rect x="88" y="50" width="6" height="5" rx="1.5" fill="#FFE46B"/>';
+ICONS.home=ICONS.house;
+
+
+/* ---------- settings: age, boy or girl, address. Saved on this phone only (nanoSocial.v1), never in this file. ---------- */
+const SKEY='nanoSocial.v1';
+function loadS(){ let o=null; try{ o=JSON.parse(localStorage.getItem(SKEY)||'null'); }catch(e){}
+  o=Object.assign({age:6,sex:'boy',addr:{},esNames:null},o||{}); o.addr=Object.assign({area:'',town:'',district:'',country:''},o.addr||{}); return o; }
+function saveS(o){ try{ localStorage.setItem(SKEY,JSON.stringify(o)); return true; }catch(e){ return false; } }
+let SET=loadS();
+/* The child's name comes from the hub (nanoHub.v1). Default Edwin; an empty name skips the name question. */
+function childName(){ try{ const o=JSON.parse(localStorage.getItem('nanoHub.v1')||'null'); if(o&&typeof o.name==='string') return o.name.trim(); }catch(e){} return 'Edwin'; }
+const norm=s=>String(s||'').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/\s+/g,' ').trim();
+const SPANISH_LANDS=['guatemala','mexico','honduras','el salvador'];
+function esNames(){ return SET.esNames==null ? SPANISH_LANDS.includes(norm(SET.addr.country)) : !!SET.esNames; }
+
+const NUMW=['zero','one','two','three','four','five','six','seven','eight','nine','ten','eleven','twelve','thirteen'];
+const NUMES=['cero','uno','dos','tres','cuatro','cinco','seis','siete','ocho','nueve','diez','once','doce','trece'];
+function numKey(n){ const k='n'+n; if(!ICONS[k]){ ICONS[k]='<text x="50" y="75" text-anchor="middle" font-family="Baloo 2, Trebuchet MS, Arial, sans-serif" font-weight="800" font-size="'+(n>9?64:76)+'" fill="#1E2A30">'+n+'</text>'; LBL[k]=[String(n),NUMW[n]||String(n),NUMES[n]||String(n)]; } return k; }
+function cakeKey(n){ const k='cake'+n; if(!ICONS[k]) ICONS[k]=ICONS.cake(n); return k; }
+
+/* text tile: a name or a place written on a card, with a small picture */
+const FLAG={belize:'flagBelize',guatemala:'flagGuatemala',mexico:'flagMexico',honduras:'flagHonduras'};
+function wordCard(word,kind){
+  const isName=kind==='name', lines=wrap2(word,isName?12:11), two=lines.length>1;
+  const fs=two?Math.min(17,155/Math.max(lines[0].length,lines[1].length)):Math.max(12,Math.min(21,150/Math.max(word.length,1)));
+  let pic='';
+  if(kind==='country'){ const f=FLAG[norm(word)]; pic=f?'<g transform="translate(31 -2) scale(.38)">'+ICONS[f]+'</g>':'<g transform="translate(34 0) scale(.32)">'+ICONS.flag+'</g>'; }
+  else if(kind==='district') pic='<g transform="translate(34 1) scale(.32)">'+ICONS.map+'</g>';
+  else if(kind==='town') pic='<g transform="translate(34 1) scale(.32)">'+ICONS.town+'</g>';
+  else if(kind==='area') pic='<g transform="translate(34 1) scale(.32)">'+ICONS.house+'</g>';
+  const top=isName?26:36, h=isName?48:60, mid=top+h/2;
+  let txt='';
+  lines.forEach((ln,i)=>{ const y=two?mid-2+(i===0?-fs*0.25:fs*0.95):mid+fs*0.36;
+    txt+='<text x="50" y="'+y.toFixed(1)+'" text-anchor="middle" font-family="Andika,Century Gothic,Arial,sans-serif" font-weight="700" font-size="'+fs.toFixed(1)+'" fill="#1E2A30">'+esc(ln)+'</text>'; });
+  return pic+'<rect x="4" y="'+top+'" width="92" height="'+h+'" rx="8" fill="#fff" '+S2+'/>'+(isName?'<rect x="4" y="'+top+'" width="92" height="9" rx="4.5" fill="#1F3A8A"/>':'')+txt;
+}
+function wrap2(w,max){ if(w.length<=max) return [w]; const parts=w.split(' '); let a='',b=''; parts.forEach(p=>{ if(!b && (a+' '+p).trim().length<=max) a=(a+' '+p).trim(); else b=(b+' '+p).trim(); }); return b?[a,b]:[a]; }
+function esc(s){ return String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+/* one key per word and kind, so the same card always has the same key */
+const TXK={};
+function textKey(word,kind){ const id=kind+'|'+word; let k=TXK[id]; if(!k){ k=TXK[id]='tx'+Object.keys(TXK).length; ICONS[k]=wordCard(word,kind); }
+  const es=(kind!=='name'&&esNames()); LBL[k]=[word,word,word,es?'es':null]; return k; }
+
+function svg(name){ return '<svg viewBox="0 0 100 100" aria-hidden="true">'+ICONS[name]+'</svg>'; }
+function row(names){
+  const n=names.length, step=300/n, w=Math.min(100,step-4); let g='';
+  names.forEach((nm,i)=>{ g+='<g transform="translate('+(i*step+(step-w)/2)+' '+((100-w)/2)+') scale('+(w/100)+')">'+ICONS[nm]+'</g>'; });
+  return '<svg viewBox="0 0 300 100" aria-hidden="true">'+g+'</svg>';
+}
+const SPK='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9h4l5-4v14l-5-4H4z" fill="currentColor"/><path d="M16 8.5a5 5 0 0 1 0 7M18.5 6a8.5 8.5 0 0 1 0 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>';
+
+// [shown label, spoken English, spoken Spanish, voice for this label ('es' = Spanish voice)]
+const LBL={
+  boy:['boy','the boy','el niño'], girl:['girl','the girl','la niña'], dad:['Dad','Dad','papá'], mom:['Mom','Mom','mamá'],
+  parents:['parents','the parents','los padres'], brother:['brother','the brother','el hermano'], sister:['sister','the sister','la hermana'],
+  siblings:['siblings','the siblings','los hermanos'], uncle:['uncle','the uncle','el tío'], aunt:['aunt','the aunt','la tía'],
+  family:['family','the family','la familia'], baby:['baby','the baby','el bebé'], dog:['dog','the dog','el perro'], car:['toy car','the toy car','el carrito'],
+  pants:['pants','the pants','el pantalón'], shirt:['shirt','the shirt','la camisa'], shoes:['shoes','the shoes','los zapatos'],
+  dress:['dress','the dress','el vestido'], hat:['hat','the hat','el sombrero'], mango:['mango','the mango','el mango'],
+  yes:['Yes','yes','sí'], no:['No','no','no']
+};
+
+/* ---------- the four roads. Questions with a fixed answer are written here; the personal ones are made from Settings. ---------- */
+const WEAR=[
+  {key:'A boy wears pants', text:"A boy wears pants. Tap the pants.", es:"Un niño usa pantalón. Toca el pantalón.", answer:'pants', opts:['pants','dress','hat'], ok:"Pants! A boy wears pants."},
+  {key:'A boy wears a shirt', text:"A boy wears a shirt. Tap the shirt.", es:"Un niño usa camisa. Toca la camisa.", answer:'shirt', opts:['shirt','shoes','dress'], ok:"A shirt! A boy wears a shirt."},
+  {key:'Shoes', text:"Boys and girls wear shoes. Tap the shoes.", es:"Los niños y las niñas usan zapatos. Toca los zapatos.", answer:'shoes', opts:['shoes','hat','pants'], ok:"Shoes! We wear shoes on our feet."},
+  {key:'A girl wears a dress', text:"A girl wears a dress. Tap the dress.", es:"Una niña usa vestido. Toca el vestido.", answer:'dress', opts:['dress','shirt','pants'], ok:"A dress! A girl wears a dress."},
+  {key:'A girl wears a hat', text:"A girl wears a hat. Tap the hat.", es:"Una niña usa sombrero. Toca el sombrero.", answer:'hat', opts:['hat','shoes','shirt'], ok:"A hat! A girl wears a hat."},
+  {key:'Find what a boy wears', type:'find', text:"On your page, a boy wears pants, shoes and a shirt. Find them all!", es:"En tu página, un niño usa pantalón, zapatos y camisa. ¡Búscalos todos!", answers:['pants','shoes','shirt'], opts:['pants','shoes','shirt','dress'], no:"Not that one. On your page, the girl wears the dress. Keep looking!", ok:"Pants, shoes and a shirt. That is what the boy wears!"},
+  {key:'Find what a girl wears', type:'find', text:"On your page, a girl wears a dress, shoes and a hat. Find them all!", es:"En tu página, una niña usa vestido, zapatos y sombrero. ¡Búscalos todos!", answers:['dress','shoes','hat'], opts:['dress','shoes','hat','pants'], no:"Not that one. On your page, the boy wears the pants. Keep looking!", ok:"A dress, shoes and a hat. That is what the girl wears!"},
+  {key:'Both wear shoes', type:'yesno', show:'shoes', text:"Do boys and girls both wear shoes?", es:"¿Los niños y las niñas usan zapatos?", answer:'yes', ok:"Yes! Boys and girls both wear shoes."}
+];
+const FAM=[
+  {key:'What is a family', text:"A family is a group of people who are related and live in the same house. Tap the family.", es:"Una familia es un grupo de personas que son parientes y viven en la misma casa. Toca la familia.", answer:'family', opts:['family','boy','car'], ok:"That's a family! They are related, and they live in the same house."},
+  {key:'Father', text:"This is Father. We call him Dad. Tap Dad.", es:"Este es el padre. Le decimos papá. Toca a papá.", answer:'dad', opts:['dad','mom','baby'], ok:"That's Dad! Father is Dad."},
+  {key:'Mother', text:"This is Mother. We call her Mom. Tap Mom.", es:"Esta es la madre. Le decimos mamá. Toca a mamá.", answer:'mom', opts:['mom','dad','sister'], ok:"That's Mom! Mother is Mom."},
+  {key:'Parents', text:"Mom and Dad together are your parents. Tap the parents.", es:"Mamá y papá juntos son tus padres. Toca a los padres.", answer:'parents', opts:['parents','siblings','uncle'], ok:"Mom and Dad are the parents."},
+  {key:'Brother', text:"A boy in your family is your brother. Tap the brother.", es:"Un niño en tu familia es tu hermano. Toca al hermano.", answer:'brother', opts:['brother','sister','dad'], ok:"That's the brother!"},
+  {key:'Sister', text:"A girl in your family is your sister. Tap the sister.", es:"Una niña en tu familia es tu hermana. Toca a la hermana.", answer:'sister', opts:['sister','brother','mom'], ok:"That's the sister!"},
+  {key:'Siblings', text:"Brothers and sisters together are siblings. Tap the siblings.", es:"Los hermanos y las hermanas juntos son hermanos. Toca a los hermanos.", answer:'siblings', opts:['siblings','parents','aunt'], ok:"Brothers and sisters are siblings!"},
+  {key:'Uncle', text:"Your mom's brother or your dad's brother is your uncle. Tap the uncle.", es:"El hermano de tu mamá o de tu papá es tu tío. Toca al tío.", answer:'uncle', opts:['uncle','aunt','sister'], ok:"That's the uncle!"},
+  {key:'Aunt', text:"Your mom's sister or your dad's sister is your aunt. Tap the aunt.", es:"La hermana de tu mamá o de tu papá es tu tía. Toca a la tía.", answer:'aunt', opts:['aunt','uncle','brother'], ok:"That's the aunt!"},
+  {key:'Stepfamily', type:'yesno', show:'family', text:"Some families have a stepmom, a stepdad or a stepsister. Are they part of the family too?", es:"Algunas familias tienen madrastra, padrastro o hermanastra. ¿También son parte de la familia?", answer:'yes', ok:"Yes! A stepmom, a stepdad and a stepsister are family too."},
+  {key:'Count the family', type:'count', show:'family4', text:"How many people are in this family? Count them. Tap the number.", es:"¿Cuántas personas hay en esta familia? Cuéntalas. Toca el número.", answer:numKey(4), opts:[numKey(3),numKey(4),numKey(5)], ok:"One, two, three, four. Four people in this family!"}
+];
+/* All about me: made fresh each drive from the hub name and Settings */
+function meList(){
+  const L=[], sex=SET.sex==='girl'?'girl':'boy', age=Math.max(2,Math.min(12,parseInt(SET.age,10)||6)), name=childName();
+  L.push({key:'Tap the boy', text:"Look at the children. A boy is a child. Tap the boy.", es:"Mira a los niños. Toca al niño.", answer:'boy', opts:['boy','girl','dad'], ok:"That is a boy."});
+  L.push({key:'Tap the girl', text:"A girl is a child too. Tap the girl.", es:"Una niña también es una niña pequeña. Toca a la niña.", answer:'girl', opts:['girl','boy','mom'], ok:"That is a girl."});
+  L.push({key:'I am a boy or a girl', text:"Look at your page. I am a boy, or I am a girl. Which one are you? Tap it.", es:"Mira tu página. Soy un niño o soy una niña. ¿Cuál eres tú? Tócalo.", answer:sex, opts:['boy','girl'], ok:"I am a "+sex+"."});
+  if(name){
+    const pool=['Maria','Carlos','Ana','Luis','Sofia','Juan','Rosa','Pedro'].filter(n=>norm(n)!==norm(name)&&norm(n)[0]!==norm(name)[0]);
+    const d=shuffle(pool).slice(0,2), opts=[textKey(name,'name')].concat(d.map(n=>textKey(n,'name')));
+    L.push({key:'My name', text:"I am special! Your name is on your page. Find your name and tap it.", es:"¡Soy especial! Tu nombre está en tu página. Busca tu nombre y tócalo.", answer:opts[0], opts:opts, ok:"My name is "+name+"."});
+  }
+  const ages=[age-1,age,age+1].map(numKey);
+  L.push({key:'How old I am', type:'count', show:cakeKey(age), text:"How old are you? Count the candles on your birthday cake. Tap the number.", es:"¿Cuántos años tienes? Cuenta las velas del pastel. Toca el número.", answer:numKey(age), opts:ages,
+    ok:(w=>w[0].toUpperCase()+w.slice(1))(NUMW.slice(1,age+1).join(', '))+". I am "+NUMW[age]+" years old."});
+  L.push({key:'I am special', type:'yesno', show:'star', text:"There is only one you in the whole world. Are you special?", es:"Solo hay uno como tú en todo el mundo. ¿Eres especial?", answer:'yes', ok:"Yes! I am special."});
+  return L;
+}
+/* My address: made from Settings. Each part of the address becomes one question; the other two choices come from these lists. */
+const POOL={
+  country:['Belize','Guatemala','Mexico','Honduras'],
+  district:['Cayo','Belize','Orange Walk','Corozal','Stann Creek','Toledo','Petén'],
+  town:['San Ignacio','Benque Viejo','Santa Elena','Belmopan','Melchor de Mencos','Flores','Belize City','Orange Walk Town','Dangriga','Punta Gorda'],
+  area:['Barrio El Centro','Santa Familia','Las Flores','Barrio Nuevo','Bullet Tree','Cahal Pech']
+};
+const PART={area:['Area','área'],town:['Town','pueblo'],district:['District','distrito'],country:['Country','país']};
+function hasAddr(){ return ['area','town','district','country'].some(p=>SET.addr[p].trim()); }
+function addrList(){
+  const L=[], A=SET.addr, es=esNames();
+  [['country',"What country do you live in? Tap your country.","¿En qué país vives? Toca tu país.","I live in the country of"],
+   ['district',"What district do you live in? Tap your district.","¿En qué distrito vives? Toca tu distrito.","My district is"],
+   ['town',"What town do you live in? Tap your town.","¿En qué pueblo vives? Toca tu pueblo.","My town is"],
+   ['area',"What area do you live in? Tap your area.","¿En qué área vives? Toca tu área.","My area is"]].forEach(([p,t,e,say])=>{
+    const v=A[p].trim(); if(!v) return;
+    const d=shuffle(POOL[p].filter(x=>norm(x)!==norm(v)&&!norm(v).includes(norm(x))&&!norm(x).includes(norm(v)))).slice(0,2);
+    const opts=[textKey(v,p)].concat(d.map(x=>textKey(x,p)));
+    L.push({key:PART[p][0], text:t, es:e, answer:opts[0], opts:opts, ok:say+" "+v+".", okItems:[{text:say},{text:v+'.',lang:es?'es':null}]});
+  });
+  L.push({key:'Say my address', type:'card', noScore:true, text:"Say your address with me! Tap each line, then say it.", es:"¡Di tu dirección conmigo! Toca cada línea y luego dila.", ok:"Great! Now you can say your address."});
+  L.push({key:'Police can help', type:'yesno', show:'officer', text:"If you are ever lost, tell a police officer your address. Can a police officer help you get home?", es:"Si te pierdes, dile tu dirección a un policía. ¿Te puede ayudar a llegar a casa?", answer:'yes', ok:"Yes! Say your address, and a police officer can help you get home."});
+  return L;
+}
+const ROUTES={
+  me:{name:'All about me', make:meList, art:'star', cls:'me', isNew:true,
+     title:'<b>I am special</b>', facts:[], line:'',
+     recap:function(){ const n=childName(), a=Math.max(2,Math.min(12,parseInt(SET.age,10)||6)); return (n?"My name is "+n+". ":"")+"I am a "+(SET.sex==='girl'?'girl':'boy')+". I am "+NUMW[a]+" years old. I am special!"; }},
+  wear:{name:'What we wear', make:()=>WEAR, art:'shirt', cls:'wear', isNew:true,
+     title:'<b>A boy wears</b> pants, shoes and a shirt. <b>A girl wears</b> a dress, shoes and a hat.', facts:['pants','shoes','shirt','dress','hat'], line:'',
+     recap:"A boy wears pants, shoes and a shirt. A girl wears a dress, shoes and a hat."},
+  fam:{name:'My family', make:()=>FAM, art:'family', cls:'fam', isNew:true,
+     title:'<b>A family</b> is a group of people who are related and live in the same house.', facts:['dad','mom','brother','sister','uncle','aunt'], line:'Brothers and sisters are <b>siblings</b>. Mom and Dad are <b>parents</b>. A stepmom, stepdad and stepsister are family too.',
+     recap:"A family is a group of people who are related and live in the same house. A family can have a dad and a mom, brothers and sisters, uncles and aunts. A stepmom, a stepdad and a stepsister are family too."},
+  addr:{name:'My address', make:addrList, art:'house', cls:'addr', isNew:true,
+     title:'<b>I know my address</b>', facts:[], line:'',
+     recap:function(){ return "I know my address."; }}
+};
+const ORDER=['me','wear','fam','addr'];
+const SECNAME={me:'All about me', wear:'What we wear', fam:'My family', addr:'My address'};
+let route='me', N=8;
+const PRAISE=["Yes! Great job!","That's right!","Super! Drive on!","You got it!","Well done!"];
+
+const $=id=>document.getElementById(id);
+function shuffle(a){ a=a.slice(); for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } return a; }
+
+// ---------- voice ----------
+const synthOK='speechSynthesis' in window && typeof SpeechSynthesisUtterance!=='undefined';
+let voices=[];
+function loadVoices(){ try{ voices=speechSynthesis.getVoices()||[]; }catch(e){ voices=[]; } }
+if(synthOK){ loadVoices(); try{ speechSynthesis.onvoiceschanged=loadVoices; }catch(e){} }
+function pickVoice(lang){
+  const pre=lang==='es'?'es':'en';
+  const pool=voices.filter(v=>(v.lang||'').toLowerCase().startsWith(pre));
+  if(!pool.length) return null;
+  /* Use the voice chosen in the Number Garage's Parents screen, if any */
+  let want=''; try{ const o=JSON.parse(localStorage.getItem('nanoNumbers.v1')||'null'); want=(o&&o.settings&&o.settings[pre==='es'?'esVoice':'enVoice'])||''; }catch(e){}
+  if(want){ const f=pool.find(v=>v.name===want); if(f) return f; }
+  const sc=v=>{ const n=(v.name||'').toLowerCase(), l=(v.lang||'').toLowerCase().replace('_','-'); let s=0;
+    if(/natural|neural|online/.test(n))s+=60; if(/premium|enhanced|siri/.test(n))s+=50; if(/google/.test(n))s+=35; if(v.localService===false)s+=5;
+    if(/compact|espeak|eloquence|fred|albert|bad news|bells|boing|bubbles|cellos|whisper|zarvox|trinoids|jester|organ|superstar|wobble|grandma|grandpa|rocko|shelley|flo|eddy|reed|sandy|junior|ralph|kathy|bahh/.test(n))s-=80;
+    if(pre==='es' ? /^es-(mx|us|419)/.test(l) : /^en-us/.test(l)) s+=10; return s; };
+  return pool.slice().sort((a,b)=>sc(b)-sc(a))[0];
+}
+function hasSpanish(){ loadVoices(); return voices.length===0 ? true : !!pickVoice('es'); }
+function clearSpeaking(){ document.querySelectorAll('.tile.speaking').forEach(t=>t.classList.remove('speaking')); }
+let speakTimer=null;
+/* English goes to the recorded voice (../voice/voice.js) when every sentence of an item has a clip; otherwise, and for Spanish, the phone voice.
+   An item with lang:'es' (a place name, when Settings says so) is always said by the phone's Spanish voice. */
+let seqTok=0;
+function speakSeq(items,lang,delay){
+  const V=window.NanoVoice;
+  if(!synthOK && !V) return;
+  stopSpeech();
+  const my=seqTok;
+  speakTimer=setTimeout(()=>{
+    const vEn=synthOK?pickVoice(lang):null, vEs=synthOK?pickVoice('es'):null;
+    const mark = it => { clearSpeaking(); if(it.el) it.el.classList.add('speaking'); };
+    const utter = (text,it) => { const es=it.lang==='es'||lang==='es', v=es?vEs:vEn; const u=new SpeechSynthesisUtterance(text); if(v) u.voice=v; u.lang=v?v.lang:(es?'es-MX':'en-US'); u.rate=0.85; u.pitch=1.05; u.onstart=()=>mark(it); return u; };
+    if(lang==='es' || !V){            /* phone voice only: queue everything at once */
+      if(!synthOK) return;
+      items.forEach((it,i)=>{ const u=utter(it.text,it); if(i===items.length-1) u.onend=clearSpeaking; speechSynthesis.speak(u); });
+      return;
+    }
+    const ttsOne = (text,it) => new Promise(res=>{ if(!synthOK) return res(); let done=false; const fin=()=>{ if(!done){ done=true; res(); } };
+      try{ const u=utter(text,it); u.onend=fin; u.onerror=fin; setTimeout(fin,1800+text.length*95); speechSynthesis.speak(u); }catch(e){ fin(); } });
+    let p=Promise.resolve();
+    items.forEach(it=>{ p=p.then(()=>{ if(my!==seqTok) return; const text=it.text;
+      if(it.lang!=='es' && V.has(text)) return V.say(text,{onstart:()=>{ if(my===seqTok) mark(it); }}).then(rest=>{ if(rest && my===seqTok) return ttsOne(rest,it); });
+      return ttsOne(text,it); }); });
+    p.then(()=>{ if(my===seqTok) clearSpeaking(); });
+  },delay==null?80:delay);
+}
+function stopSpeech(){ seqTok++; try{ if(window.NanoVoice) NanoVoice.stop(); }catch(e){} if(synthOK){ try{ speechSynthesis.cancel(); }catch(e){} } clearTimeout(speakTimer); clearSpeaking(); }
+
+// ---------- siren: a short, quiet police wail, only after a tap ----------
+let sirenOn=true, actx=null;
+function siren(){
+  if(!sirenOn) return false;
+  try{
+    actx = actx || new (window.AudioContext||window.webkitAudioContext)();
+    const o=actx.createOscillator(), g=actx.createGain(), t=actx.currentTime;
+    o.type='sawtooth';
+    o.frequency.setValueAtTime(620,t); o.frequency.linearRampToValueAtTime(980,t+0.32); o.frequency.linearRampToValueAtTime(620,t+0.64);
+    g.gain.setValueAtTime(0.0001,t); g.gain.exponentialRampToValueAtTime(0.04,t+0.04);
+    g.gain.setValueAtTime(0.04,t+0.58); g.gain.exponentialRampToValueAtTime(0.0001,t+0.68);
+    o.connect(g); g.connect(actx.destination); o.start(t); o.stop(t+0.7);
+    return true;
+  }catch(e){ return false; }
+}
+
+// ---------- road ----------
+const stops=$('stops');
+function buildStops(){ stops.innerHTML=''; for(let i=0;i<N;i++) stops.appendChild(document.createElement('i')); }
+$('amb').innerHTML=svg('police');
+$('finish').innerHTML=svg('house');
+function setRoad(done){
+  [...stops.children].forEach((d,i)=>d.classList.toggle('done',i<done));
+  $('amb').style.left='calc(4px + (100% - '+(window.innerWidth<=480?96:120)+'px) * '+(N?done/N:0)+')';
+  $('count').textContent=done+' / '+N;
+}
+function flashAmb(){ const a=$('amb'); a.classList.remove('flash'); void a.offsetWidth; a.classList.add('flash'); }
+$('hear').innerHTML=SPK; $('hearRecap').innerHTML=SPK;
+$('startScene').innerHTML='<svg viewBox="0 0 240 110" aria-hidden="true"><rect x="0" y="0" width="240" height="110" rx="14" fill="#DDEFF8"/><rect x="0" y="74" width="240" height="26" fill="#3A3F44"/><path d="M8 87 H232" stroke="#F4C430" stroke-width="3" stroke-dasharray="14 10"/>'+
+  '<g transform="translate(12 22) scale(.64)">'+ICONS.police+'</g><g transform="translate(168 8) scale(.66)">'+ICONS.house+'</g><g transform="translate(96 6) scale(.6)">'+ICONS.family+'</g></svg>';
+if(!synthOK) $('noVoice').hidden=false;
+
+// ---------- game ----------
+let QS=[], idx=0, wrongs=[], locked=false, found=0;
+function optsOf(q){ return q.type==='yesno' ? ['yes','no'] : q.opts; }
+
+function readQuestion(lang){
+  const q=QS[idx];
+  const items=[{text: lang==='es'?q.es:q.text}];
+  if(q.type==='card'){ speakSeq(items,lang); return; }
+  [...$('opts').children].forEach(t=>{ const L=LBL[t.dataset.k]; if(L && !t.classList.contains('wrong') && !t.classList.contains('right')) items.push({text:L[lang==='es'?2:1], el:t, lang:L[3]}); });
+  speakSeq(items,lang);
+}
+
+function showQuestion(){
+  const q=QS[idx]; locked=false; found=0;
+  $('section').textContent = SECNAME[q.sec];
+  $('qtext').textContent=q.text;
+  $('feedback').textContent=''; $('feedback').className='feedback';
+  $('next').hidden=true; $('esNote').hidden=true;
+  const sh=$('show');
+  sh.classList.toggle('wide', !!(q.show && q.show.row));
+  if(q.show){ sh.hidden=false; sh.innerHTML = q.show.row ? row(q.show.row) : svg(q.show); } else { sh.hidden=true; sh.innerHTML=''; }
+  const fb=$('findbar');
+  if(q.type==='find'){ fb.hidden=false; fb.innerHTML=q.answers.map(()=>'<i></i>').join(''); } else { fb.hidden=true; fb.innerHTML=''; }
+  const box=$('opts'); box.innerHTML='';
+  if(q.type==='card'){ buildCard(q,box); readQuestion('en'); return; }
+  const opts=optsOf(q);
+  const cols = opts.length>=5 ? 3 : opts.length===4 ? 2 : opts.length;
+  box.style.setProperty('--cols',cols);
+  box.classList.toggle('narrow', opts.length<=2 || opts.length===4);
+  box.classList.toggle('yn', q.type==='yesno');
+  (q.type==='yesno' ? opts : shuffle(opts)).forEach(k=>{
+    const b=document.createElement('button');
+    b.className='tile'; b.dataset.k=k; b.id='opt-'+k;
+    b.setAttribute('aria-label',LBL[k][0]);
+    const isText=/^tx\d/.test(k), isNum=/^n\d+$/.test(k);
+    if(isText) b.classList.add('word');
+    b.innerHTML=svg(k)+((isNum||isText)?'':'<span>'+LBL[k][0]+'</span>');
+    b.addEventListener('click',()=>choose(b));
+    box.appendChild(b);
+  });
+  readQuestion('en');
+}
+
+/* "Say your address with me": the address card from his notebook. Tap each line to hear it, then he says it. Not scored. */
+function buildCard(q,box){
+  box.style.setProperty('--cols',1); box.classList.add('narrow'); box.classList.remove('yn');
+  const A=SET.addr, es=esNames(), parts=['area','town','district','country'].filter(p=>A[p].trim());
+  const card=document.createElement('div'); card.className='addrcard';
+  card.innerHTML='<div class="addrtitle">I Know My Address</div>';
+  let heard=0;
+  parts.forEach(p=>{
+    const b=document.createElement('button'); b.type='button'; b.className='addrline';
+    b.innerHTML='<b>'+PART[p][0]+':</b> <span>'+esc(A[p].trim())+'</span>';
+    b.addEventListener('click',()=>{
+      if(!b.classList.contains('done')){ b.classList.add('done'); heard++; }
+      speakSeq([{text:PART[p][0]+'.',el:null},{text:A[p].trim(),lang:es?'es':null}],'en',0);
+      if(heard===parts.length && !locked){ setTimeout(()=>{ if(!locked){ card.classList.add('right'); finishQuestion(q); } },1600); }
+    });
+    card.appendChild(b);
+  });
+  card.insertAdjacentHTML('beforeend','<svg viewBox="0 0 100 100" aria-hidden="true" class="addrhouse">'+ICONS.house+'</svg>');
+  box.appendChild(card);
+}
+
+function finishQuestion(q){
+  locked=true;
+  if(!q.noScore) recordQ(QID(q), !wrongs[idx]);
+  [...$('opts').querySelectorAll('button')].forEach(t=>t.disabled=true);
+  const p=PRAISE[Math.floor(Math.random()*PRAISE.length)];
+  $('feedback').textContent=p+' '+q.ok; $('feedback').className='feedback good';
+  setRoad(idx+1); flashAmb();
+  $('next').hidden=false;
+  $('next').textContent= idx===N-1 ? 'Drive home!' : 'Drive on!';
+  try{ $('next').scrollIntoView({block:'nearest',behavior:'smooth'}); }catch(e){}
+  const played=siren();
+  speakSeq([{text:p}].concat(q.okItems||[{text:q.ok}]),'en', played?760:80);
+}
+
+function choose(b){
+  if(locked||b.classList.contains('wrong')||b.classList.contains('right')) return;
+  const q=QS[idx], k=b.dataset.k;
+  if(q.type==='find'){
+    if(q.answers.includes(k)){
+      b.classList.add('right'); b.disabled=true; found++;
+      [...$('findbar').children].forEach((d,i)=>d.classList.toggle('got',i<found));
+      const left=q.answers.length-found;
+      if(left===0){ finishQuestion(q); return; }
+      $('feedback').textContent = left===1 ? 'Yes! 1 more to find.' : 'Yes! '+left+' more to find.';
+      $('feedback').className='feedback more';
+      speakSeq([{text:'Yes! '+LBL[k][1]+'.'},{text: left===1?'One more to find.':left+' more to find.'}],'en');
+    } else {
+      wrongs[idx]=true; b.classList.add('wrong'); b.disabled=true;
+      $('feedback').textContent=q.no||'Not that one. Keep looking!'; $('feedback').className='feedback try';
+      speakSeq([{text:q.no||'Not that one. Keep looking!'}],'en');
+    }
+    return;
+  }
+  if(k===q.answer){ b.classList.add('right'); finishQuestion(q); }
+  else {
+    wrongs[idx]=true; b.classList.add('wrong'); b.disabled=true;
+    $('feedback').textContent='Not that one. Try again!'; $('feedback').className='feedback try';
+    const items=[{text:'Not that one. Try again!'},{text:q.text}];
+    [...$('opts').children].filter(t=>!t.classList.contains('wrong')).forEach(t=>{ const L=LBL[t.dataset.k]; items.push({text:L[1],el:t,lang:L[3]}); });
+    speakSeq(items,'en');
+  }
+}
+
+/* ---------- saved progress (this phone only) ---------- */
+const PKEY='nanoQuiz.social.v1';
+function loadP(){ try{ const o=JSON.parse(localStorage.getItem(PKEY)||'null'); if(o&&o.hist) return o; }catch(e){} return {hist:{},drives:{date:'',count:0},total:0}; }
+function saveP(p){ try{ localStorage.setItem(PKEY,JSON.stringify(p)); }catch(e){} }
+function todayStr(){ const d=new Date(); return d.getFullYear()+'-'+(d.getMonth()+1)+'-'+d.getDate(); }
+const QID=q=>q.sec+': '+q.key, QLABEL=q=>q.key;
+/* Every scored question the roads can ask with the Settings as they are now (the hub shows "x of TOTAL strong") */
+function canon(){ return ORDER.reduce((a,r)=>a.concat((r==='addr'&&!hasAddr())?[]:ROUTES[r].make().filter(q=>!q.noScore).map(q=>Object.assign({sec:r},q))),[]); }
+function total(){ return canon().length; }
+function recordQ(id,first){ const p=loadP(); p.hist[id]=(p.hist[id]||[]).concat([first?1:0]).slice(-5); p.total=total(); saveP(p); }
+function recordDrive(){ const p=loadP(), t=todayStr(); if(!p.drives||p.drives.date!==t) p.drives={date:t,count:0}; p.drives.count++; p.total=total(); saveP(p); }
+function qState(h){ h=h||[]; if(h.length>=5&&h.filter(Boolean).length>=4) return 'strong'; return h.some(x=>!x)?'again':'new'; }
+function routeIds(r){ return ROUTES[r].make().filter(q=>!q.noScore).map(q=>QID(Object.assign({sec:r},q))); }
+function routeLine(r){ const p=loadP(), ids=routeIds(r); if(!ids.some(i=>p.hist[i])) return '';
+  return '★ '+ids.filter(i=>qState(p.hist[i])==='strong').length+' of '+ids.length+' strong'; }
+function progLine(){ const p=loadP(), ids=canon().map(QID); if(!ids.some(i=>p.hist[i])) return '';
+  const strong=ids.filter(i=>qState(p.hist[i])==='strong').length, d=(p.drives&&p.drives.date===todayStr())?p.drives.count:0;
+  return '★ '+strong+tr(' of ',' de ')+ids.length+tr(' strong (all roads)',' firmes (todos los caminos)')+(d?' · '+d+tr(' drive'+(d>1?'s':'')+' today',' viaje'+(d>1?'s':'')+' hoy'):''); }
+function progChips(){ const p=loadP();
+  return ROUTES[route].make().filter(q=>!q.noScore).map(q=>{ const id=QID(Object.assign({sec:route},q)), h=p.hist[id]||[];
+    return '<li class="'+qState(h)+'">'+esc(QLABEL(q))+(h.length?'<small>'+h.map(x=>x?'✓':'✗').join('')+'</small>':'')+'</li>'; }).join(''); }
+function showStartProg(){ const el=$('startProg'), t=progLine(); el.textContent=t; el.hidden=!t; }
+
+function recapText(){ const R=ROUTES[route]; return typeof R.recap==='function'?R.recap():R.recap; }
+function showEnd(){
+  $('quiz').hidden=true; $('end').hidden=false;
+  const scored=QS.map((q,i)=>[q,i]).filter(x=>!x[0].noScore), first=scored.filter(x=>!wrongs[x[1]]).length;
+  recordDrive();
+  const R=ROUTES[route];
+  $('factsTitle').innerHTML=R.title; $('factsTitle').hidden=!R.title;
+  let facts=R.facts.map(k=>'<div>'+svg(k)+LBL[k][0]+'</div>').join('');
+  if(route==='addr'){ const A=SET.addr; facts=['area','town','district','country'].filter(p=>A[p].trim()).map(p=>'<div class="wide">'+PART[p][0]+': <b>'+esc(A[p].trim())+'</b></div>').join(''); }
+  if(route==='me'){ const n=childName(), a=Math.max(2,Math.min(12,parseInt(SET.age,10)||6)); facts=(n?'<div class="wide">My name is <b>'+esc(n)+'</b></div>':'')+'<div class="wide">I am a <b>'+(SET.sex==='girl'?'girl':'boy')+'</b></div><div class="wide">I am <b>'+a+'</b> years old</div>'; }
+  $('facts').innerHTML=facts; $('facts').hidden=!facts;
+  $('endLine').innerHTML=R.line; $('endLine').hidden=!R.line;
+  $('doIt').hidden = route!=='addr';
+  $('stars').textContent='This drive: '+first+' of '+scored.length+' right on the first try';
+  $('strongline').textContent=progLine();
+  $('results').innerHTML=progChips();
+  const played=siren();
+  let rec=[{text:recapText()}];
+  if(route==='addr'){ const A=SET.addr, es=esNames(); rec=[{text:"I know my address."}]; ['area','town','district','country'].filter(p=>A[p].trim()).forEach(p=>{ rec.push({text:PART[p][0]+'.'}); rec.push({text:A[p].trim(),lang:es?'es':null}); }); }
+  ROUTES._lastRecap=rec;
+  speakSeq([{text:"Hooray! The police car made it home!"}].concat(rec),'en',played?760:80);
+}
+
+function begin(r){
+  if(r) route=r;
+  if(route==='addr' && !hasAddr()){ $('addrNeed').hidden=false; $('setup').open=true; try{ $('setup').scrollIntoView({block:'start',behavior:'smooth'}); }catch(e){} return; }
+  let list=ROUTES[route].make();
+  /* keep a sensible order where it matters: boy and girl first in All about me; the address card and police near the end */
+  if(route==='me'){ list=list.slice(0,2).concat(shuffle(list.slice(2))); }
+  else if(route==='addr'){ const n=list.length; list=shuffle(list.slice(0,n-2)).concat(list.slice(n-2)); }
+  else if(route==='fam'){ list=[list[0]].concat(shuffle(list.slice(1))); }
+  else list=shuffle(list);
+  QS=list.map(q=>Object.assign({sec:route},q));
+  N=QS.length; buildStops();
+  idx=0; wrongs=[]; setRoad(0);
+  $('start').hidden=true; $('end').hidden=true; $('quiz').hidden=false;
+  showQuestion();
+}
+function drawRoutes(){
+  $('routes').innerHTML=ORDER.map(r=>{ const R=ROUTES[r], pl=routeLine(r), n=(r==='addr'&&!hasAddr())?0:R.make().length;
+    return '<button class="go route '+R.cls+'" data-r="'+r+'">'+svg(R.art)+'<span><b>'+R.name+'</b>'+
+      '<small>'+(n?n+' stops':tr('Needs your address','Falta la dirección'))+(pl?' · '+pl:'')+'</small></span></button>'; }).join('');
+  $('routes').querySelectorAll('.route').forEach(b=>b.addEventListener('click',()=>begin(b.dataset.r)));
+  $('addrNeed').hidden=true;
+}
+
+/* ---------- Settings box ---------- */
+function drawNameRow(){ const n=childName();
+  $('nameRow').innerHTML = n ? tr('Name: <b>'+esc(n)+'</b> (change it in Parents on the home page)','Nombre: <b>'+esc(n)+'</b> (cámbielo en Padres, en la página de inicio)')
+                             : tr('No name is set, so the name question is skipped. Add the name in Parents on the home page.','No hay nombre, así que se salta la pregunta del nombre. Escriba el nombre en Padres, en la página de inicio.'); }
+function fillSettings(){
+  const sel=$('sAge'); sel.innerHTML=''; for(let a=3;a<=12;a++){ const o=document.createElement('option'); o.value=a; o.textContent=a; sel.appendChild(o); }
+  sel.value=String(Math.max(3,Math.min(12,parseInt(SET.age,10)||6)));
+  setSex(SET.sex);
+  $('aArea').value=SET.addr.area; $('aTown').value=SET.addr.town; $('aDistrict').value=SET.addr.district; $('aCountry').value=SET.addr.country;
+  $('sEsNames').checked=esNames();
+  drawNameRow();
+}
+let pendingSex=SET.sex;
+function setSex(s){ pendingSex=s==='girl'?'girl':'boy'; $('sBoy').setAttribute('aria-pressed',pendingSex==='boy'); $('sGirl').setAttribute('aria-pressed',pendingSex==='girl'); }
+$('sBoy').addEventListener('click',()=>setSex('boy'));
+$('sGirl').addEventListener('click',()=>setSex('girl'));
+let esTouched=false; $('sEsNames').addEventListener('change',()=>{ esTouched=true; });
+$('aCountry').addEventListener('input',()=>{ if(!esTouched && SET.esNames==null) $('sEsNames').checked=SPANISH_LANDS.includes(norm($('aCountry').value)); });
+$('sSave').addEventListener('click',()=>{
+  const clean=v=>v.replace(/\s+/g,' ').trim().slice(0,40);
+  SET.age=parseInt($('sAge').value,10)||6; SET.sex=pendingSex;
+  SET.addr={area:clean($('aArea').value),town:clean($('aTown').value),district:clean($('aDistrict').value),country:clean($('aCountry').value)};
+  if(esTouched) SET.esNames=$('sEsNames').checked;
+  const ok=saveS(SET);
+  $('sSaved').textContent= ok ? tr('Saved on this phone.','Guardado en este teléfono.') : tr('Could not save on this phone. It works until the page is closed.','No se pudo guardar en este teléfono. Funciona hasta que se cierre la página.');
+  const p=loadP(); p.total=total(); saveP(p);
+  drawRoutes(); showStartProg();
+});
+
+fillSettings();
+drawRoutes();
+showStartProg();
+N=ROUTES.wear.make().length; buildStops();
+$('again').addEventListener('click',()=>begin());
+$('otherRoad').addEventListener('click',()=>{ stopSpeech(); $('end').hidden=true; $('quiz').hidden=true; $('start').hidden=false; drawRoutes(); showStartProg(); setRoad(0); });
+$('hear').addEventListener('click',()=>readQuestion('en'));
+$('hearEs').addEventListener('click',()=>{ if(!synthOK||!hasSpanish()){ $('esNote').hidden=false; return; } readQuestion('es'); });
+$('sirenBtn').addEventListener('click',e=>{ sirenOn=!sirenOn; e.currentTarget.textContent='Siren: '+(sirenOn?'on':'off'); e.currentTarget.setAttribute('aria-pressed',sirenOn); });
+$('next').addEventListener('click',()=>{ stopSpeech(); if(idx<N-1){ idx++; showQuestion(); } else showEnd(); });
+$('hearRecap').addEventListener('click',()=>speakSeq(ROUTES._lastRecap||[{text:recapText()}],'en'));
+document.addEventListener('visibilitychange',()=>{ if(document.hidden) stopSpeech(); });
+setRoad(0);
+applyPl();
+/* keep the hub's count right even before the first drive */
+(function(){ const p=loadP(); if(p.total!==total()){ p.total=total(); if(Object.keys(p.hist).length) saveP(p); } })();
+/* Copyright on the quiz screen without touching the layout: a small fixed line under the card.
+   Shown only when nothing would sit under it and the screen does not already show the copyright line. */
+(function(){var cf=document.createElement('p');cf.className='copy-fix';cf.innerHTML='&copy; '+new Date().getFullYear()+' Edwin Lopez. All rights reserved.';document.body.appendChild(cf);
+  function sync(){var sec=[].slice.call(document.querySelectorAll('section.card')).filter(function(s){return !s.hidden;})[0];
+    var h=!(sec&&!sec.querySelector('.copy')&&document.documentElement.scrollHeight<=innerHeight+1&&sec.getBoundingClientRect().bottom<innerHeight-20);if(cf.hidden!==h)cf.hidden=h;}
+  new MutationObserver(sync).observe(document.body,{childList:true,subtree:true,attributes:true,attributeFilter:['hidden']});addEventListener('resize',sync);sync();})();
+/* Copyright year follows the phone's clock */
+document.querySelectorAll('.cyear').forEach(function(e){e.textContent=new Date().getFullYear();});
+})();
+</script>
+</body>
+</html>
